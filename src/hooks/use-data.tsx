@@ -97,7 +97,7 @@ interface DataContextType {
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'investmentId'>) => void;
+    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'investmentId' | 'investmentId'>) => void;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status'>) => void;
     approveInvestmentRequest: (requestId: number) => void;
     rejectInvestmentRequest: (requestId: number) => void;
@@ -116,21 +116,21 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Mock Data
 const MOCK_USERS: AppUser[] = [
-    { id: "user1", name: "Ramesh Patel", email: "ramesh.patel@example.com", avatar: "/placeholder-user.jpg", joinDate: "2023-01-15" },
-    { id: "user2", name: "Sunita Reddy", email: "sunita.reddy@example.com", avatar: "/placeholder-user.jpg", joinDate: "2023-02-20" },
-    { id: "user3", name: "Vijay Verma", email: "vijay.verma@example.com", avatar: "/placeholder-user.jpg", joinDate: "2023-03-10" },
+    { id: "user1", name: "Ramesh Patel", email: "ramesh.patel@example.com", avatar: "https://placehold.co/100x100.png", joinDate: "2023-01-15" },
+    { id: "user2", name: "Sunita Reddy", email: "sunita.reddy@example.com", avatar: "https://placehold.co/100x100.png", joinDate: "2023-02-20" },
+    { id: "user3", name: "Vijay Verma", email: "vijay.verma@example.com", avatar: "https://placehold.co/100x100.png", joinDate: "2023-03-10" },
 ];
 
 const MOCK_INVESTMENTS: Investment[] = [
-    { id: 1, userId: "user1", name: "SBI Fixed Deposit", amount: 50000, interestRate: 0.07, startDate: "2024-07-24", maturityDate: "2029-07-24", status: "Active" },
-    { id: 2, userId: "user2", name: "HDFC Fixed Deposit", amount: 100000, interestRate: 0.0725, startDate: "2023-08-15", maturityDate: "2028-08-15", status: "Active" },
-    { id: 3, userId: "user1", name: "Post Office TD", amount: 25000, interestRate: 0.0714, startDate: "2021-01-01", maturityDate: "2024-01-01", status: "Matured" },
+    { id: 1, userId: "user1", name: "SBI Fixed Deposit", amount: 50000, interestRate: 0.09, startDate: "2024-07-24", maturityDate: "2029-07-24", status: "Active" },
+    { id: 2, userId: "user2", name: "HDFC Fixed Deposit", amount: 100000, interestRate: 0.09, startDate: "2023-08-15", maturityDate: "2028-08-15", status: "Active" },
+    { id: 3, userId: "user1", name: "Post Office TD", amount: 25000, interestRate: 0.09, startDate: "2021-01-01", maturityDate: "2024-01-01", status: "Matured" },
 ];
 
 const MOCK_USER_BALANCES: UserBalance[] = [
-    { id: 1, userId: "user1", userName: "Ramesh Patel", userAvatar: "/placeholder-user.jpg", balance: 55000 },
-    { id: 2, userId: "user2", userName: "Sunita Reddy", userAvatar: "/placeholder-user.jpg", balance: 75000 },
-    { id: 3, userId: "user3", userName: "Vijay Verma", userAvatar: "/placeholder-user.jpg", balance: 120000 },
+    { id: 1, userId: "user1", userName: "Ramesh Patel", userAvatar: "https://placehold.co/100x100.png", balance: 55000 },
+    { id: 2, userId: "user2", userName: "Sunita Reddy", userAvatar: "https://placehold.co/100x100.png", balance: 75000 },
+    { id: 3, userId: "user3", userName: "Vijay Verma", userAvatar: "https://placehold.co/100x100.png", balance: 120000 },
 ];
 
 const MOCK_BALANCE_HISTORY: BalanceHistory[] = [
@@ -157,14 +157,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 id: user.uid,
                 name: user.displayName || "New User",
                 email: user.email || "",
-                avatar: user.photoURL || "/placeholder-user.jpg",
+                avatar: user.photoURL || `https://placehold.co/100x100.png`,
                 joinDate: new Date().toISOString().split('T')[0],
             };
             const newUserBalance: UserBalance = {
                 id: Date.now(),
                 userId: user.uid,
                 userName: user.displayName || "New User",
-                userAvatar: user.photoURL || "/placeholder-user.jpg",
+                userAvatar: user.photoURL || `https://placehold.co/100x100.png`,
                 balance: 0,
             };
             setUsers(prev => [...prev, newUser]);
@@ -179,7 +179,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             userId: requestData.userId,
             name: "New Fixed Deposit",
             amount: requestData.amount,
-            interestRate: 0.07,
+            interestRate: 0.09, // Standard rate for new FDs
             startDate: new Date().toISOString(),
             maturityDate: addYears(new Date(), requestData.years).toISOString(),
             status: 'Pending',

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogClose } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { addYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +25,7 @@ export default function FdInvestmentPage() {
     const isMobile = useIsMobile();
 
 
-    const fdRate = 0.07;
+    const fdRate = 0.09; // Using the higher 9% rate
     const calculatedReturn = amount * fdRate * years;
     const totalAmount = amount + calculatedReturn;
     const maturityDate = addYears(new Date(), years);
@@ -40,9 +40,10 @@ export default function FdInvestmentPage() {
             return;
         }
 
+        const transactionNote = `FD Investment for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
+        
         if (isMobile) {
-            const transactionNote = `FD Investment for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
-            const upiUrl = `upi://pay?pa=payee@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+            const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
             window.open(upiUrl, '_blank');
         }
 
@@ -107,7 +108,7 @@ export default function FdInvestmentPage() {
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Estimated Return:</span>
+                                                <span className="text-muted-foreground">Estimated Return (at {fdRate*100}%):</span>
                                                 <span className="font-semibold text-green-600">₹{calculatedReturn.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">

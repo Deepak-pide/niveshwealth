@@ -4,12 +4,11 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
@@ -235,7 +234,9 @@ export default function ManageBalancePage() {
                                             </div>
                                         </div>
                                         <DialogFooter>
-                                            <Button type="submit" onClick={handlePayInterest}>Confirm Payment</Button>
+                                            <DialogClose asChild>
+                                                <Button type="submit" onClick={handlePayInterest}>Confirm Payment</Button>
+                                            </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
@@ -284,5 +285,3 @@ export default function ManageBalancePage() {
         </div>
     );
 }
-
-    
