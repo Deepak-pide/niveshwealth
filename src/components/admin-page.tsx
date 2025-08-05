@@ -1,8 +1,16 @@
 
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase, Wallet } from "lucide-react";
+import { useData } from "@/hooks/use-data";
 
 export default function AdminPage() {
+    const { investments, userBalances } = useData();
+
+    const totalFD = investments.reduce((acc, inv) => acc + inv.amount, 0);
+    const totalBalance = userBalances.reduce((acc, user) => acc + user.balance, 0);
+
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-6">
@@ -19,10 +27,7 @@ export default function AdminPage() {
                              <Briefcase className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">₹12,50,000</div>
-                            <p className="text-xs text-muted-foreground">
-                                +15% from last month
-                            </p>
+                            <div className="text-2xl font-bold">₹{totalFD.toLocaleString('en-IN')}</div>
                         </CardContent>
                     </Card>
                      <Card className="transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
@@ -33,10 +38,7 @@ export default function AdminPage() {
                              <Wallet className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">₹5,48,590</div>
-                             <p className="text-xs text-muted-foreground">
-                                +18.1% from last month
-                            </p>
+                            <div className="text-2xl font-bold">₹{totalBalance.toLocaleString('en-IN')}</div>
                         </CardContent>
                     </Card>
                 </div>

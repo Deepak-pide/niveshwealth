@@ -10,62 +10,70 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/use-auth";
-import { Lock } from "lucide-react";
-import Link from "next/link";
+import { useData } from "@/hooks/use-data";
+import { useToast } from "@/hooks/use-toast";
 
-const balanceHistory = [
-    {
-        date: "2024-07-28",
-        description: "Added to wallet",
-        amount: "5,000.00",
-        type: "Credit"
-    },
-    {
-        date: "2024-07-27",
-        description: "FD Investment",
-        amount: "50,000.00",
-        type: "Debit"
-    },
-    {
-        date: "2024-07-25",
-        description: "Added to wallet",
-        amount: "60,000.00",
-        type: "Credit"
-    },
-    {
-        date: "2024-07-24",
-        description: "Added to wallet",
-        amount: "10,000.00",
-        type: "Credit"
-    },
-    {
-        date: "2024-07-22",
-        description: "FD Investment",
-        amount: "25,000.00",
-        type: "Debit"
-    },
-    {
-        date: "2024-07-20",
-        description: "Added to wallet",
-        amount: "30,000.00",
-        type: "Credit"
-    },
-];
 
 export default function MyBalancePage() {
-    const [addAmount, setAddAmount] = useState(0);
-    const [withdrawAmount, setWithdrawAmount] = useState(0);
-    const { user } = useAuth();
+    const [addAmount, setAddAmount] = useState("");
+    const [withdrawAmount, setWithdrawAmount] = useState("");
+    const { userBalances, balanceHistory, addBalanceRequest } = useData();
+    const { toast } = useToast();
 
-    if (!user) {
-        return (
-            <div className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center text-center h-full animate-fade-in">
-                <Lock className="h-16 w-16 text-primary mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-                <p className="text-muted-foreground mb-4">Please log in to view your balance.</p>
-            </div>
-        );
+    // Mock user ID as auth is removed
+    const mockUserId = 'user1'; 
+    const mockUser = {
+        uid: mockUserId,
+        displayName: "Ramesh Patel",
+        email: "ramesh.patel@example.com",
+        photoURL: "/placeholder-user.jpg"
+    }
+
+    const currentUserBalance = userBalances.find(b => b.userId === mockUserId)?.balance || 0;
+    const currentUserHistory = balanceHistory.filter(h => h.userId === mockUserId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const handleAddBalance = () => {
+        const amount = parseFloat(addAmount);
+        if (isNaN(amount) || amount <= 0) {
+            toast({ title: "Invalid amount", description: "Please enter a valid amount to add.", variant: "destructive" });
+            return;
+        }
+        addBalanceRequest({
+            id: Date.now(),
+            userId: mockUser.uid,
+            userName: mockUser.displayName || mockUser.email || 'Unknown User',
+            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            type: "Add",
+            amount: amount,
+            date: new Date().toISOString().split('T')[0],
+            status: "Pending"
+        });
+        toast({ title: "Request Submitted", description: "Your request to add balance has been submitted." });
+        setAddAmount("");
+    }
+    
+    const handleWithdrawBalance = () => {
+        const amount = parseFloat(withdrawAmount);
+        if (isNaN(amount) || amount <= 0) {
+            toast({ title: "Invalid amount", description: "Please enter a valid amount to withdraw.", variant: "destructive" });
+            return;
+        }
+        if (amount > currentUserBalance) {
+            toast({ title: "Insufficient Balance", description: "You cannot withdraw more than your current balance.", variant: "destructive" });
+            return;
+        }
+        addBalanceRequest({
+            id: Date.now(),
+            userId: mockUser.uid,
+            userName: mockUser.displayName || mockUser.email || 'Unknown User',
+            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            type: "Withdraw",
+            amount: amount,
+            date: new Date().toISOString().split('T')[0],
+            status: "Pending"
+        });
+        toast({ title: "Request Submitted", description: "Your request to withdraw balance has been submitted." });
+        setWithdrawAmount("");
     }
 
     return (
@@ -76,7 +84,7 @@ export default function MyBalancePage() {
                         <CardTitle>Your Balance</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold tracking-tight text-foreground">₹1,23,456.78</p>
+                        <p className="text-4xl font-bold tracking-tight text-foreground">₹{currentUserBalance.toLocaleString('en-IN')}</p>
                     </CardContent>
                     <CardFooter className="gap-2">
                         <Dialog>
@@ -96,14 +104,14 @@ export default function MyBalancePage() {
                                             id="add-amount"
                                             type="number"
                                             value={addAmount}
-                                            onChange={(e) => setAddAmount(Number(e.target.value))}
+                                            onChange={(e) => setAddAmount(e.target.value)}
                                             className="col-span-3"
                                         />
                                     </div>
                                 </div>
                                 <DialogFooter>
                                     <DialogClose asChild>
-                                        <Button type="submit">Pay using UPI</Button>
+                                        <Button type="submit" onClick={handleAddBalance}>Pay using UPI</Button>
                                     </DialogClose>
                                 </DialogFooter>
                             </DialogContent>
@@ -125,14 +133,14 @@ export default function MyBalancePage() {
                                             id="withdraw-amount"
                                             type="number"
                                             value={withdrawAmount}
-                                            onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+                                            onChange={(e) => setWithdrawAmount(e.target.value)}
                                             className="col-span-3"
                                         />
                                     </div>
                                 </div>
                                 <DialogFooter>
                                     <DialogClose asChild>
-                                         <Button type="submit">Withdraw</Button>
+                                         <Button type="submit" onClick={handleWithdrawBalance}>Withdraw</Button>
                                     </DialogClose>
                                 </DialogFooter>
                             </DialogContent>
@@ -156,19 +164,21 @@ export default function MyBalancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {balanceHistory.map((item, index) => (
+                                    {currentUserHistory.length > 0 ? currentUserHistory.map((item, index) => (
                                         <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                            <TableCell className="font-medium">{item.date}</TableCell>
+                                            <TableCell className="font-medium">{new Date(item.date).toLocaleDateString()}</TableCell>
                                             <TableCell>{item.description}</TableCell>
                                             <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
-                                                {item.type === 'Credit' ? '+' : '-'}₹{item.amount}
+                                                {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    )) : <TableRow><TableCell colSpan={3} className="text-center">No transaction history.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </ScrollArea>
                     </CardContent>
                 </Card>
             </div>
-        
+        </div>
+    )
+}

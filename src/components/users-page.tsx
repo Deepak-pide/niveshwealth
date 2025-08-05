@@ -6,51 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useData } from "@/hooks/use-data";
 
-const users = [
-    {
-        id: 1,
-        name: "Ramesh Patel",
-        email: "ramesh.patel@example.com",
-        avatar: "/placeholder-user.jpg",
-        joinDate: "2023-01-15",
-        totalInvestment: "1,50,000",
-        balance: "55,000",
-        totalFDs: 3,
-    },
-    {
-        id: 2,
-        name: "Sunita Reddy",
-        email: "sunita.reddy@example.com",
-        avatar: "/placeholder-user.jpg",
-        joinDate: "2023-02-20",
-        totalInvestment: "2,75,000",
-        balance: "75,000",
-        totalFDs: 5,
-    },
-    {
-        id: 3,
-        name: "Vijay Verma",
-        email: "vijay.verma@example.com",
-        avatar: "/placeholder-user.jpg",
-        joinDate: "2023-03-10",
-        totalInvestment: "95,000",
-        balance: "1,20,000",
-        totalFDs: 2,
-    },
-    {
-        id: 4,
-        name: "Priya Sharma",
-        email: "priya.sharma@example.com",
-        avatar: "/placeholder-user.jpg",
-        joinDate: "2023-04-05",
-        totalInvestment: "5,00,000",
-        balance: "30,000",
-        totalFDs: 8,
-    },
-];
 
 export default function UsersPage() {
+    const { users, investments, userBalances } = useData();
+
     return (
         <div className="container mx-auto p-4 md:p-8">
             <header className="mb-6">
@@ -73,7 +34,13 @@ export default function UsersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.map((user) => (
+                            {users.map((user) => {
+                                const userInvestments = investments.filter(inv => inv.userId === user.id);
+                                const totalInvestment = userInvestments.reduce((acc, inv) => acc + inv.amount, 0);
+                                const userBalance = userBalances.find(bal => bal.userId === user.id)?.balance || 0;
+                                const totalFDs = userInvestments.length;
+
+                                return(
                                 <TableRow key={user.id}>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
@@ -103,22 +70,22 @@ export default function UsersPage() {
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Total Balance:</span>
-                                                        <span className="font-semibold">₹{user.balance}</span>
+                                                        <span className="font-semibold">₹{userBalance.toLocaleString('en-IN')}</span>
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Total Investment:</span>
-                                                        <span className="font-semibold">₹{user.totalInvestment}</span>
+                                                        <span className="font-semibold">₹{totalInvestment.toLocaleString('en-IN')}</span>
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Total FDs:</span>
-                                                        <span className="font-semibold">{user.totalFDs}</span>
+                                                        <span className="font-semibold">{totalFDs}</span>
                                                     </div>
                                                 </div>
                                             </DialogContent>
                                         </Dialog>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </CardContent>

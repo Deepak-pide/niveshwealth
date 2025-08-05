@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -7,203 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { differenceInYears, parse } from 'date-fns';
-import { useAuth } from "@/hooks/use-auth";
+import { differenceInYears, parseISO, format } from 'date-fns';
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { useData } from "@/hooks/use-data";
+import { useToast } from "@/hooks/use-toast";
 
-const investments = [
-    {
-        id: 1,
-        name: "SBI Fixed Deposit",
-        amount: "50,000",
-        interestRate: "7.00%",
-        startDate: "24 Jul 2024",
-        maturityDate: "24 Jul 2029",
-        status: "Active"
-    },
-    {
-        id: 2,
-        name: "HDFC Fixed Deposit",
-        amount: "1,00,000",
-        interestRate: "7.25%",
-        startDate: "15 Aug 2023",
-        maturityDate: "15 Aug 2028",
-        status: "Active"
-    },
-    {
-        id: 3,
-        name: "Post Office TD",
-        amount: "25,000",
-        interestRate: "7.14%",
-        startDate: "01 Jan 2021",
-        maturityDate: "01 Jan 2026",
-        status: "Matured"
-    },
-    {
-        id: 4,
-        name: "ICICI Bank FD",
-        amount: "75,000",
-        interestRate: "7.10%",
-        startDate: "10 Feb 2022",
-        maturityDate: "10 Feb 2027",
-        status: "Active"
-    },
-    {
-        id: 5,
-        name: "Axis Bank FD",
-        amount: "1,25,000",
-        interestRate: "7.05%",
-        startDate: "05 Mar 2020",
-        maturityDate: "05 Mar 2025",
-        status: "Matured"
-    },
-    {
-        id: 6,
-        name: "Kotak Mahindra Bank FD",
-        amount: "30,000",
-        interestRate: "6.90%",
-        startDate: "12 Apr 2023",
-        maturityDate: "12 Apr 2028",
-        status: "Active"
-    },
-    {
-        id: 7,
-        name: "IndusInd Bank FD",
-        amount: "2,00,000",
-        interestRate: "7.50%",
-        startDate: "20 May 2020",
-        maturityDate: "20 May 2030",
-        status: "Active"
-    },
-    {
-        id: 8,
-        name: "Yes Bank FD",
-        amount: "40,000",
-        interestRate: "7.30%",
-        startDate: "18 Jun 2019",
-        maturityDate: "18 Jun 2024",
-        status: "Matured"
-    },
-    {
-        id: 9,
-        name: "Punjab National Bank FD",
-        amount: "60,000",
-        interestRate: "6.80%",
-        startDate: "25 Jul 2021",
-        maturityDate: "25 Jul 2026",
-        status: "Active"
-    },
-    {
-        id: 10,
-        name: "Bank of Baroda FD",
-        amount: "80,000",
-        interestRate: "6.85%",
-        startDate: "30 Aug 2022",
-        maturityDate: "30 Aug 2027",
-        status: "Active"
-    },
-    {
-        id: 11,
-        name: "Canara Bank FD",
-        amount: "90,000",
-        interestRate: "6.75%",
-        startDate: "14 Sep 2020",
-        maturityDate: "14 Sep 2025",
-        status: "Matured"
-    },
-    {
-        id: 12,
-        name: "Union Bank of India FD",
-        amount: "1,10,000",
-        interestRate: "6.70%",
-        startDate: "22 Oct 2023",
-        maturityDate: "22 Oct 2028",
-        status: "Active"
-    },
-    {
-        id: 13,
-        name: "IDFC First Bank FD",
-        amount: "1,50,000",
-        interestRate: "7.40%",
-        startDate: "11 Nov 2024",
-        maturityDate: "11 Nov 2029",
-        status: "Active"
-    },
-    {
-        id: 14,
-        name: "RBL Bank FD",
-        amount: "35,000",
-        interestRate: "7.60%",
-        startDate: "08 Dec 2019",
-        maturityDate: "08 Dec 2024",
-        status: "Matured"
-    },
-    {
-        id: 15,
-        name: "Federal Bank FD",
-        amount: "45,000",
-        interestRate: "7.15%",
-        startDate: "19 Jan 2021",
-        maturityDate: "19 Jan 2026",
-        status: "Active"
-    },
-    {
-        id: 16,
-        name: "South Indian Bank FD",
-        amount: "55,000",
-        interestRate: "7.00%",
-        startDate: "23 Feb 2022",
-        maturityDate: "23 Feb 2027",
-        status: "Active"
-    },
-    {
-        id: 17,
-        name: "Bandhan Bank FD",
-        amount: "65,000",
-        interestRate: "7.20%",
-        startDate: "16 Mar 2020",
-        maturityDate: "16 Mar 2025",
-        status: "Matured"
-    },
-    {
-        id: 18,
-        name: "DCB Bank FD",
-        amount: "85,000",
-        interestRate: "7.55%",
-        startDate: "14 Apr 2020",
-        maturityDate: "14 Apr 2030",
-        status: "Active"
-    },
-    {
-        id: 19,
-        name: "City Union Bank FD",
-        amount: "95,000",
-        interestRate: "6.95%",
-        startDate: "29 May 2023",
-        maturityDate: "29 May 2028",
-        status: "Active"
-    },
-    {
-        id: 20,
-        name: "Karur Vysya Bank FD",
-        amount: "1,05,000",
-        interestRate: "7.00%",
-        startDate: "07 Jul 2021",
-        maturityDate: "07 Jul 2026",
-        status: "Active"
-    }
-];
-
-const activeInvestments = investments.filter(inv => inv.status === 'Active');
-const maturedInvestments = investments.filter(inv => inv.status === 'Matured');
-
-const parseDate = (dateStr: string) => parse(dateStr, 'dd MMM yyyy', new Date());
-
-const calculateInvestmentDetails = (investment: typeof investments[0], customRate?: number) => {
-    const principal = parseFloat(investment.amount.replace(/,/g, ''));
-    const rate = customRate || parseFloat(investment.interestRate) / 100;
-    const years = differenceInYears(parseDate(investment.maturityDate), parseDate(investment.startDate));
+const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: string, maturityDate: string }, customRate?: number) => {
+    const principal = investment.amount;
+    const rate = customRate || investment.interestRate;
+    const years = differenceInYears(parseISO(investment.maturityDate), parseISO(investment.startDate));
     const totalInterest = principal * rate * years;
     const totalValue = principal + totalInterest;
 
@@ -214,21 +27,47 @@ const calculateInvestmentDetails = (investment: typeof investments[0], customRat
     };
 };
 
-const COLORS = ['#3b82f6', 'hsl(var(--primary))'];
+const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 
 export default function InvestmentsPage() {
-    const { user } = useAuth();
+    const { investments, addFdRequest } = useData();
+    const { toast } = useToast();
+    
+    // Mock user ID as auth is removed
+    const mockUserId = 'user1';
 
-    if (!user) {
-        return (
-            <div className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center text-center h-full animate-fade-in">
-                <Lock className="h-16 w-16 text-primary mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-                <p className="text-muted-foreground mb-4">Please log in to view your investments.</p>
-                {/* The login button is in the header, so no need to add another one here. */}
-            </div>
-        );
-    }
+    const userInvestments = investments.filter(inv => inv.userId === mockUserId);
+    const activeInvestments = userInvestments.filter(inv => inv.status === 'Active');
+    const maturedInvestments = userInvestments.filter(inv => inv.status === 'Matured');
+    
+    const handleWithdraw = (investmentId: number) => {
+        const investment = investments.find(inv => inv.id === investmentId);
+        if (!investment) return;
+
+        const mockUser = {
+            uid: mockUserId,
+            displayName: "Ramesh Patel",
+            email: "ramesh.patel@example.com",
+            photoURL: "/placeholder-user.jpg"
+        }
+
+        addFdRequest({
+            id: Date.now(),
+            userId: mockUser.uid,
+            userName: mockUser.displayName || mockUser.email || 'Unknown User',
+            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            type: "Withdrawal",
+            amount: investment.amount,
+            date: new Date().toISOString().split('T')[0],
+            status: "Pending",
+            investmentIdToWithdraw: investmentId,
+        });
+
+        toast({
+            title: "Withdrawal Request Submitted",
+            description: "Your withdrawal request has been submitted for approval.",
+        });
+    };
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -251,7 +90,7 @@ export default function InvestmentsPage() {
                             </DialogHeader>
                             <ScrollArea className="h-96">
                                 <div className="space-y-4 pr-4">
-                                     {maturedInvestments.map((investment) => (
+                                     {maturedInvestments.length > 0 ? maturedInvestments.map((investment) => (
                                         <Card key={investment.id}>
                                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                                 <CardTitle className="text-base font-medium">{investment.name}</CardTitle>
@@ -261,32 +100,32 @@ export default function InvestmentsPage() {
                                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                                     <div>
                                                         <p className="text-muted-foreground">Amount</p>
-                                                        <p className="font-semibold">₹{investment.amount}</p>
+                                                        <p className="font-semibold">₹{investment.amount.toLocaleString('en-IN')}</p>
                                                     </div>
                                                     <div>
                                                         <p className="text-muted-foreground">Interest Rate</p>
-                                                        <p className="font-semibold">{investment.interestRate}</p>
+                                                        <p className="font-semibold">{(investment.interestRate * 100).toFixed(2)}%</p>
                                                     </div>
                                                     <div>
                                                         <p className="text-muted-foreground">Maturity Date</p>
-                                                        <p className="font-semibold">{investment.maturityDate}</p>
+                                                        <p className="font-semibold">{format(parseISO(investment.maturityDate), 'dd MMM yyyy')}</p>
                                                     </div>
                                                 </div>
                                             </CardContent>
                                         </Card>
-                                    ))}
+                                    )) : <p className="text-muted-foreground text-center">No matured investments found.</p>}
                                 </div>
                             </ScrollArea>
                         </DialogContent>
                     </Dialog>
                 </header>
                 <div className="space-y-4">
-                    {activeInvestments.map((investment) => {
+                    {activeInvestments.length > 0 ? activeInvestments.map((investment) => {
                         const { principal, totalInterest, totalValue } = calculateInvestmentDetails(investment);
                         const penalizedDetails = calculateInvestmentDetails(investment, 0.065);
                         const chartData = [
-                            { name: 'Principal Amount', value: principal },
                             { name: 'Total Interest', value: totalInterest },
+                            { name: 'Principal Amount', value: principal },
                         ];
                         return (
                             <Dialog key={investment.id}>
@@ -300,15 +139,15 @@ export default function InvestmentsPage() {
                                             <div className="grid grid-cols-2 gap-4 text-sm">
                                                 <div>
                                                     <p className="text-muted-foreground">Amount</p>
-                                                    <p className="font-semibold">₹{investment.amount}</p>
+                                                    <p className="font-semibold">₹{investment.amount.toLocaleString('en-IN')}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-muted-foreground">Interest Rate</p>
-                                                    <p className="font-semibold">{investment.interestRate}</p>
+                                                    <p className="font-semibold">{(investment.interestRate * 100).toFixed(2)}%</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-muted-foreground">Maturity Date</p>
-                                                    <p className="font-semibold">{investment.maturityDate}</p>
+                                                    <p className="font-semibold">{format(parseISO(investment.maturityDate), 'dd MMM yyyy')}</p>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -347,7 +186,7 @@ export default function InvestmentsPage() {
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Maturity Date:</span>
-                                                <span className="font-semibold text-foreground">{investment.maturityDate}</span>
+                                                <span className="font-semibold text-foreground">{format(parseISO(investment.maturityDate), 'dd MMM yyyy')}</span>
                                             </div>
                                         </div>
                                         <AlertDialog>
@@ -377,7 +216,7 @@ export default function InvestmentsPage() {
                                                 </div>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction>Confirm Withdrawal</AlertDialogAction>
+                                                    <AlertDialogAction onClick={() => handleWithdraw(investment.id)}>Confirm Withdrawal</AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
@@ -385,7 +224,14 @@ export default function InvestmentsPage() {
                                 </DialogContent>
                             </Dialog>
                         );
-                    })}
+                    }) : (
+                        <Card className="text-center p-8">
+                            <p className="text-muted-foreground">You have no active investments.</p>
+                            <Button asChild className="mt-4">
+                                <Link href="/fd-investment">Make an Investment</Link>
+                            </Button>
+                        </Card>
+                    )}
                 </div>
             </div>
         </div>

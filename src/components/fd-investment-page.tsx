@@ -8,19 +8,49 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { addYears, format } from 'date-fns';
+import { useData } from "@/hooks/use-data";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
-    const [showDialog, setShowDialog] = useState(false);
+    const { addFdRequest } = useData();
+    const { toast } = useToast();
+    const router = useRouter();
+
 
     const fdRate = 0.07;
     const calculatedReturn = amount * fdRate * years;
     const totalAmount = amount + calculatedReturn;
     const maturityDate = addYears(new Date(), years);
 
-    const handleInvestNow = () => {
-        setShowDialog(true);
+    const handleConfirmInvestment = () => {
+        // Mock user ID as auth is removed
+        const mockUserId = 'user1'; 
+        const mockUser = {
+            uid: mockUserId,
+            displayName: "Ramesh Patel",
+            email: "ramesh.patel@example.com",
+            photoURL: "/placeholder-user.jpg"
+        }
+
+        addFdRequest({
+            id: Date.now(),
+            userId: mockUser.uid,
+            userName: mockUser.displayName || mockUser.email || 'Unknown User',
+            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            type: "Investment",
+            amount: amount,
+            date: new Date().toISOString().split('T')[0],
+            years: years,
+            status: "Pending"
+        });
+        toast({
+            title: "Investment Request Submitted",
+            description: "Your FD investment request has been submitted for approval.",
+        });
+        router.push('/investments');
     };
 
     return (
@@ -53,9 +83,9 @@ export default function FdInvestmentPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+                        <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button className="w-full" onClick={handleInvestNow}>Invest Now</Button>
+                                <Button className="w-full">Invest Now</Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -82,8 +112,8 @@ export default function FdInvestmentPage() {
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
-                                     <Button variant="secondary">Nivesh Balance</Button>
-                                     <Button>Pay using UPI</Button>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                     <AlertDialogAction onClick={handleConfirmInvestment}>Confirm</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>

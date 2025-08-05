@@ -13,22 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
-
-const balanceRequests = [
-    { id: 1, userName: "Ramesh Patel", userAvatar: "/placeholder-user.jpg", type: "Add", amount: "10,000", date: "2024-07-31" },
-    { id: 2, userName: "Sunita Reddy", userAvatar: "/placeholder-user.jpg", type: "Withdraw", amount: "5,000", date: "2024-07-30" },
-    { id: 3, userName: "Vijay Verma", userAvatar: "/placeholder-user.jpg", type: "Add", amount: "20,000", date: "2024-07-29" },
-];
-
-const userBalances = [
-    { id: 1, userName: "Ramesh Patel", userAvatar: "/placeholder-user.jpg", balance: 55000 },
-    { id: 2, userName: "Sunita Reddy", userAvatar: "/placeholder-user.jpg", balance: 75000 },
-    { id: 3, userName: "Vijay Verma", userAvatar: "/placeholder-user.jpg", balance: 120000 },
-    { id: 4, userName: "Priya Sharma", userAvatar: "/placeholder-user.jpg", balance: 30000 },
-];
+import { useData } from "@/hooks/use-data";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ManageBalancePage() {
     const [interestRate, setInterestRate] = useState(6);
+    const { balanceRequests, userBalances, approveBalanceRequest, rejectBalanceRequest, payInterestToAll } = useData();
+    const { toast } = useToast();
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
@@ -52,6 +43,13 @@ export default function ManageBalancePage() {
         XLSX.writeFile(workbook, "user_balances.xlsx");
     };
 
+    const handlePayInterest = () => {
+        payInterestToAll(interestRate);
+        toast({
+            title: "Interest Paid",
+            description: `Monthly interest at ${interestRate}% p.a. has been paid to all users.`,
+        });
+    }
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -83,7 +81,7 @@ export default function ManageBalancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {balanceRequests.map((req) => (
+                                    {balanceRequests.length > 0 ? balanceRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -97,14 +95,14 @@ export default function ManageBalancePage() {
                                             <TableCell>
                                                 <Badge variant={req.type === 'Add' ? 'default' : 'destructive'}>{req.type}</Badge>
                                             </TableCell>
-                                            <TableCell>₹{req.amount}</TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{req.date}</TableCell>
                                             <TableCell className="text-right space-x-2">
-                                                <Button variant="outline" size="sm">Reject</Button>
-                                                <Button size="sm">Accept</Button>
+                                                <Button variant="outline" size="sm" onClick={() => rejectBalanceRequest(req.id)}>Reject</Button>
+                                                <Button size="sm" onClick={() => approveBalanceRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    )) : <TableRow><TableCell colSpan={5} className="text-center">No pending requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </CardContent>
@@ -162,7 +160,7 @@ export default function ManageBalancePage() {
                                             </div>
                                         </div>
                                         <DialogFooter>
-                                            <Button type="submit">Confirm Payment</Button>
+                                            <Button type="submit" onClick={handlePayInterest}>Confirm Payment</Button>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>

@@ -11,66 +11,42 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Download } from "lucide-react";
-import { differenceInYears, parseISO, addYears, format } from 'date-fns';
-
-const fdRequests = [
-    { id: 1, userName: "Ravi Kumar", userAvatar: "/placeholder-user.jpg", type: "Investment", amount: "50,000", date: "2024-07-30" },
-    { id: 2, userName: "Priya Sharma", userAvatar: "/placeholder-user.jpg", type: "Withdrawal", amount: "25,000", date: "2024-07-29" },
-    { id: 3, userName: "Amit Singh", userAvatar: "/placeholder-user.jpg", type: "Investment", amount: "1,00,000", date: "2024-07-28" },
-];
-
-const userInvestments = [
-    {
-        id: 1,
-        userName: "Ravi Kumar",
-        userAvatar: "/placeholder-user.jpg",
-        totalInvestment: "2,50,000",
-        activeFDs: [
-            { id: 101, name: "HDFC FD", amount: 100000, maturityDate: "2028-08-15", startDate: "2023-08-15", interestRate: 0.0725 },
-            { id: 102, name: "SBI FD", amount: 150000, maturityDate: "2029-07-24", startDate: "2024-07-24", interestRate: 0.07 },
-        ]
-    },
-    {
-        id: 2,
-        userName: "Priya Sharma",
-        userAvatar: "/placeholder-user.jpg",
-        totalInvestment: "1,75,000",
-        activeFDs: [
-            { id: 201, name: "ICICI FD", amount: 175000, maturityDate: "2027-01-10", startDate: "2022-01-10", interestRate: 0.071 },
-        ]
-    },
-     {
-        id: 3,
-        userName: "Amit Singh",
-        userAvatar: "/placeholder-user.jpg",
-        totalInvestment: "3,00,000",
-        activeFDs: [
-            { id: 301, name: "Axis Bank FD", amount: 300000, maturityDate: "2026-11-20", startDate: "2021-11-20", interestRate: 0.069 },
-        ]
-    },
-];
+import { differenceInYears, parseISO, format } from 'date-fns';
+import { useData } from "@/hooks/use-data";
 
 
 export default function ManageFdPage() {
+    const { fdRequests, investments, users, approveFdRequest, rejectFdRequest } = useData();
+
+    const userInvestments = users.map(user => {
+        const userFDs = investments.filter(inv => inv.userId === user.id);
+        const totalInvestment = userFDs.reduce((acc, fd) => acc + fd.amount, 0);
+        return {
+            id: user.id,
+            userName: user.name,
+            userAvatar: user.avatar,
+            totalInvestment: totalInvestment,
+            activeFDs: userFDs.filter(fd => fd.status === 'Active')
+        }
+    });
 
     const handleDownload = () => {
         const title = "USER INVESTMENTS";
-        const flattenedData = userInvestments.flatMap(user =>
-            user.activeFDs.map(fd => {
-                const startDate = parseISO(fd.startDate);
-                const maturityDate = parseISO(fd.maturityDate);
-                const years = differenceInYears(maturityDate, startDate);
-                const totalValue = fd.amount * (1 + fd.interestRate * years);
+        const flattenedData = investments.map(fd => {
+            const user = users.find(u => u.id === fd.userId);
+            const startDate = parseISO(fd.startDate);
+            const maturityDate = parseISO(fd.maturityDate);
+            const years = differenceInYears(maturityDate, startDate);
+            const totalValue = fd.amount * (1 + fd.interestRate * years);
 
-                return {
-                    'User': user.userName,
-                    'Amount': `₹${fd.amount.toLocaleString('en-IN')}`,
-                    'Year': years,
-                    'Maturity Date': format(maturityDate, 'yyyy-MM-dd'),
-                    'Total Value': `₹${totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                };
-            })
-        );
+            return {
+                'User': user ? user.name : 'Unknown',
+                'Amount': `₹${fd.amount.toLocaleString('en-IN')}`,
+                'Year': years,
+                'Maturity Date': format(maturityDate, 'yyyy-MM-dd'),
+                'Total Value': `₹${totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            };
+        });
 
         const worksheet = XLSX.utils.json_to_sheet([]);
         XLSX.utils.sheet_add_aoa(worksheet, [[title]], { origin: "A1" });
@@ -112,7 +88,7 @@ export default function ManageFdPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {fdRequests.map((req) => (
+                                    {fdRequests.length > 0 ? fdRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -126,14 +102,14 @@ export default function ManageFdPage() {
                                             <TableCell>
                                                 <Badge variant={req.type === 'Investment' ? 'default' : 'destructive'}>{req.type}</Badge>
                                             </TableCell>
-                                            <TableCell>₹{req.amount}</TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{req.date}</TableCell>
                                             <TableCell className="text-right space-x-2">
-                                                <Button variant="outline" size="sm">Reject</Button>
-                                                <Button size="sm">Accept</Button>
+                                                <Button variant="outline" size="sm" onClick={() => rejectFdRequest(req.id)}>Reject</Button>
+                                                <Button size="sm" onClick={() => approveFdRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    )) : <TableRow><TableCell colSpan={5} className="text-center">No pending requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </CardContent>
@@ -172,11 +148,11 @@ export default function ManageFdPage() {
                                                     <span className="font-medium">{user.userName}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>₹{user.totalInvestment}</TableCell>
+                                            <TableCell>₹{user.totalInvestment.toLocaleString('en-IN')}</TableCell>
                                             <TableCell className="text-right">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button variant="outline" size="sm">View</Button>
+                                                        <Button variant="outline" size="sm" disabled={user.activeFDs.length === 0}>View</Button>
                                                     </AlertDialogTrigger>
                                                     <AlertDialogContent>
                                                         <AlertDialogHeader>
@@ -196,7 +172,7 @@ export default function ManageFdPage() {
                                                                         <TableRow key={fd.id}>
                                                                             <TableCell>{fd.name}</TableCell>
                                                                             <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
-                                                                            <TableCell>{fd.maturityDate}</TableCell>
+                                                                            <TableCell>{format(parseISO(fd.maturityDate), 'dd MMM yyyy')}</TableCell>
                                                                         </TableRow>
                                                                     ))}
                                                                 </TableBody>
