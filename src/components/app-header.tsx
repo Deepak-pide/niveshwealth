@@ -6,8 +6,21 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { LineChart } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function AppHeader() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith('/admin');
+
+  const handleSwitchChange = (checked: boolean) => {
+    if (checked) {
+      router.push('/admin');
+    } else {
+      router.push('/');
+    }
+  };
+
   return (
     <header className="shrink-0 border-b bg-card">
       <div className="container mx-auto px-4">
@@ -21,7 +34,11 @@ export default function AppHeader() {
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
               <Label htmlFor="role-switch">User</Label>
-              <Switch id="role-switch" />
+              <Switch
+                id="role-switch"
+                checked={isAdmin}
+                onCheckedChange={handleSwitchChange}
+              />
               <Label htmlFor="role-switch">Admin</Label>
             </div>
             <Button>Login</Button>
