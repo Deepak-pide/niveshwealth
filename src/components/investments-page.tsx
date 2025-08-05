@@ -211,7 +211,7 @@ const calculateInvestmentDetails = (investment: typeof investments[0]) => {
     };
 };
 
-const COLORS = ['hsl(var(--secondary))', 'hsl(var(--primary))'];
+const COLORS = ['#3b82f6', 'hsl(var(--primary))'];
 
 export default function InvestmentsPage() {
     return (
