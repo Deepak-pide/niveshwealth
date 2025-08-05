@@ -40,7 +40,7 @@ export default function FdInvestmentPage() {
             return;
         }
 
-        const transactionNote = `FD Investment for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
+        const transactionNote = `FD for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
         
         if (isMobile) {
             const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;

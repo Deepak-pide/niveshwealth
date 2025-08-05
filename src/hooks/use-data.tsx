@@ -26,7 +26,6 @@ interface InvestmentRequest {
     years: number;
     date: string; // ISO string
     status: 'Pending';
-    investmentId: number;
 }
 
 interface FdWithdrawalRequest {
@@ -97,7 +96,7 @@ interface DataContextType {
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'investmentId' | 'investmentId'>) => void;
+    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status'>) => void;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status'>) => void;
     approveInvestmentRequest: (requestId: number) => void;
     rejectInvestmentRequest: (requestId: number) => void;
@@ -172,26 +171,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [user, users]);
 
-    const addInvestmentRequest = (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'investmentId'>) => {
-        const newInvestmentId = Date.now();
-        const newInvestment: Investment = {
-            id: newInvestmentId,
-            userId: requestData.userId,
-            name: "New Fixed Deposit",
-            amount: requestData.amount,
-            interestRate: 0.09, // Standard rate for new FDs
-            startDate: new Date().toISOString(),
-            maturityDate: addYears(new Date(), requestData.years).toISOString(),
-            status: 'Pending',
-        };
-        setInvestments(prev => [...prev, newInvestment]);
-
-        const newRequest: InvestmentRequest = {
-            ...requestData,
-            id: Date.now() + 1,
-            status: 'Pending',
-            investmentId: newInvestmentId,
-        };
+    const addInvestmentRequest = (requestData: Omit<InvestmentRequest, 'id' | 'status'>) => {
+        const newRequest: InvestmentRequest = { ...requestData, id: Date.now(), status: 'Pending' };
         setInvestmentRequests(prev => [...prev, newRequest]);
     };
 
@@ -204,17 +185,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const request = investmentRequests.find(r => r.id === requestId);
         if (!request) return;
 
-        setInvestments(prev => prev.map(inv =>
-            inv.id === request.investmentId ? { ...inv, status: 'Active' } : inv
-        ));
+        const newInvestment: Investment = {
+            id: Date.now() + 1,
+            userId: request.userId,
+            name: `FD for ${request.years} years`,
+            amount: request.amount,
+            interestRate: 0.09, 
+            startDate: new Date().toISOString(),
+            maturityDate: addYears(new Date(), request.years).toISOString(),
+            status: 'Active',
+        };
+        setInvestments(prev => [...prev, newInvestment]);
         setInvestmentRequests(prev => prev.filter(r => r.id !== requestId));
     };
 
     const rejectInvestmentRequest = (requestId: number) => {
-        const request = investmentRequests.find(r => r.id === requestId);
-        if (request) {
-            setInvestments(prev => prev.filter(inv => inv.id !== request.investmentId));
-        }
         setInvestmentRequests(prev => prev.filter(r => r.id !== requestId));
     };
 
