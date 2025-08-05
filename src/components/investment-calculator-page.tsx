@@ -59,16 +59,18 @@ export default function InvestmentCalculatorPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-6 py-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="amount">Amount</Label>
-                                <Input
-                                    id="amount"
-                                    type="number"
-                                    value={amount}
-                                    onChange={(e) => setAmount(Math.min(Number(e.target.value), 50000))}
-                                    className="w-full"
-                                    max="50000"
-                                />
+                            <div className="grid gap-4">
+                                <div className="flex items-center gap-4">
+                                    <Label htmlFor="amount" className="w-20">Amount</Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        value={amount}
+                                        onChange={(e) => setAmount(Math.min(Number(e.target.value), 50000))}
+                                        className="w-full"
+                                        max="50000"
+                                    />
+                                </div>
                                 <Slider
                                     value={[amount]}
                                     onValueChange={(value) => setAmount(value[0])}
@@ -80,16 +82,18 @@ export default function InvestmentCalculatorPage() {
                                     <span>₹50,000</span>
                                 </div>
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="years">Years</Label>
-                                <Input
-                                    id="years"
-                                    type="number"
-                                    value={years}
-                                    onChange={(e) => setYears(Math.min(Number(e.target.value), 5))}
-                                    className="w-full"
-                                    max="5"
-                                />
+                            <div className="grid gap-4">
+                                <div className="flex items-center gap-4">
+                                    <Label htmlFor="years" className="w-20">Years</Label>
+                                    <Input
+                                        id="years"
+                                        type="number"
+                                        value={years}
+                                        onChange={(e) => setYears(Math.min(Number(e.target.value), 5))}
+                                        className="w-full"
+                                        max="5"
+                                    />
+                                </div>
                                 <Slider
                                     value={[years]}
                                     onValueChange={(value) => setYears(value[0])}
