@@ -11,6 +11,7 @@ import { addYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
@@ -18,6 +19,7 @@ export default function FdInvestmentPage() {
     const { addFdRequest } = useData();
     const { toast } = useToast();
     const router = useRouter();
+    const { user } = useAuth();
 
 
     const fdRate = 0.07;
@@ -26,30 +28,37 @@ export default function FdInvestmentPage() {
     const maturityDate = addYears(new Date(), years);
 
     const handleConfirmInvestment = () => {
-        // Mock user ID as auth is removed
-        const mockUserId = 'user1'; 
-        const mockUser = {
-            uid: mockUserId,
-            displayName: "Ramesh Patel",
-            email: "ramesh.patel@example.com",
-            photoURL: "/placeholder-user.jpg"
+        if (!user) {
+            toast({
+                title: "Authentication Error",
+                description: "You must be logged in to make an investment.",
+                variant: "destructive",
+            });
+            return;
         }
+
+        const transactionNote = `FD Investment for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
+        const upiUrl = `upi://pay?pa=payee@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+        
+        window.open(upiUrl, '_blank');
 
         addFdRequest({
             id: Date.now(),
-            userId: mockUser.uid,
-            userName: mockUser.displayName || mockUser.email || 'Unknown User',
-            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            userId: user.uid,
+            userName: user.displayName || user.email || 'Unknown User',
+            userAvatar: user.photoURL || "/placeholder-user.jpg",
             type: "Investment",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
             years: years,
             status: "Pending"
         });
+
         toast({
             title: "Investment Request Submitted",
             description: "Your FD investment request has been submitted for approval.",
         });
+
         router.push('/investments');
     };
 
@@ -108,12 +117,15 @@ export default function FdInvestmentPage() {
                                                 <span className="text-muted-foreground">Maturity Date:</span>
                                                 <span className="font-semibold text-foreground">{format(maturityDate, 'PPP')}</span>
                                             </div>
+                                             <div className="pt-4 text-center text-muted-foreground">
+                                                You will be redirected to your UPI app to complete the payment.
+                                            </div>
                                         </div>
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                     <AlertDialogAction onClick={handleConfirmInvestment}>Confirm</AlertDialogAction>
+                                     <AlertDialogAction onClick={handleConfirmInvestment}>Pay using UPI</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>

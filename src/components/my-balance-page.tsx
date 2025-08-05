@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
 
 export default function MyBalancePage() {
@@ -19,18 +21,21 @@ export default function MyBalancePage() {
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const { userBalances, balanceHistory, addBalanceRequest } = useData();
     const { toast } = useToast();
+    const { user } = useAuth();
 
-    // Mock user ID as auth is removed
-    const mockUserId = 'user1'; 
-    const mockUser = {
-        uid: mockUserId,
-        displayName: "Ramesh Patel",
-        email: "ramesh.patel@example.com",
-        photoURL: "/placeholder-user.jpg"
+    if (!user) {
+        return (
+             <div className="container mx-auto p-4 md:p-8 animate-fade-in text-center">
+                <p>Please log in to view your balance.</p>
+                 <Button asChild className="mt-4">
+                    <Link href="/login">Login</Link>
+                </Button>
+            </div>
+        )
     }
 
-    const currentUserBalance = userBalances.find(b => b.userId === mockUserId)?.balance || 0;
-    const currentUserHistory = balanceHistory.filter(h => h.userId === mockUserId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const currentUserBalance = userBalances.find(b => b.userId === user.uid)?.balance || 0;
+    const currentUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const handleAddBalance = () => {
         const amount = parseFloat(addAmount);
@@ -38,11 +43,16 @@ export default function MyBalancePage() {
             toast({ title: "Invalid amount", description: "Please enter a valid amount to add.", variant: "destructive" });
             return;
         }
+
+        const transactionNote = "Add to Nivesh Wallet";
+        const upiUrl = `upi://pay?pa=payee@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+        window.open(upiUrl, '_blank');
+
         addBalanceRequest({
             id: Date.now(),
-            userId: mockUser.uid,
-            userName: mockUser.displayName || mockUser.email || 'Unknown User',
-            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            userId: user.uid,
+            userName: user.displayName || user.email || 'Unknown User',
+            userAvatar: user.photoURL || "/placeholder-user.jpg",
             type: "Add",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
@@ -64,9 +74,9 @@ export default function MyBalancePage() {
         }
         addBalanceRequest({
             id: Date.now(),
-            userId: mockUser.uid,
-            userName: mockUser.displayName || mockUser.email || 'Unknown User',
-            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            userId: user.uid,
+            userName: user.displayName || user.email || 'Unknown User',
+            userAvatar: user.photoURL || "/placeholder-user.jpg",
             type: "Withdraw",
             amount: amount,
             date: new Date().toISOString().split('T')[0],

@@ -12,6 +12,7 @@ import { differenceInYears, parseISO, format } from 'date-fns';
 import Link from "next/link";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: string, maturityDate: string }, customRate?: number) => {
     const principal = investment.amount;
@@ -32,30 +33,32 @@ const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 export default function InvestmentsPage() {
     const { investments, addFdRequest } = useData();
     const { toast } = useToast();
+    const { user } = useAuth();
     
-    // Mock user ID as auth is removed
-    const mockUserId = 'user1';
+    if (!user) {
+        return (
+             <div className="container mx-auto p-4 md:p-8 animate-fade-in text-center">
+                <p>Please log in to view your investments.</p>
+                 <Button asChild className="mt-4">
+                    <Link href="/login">Login</Link>
+                </Button>
+            </div>
+        )
+    }
 
-    const userInvestments = investments.filter(inv => inv.userId === mockUserId);
+    const userInvestments = investments.filter(inv => inv.userId === user.uid);
     const activeInvestments = userInvestments.filter(inv => inv.status === 'Active');
-    const maturedInvestments = userInvestments.filter(inv => inv.status === 'Matured');
+    const maturedInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
     
     const handleWithdraw = (investmentId: number) => {
         const investment = investments.find(inv => inv.id === investmentId);
-        if (!investment) return;
-
-        const mockUser = {
-            uid: mockUserId,
-            displayName: "Ramesh Patel",
-            email: "ramesh.patel@example.com",
-            photoURL: "/placeholder-user.jpg"
-        }
+        if (!investment || !user) return;
 
         addFdRequest({
             id: Date.now(),
-            userId: mockUser.uid,
-            userName: mockUser.displayName || mockUser.email || 'Unknown User',
-            userAvatar: mockUser.photoURL || "/placeholder-user.jpg",
+            userId: user.uid,
+            userName: user.displayName || user.email || 'Unknown User',
+            userAvatar: user.photoURL || "/placeholder-user.jpg",
             type: "Withdrawal",
             amount: investment.amount,
             date: new Date().toISOString().split('T')[0],
@@ -85,7 +88,7 @@ export default function InvestmentsPage() {
                             <DialogHeader>
                                 <DialogTitle>Investment History</DialogTitle>
                                 <DialogDescription>
-                                    Here is a list of your matured investments.
+                                    Here is a list of your matured and withdrawn investments.
                                 </DialogDescription>
                             </DialogHeader>
                             <ScrollArea className="h-96">
@@ -94,7 +97,7 @@ export default function InvestmentsPage() {
                                         <Card key={investment.id}>
                                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                                 <CardTitle className="text-base font-medium">{investment.name}</CardTitle>
-                                                <Badge variant='secondary'>{investment.status}</Badge>
+                                                <Badge variant={investment.status === 'Matured' ? 'secondary' : 'destructive'}>{investment.status}</Badge>
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="grid grid-cols-2 gap-4 text-sm">
