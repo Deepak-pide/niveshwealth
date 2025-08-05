@@ -10,10 +10,10 @@ export default function AppFooter() {
             <Home className="h-6 w-6" />
             <span className="text-xs font-medium">Home</span>
           </Link>
-          <a href="#" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
+          <Link href="/fd-investment" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
             <TrendingUp className="h-6 w-6" />
             <span className="text-xs font-medium">FD</span>
-          </a>
+          </Link>
           <a href="#" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
             <Wallet className="h-6 w-6" />
             <span className="text-xs font-medium">My Balance</span>
