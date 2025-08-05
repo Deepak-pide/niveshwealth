@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Download } from "lucide-react";
 import { differenceInYears, parseISO, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
@@ -258,14 +259,14 @@ export default function ManageFdPage() {
                                             </TableCell>
                                             <TableCell>₹{user.totalInvestment.toLocaleString('en-IN')}</TableCell>
                                             <TableCell className="text-right">
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
                                                         <Button variant="outline" size="sm" disabled={user.activeFDs.length === 0}>View</Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>{user.userName}'s Active FDs</AlertDialogTitle>
-                                                        </AlertDialogHeader>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>{user.userName}'s Active FDs</DialogTitle>
+                                                        </DialogHeader>
                                                         <div className="py-4">
                                                             <Table>
                                                                 <TableHeader>
@@ -286,11 +287,13 @@ export default function ManageFdPage() {
                                                                 </TableBody>
                                                             </Table>
                                                         </div>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogAction>Close</AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
+                                                        <DialogFooter>
+                                                            <DialogClose asChild>
+                                                                <Button>Close</Button>
+                                                            </DialogClose>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
                                             </TableCell>
                                         </TableRow>
                                     ))}
