@@ -3,6 +3,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { addYears, format, parseISO, differenceInYears } from 'date-fns';
+import { useAuth } from './use-auth';
 
 // Types
 interface Investment {
@@ -13,7 +14,7 @@ interface Investment {
     interestRate: number;
     startDate: string; // ISO string
     maturityDate: string; // ISO string
-    status: 'Active' | 'Matured' | 'Withdrawn';
+    status: 'Active' | 'Matured' | 'Withdrawn' | 'Pending';
 }
 
 interface FDRequest {
@@ -26,6 +27,7 @@ interface FDRequest {
     date: string; // ISO string
     status: 'Pending' | 'Approved' | 'Rejected';
     years?: number;
+    investmentId?: number; // The ID of the investment this request is for
     investmentIdToWithdraw?: number;
 }
 
@@ -74,7 +76,7 @@ interface DataContextType {
     balanceRequests: BalanceRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    addFdRequest: (request: FDRequest) => void;
+    addFdRequest: (requestData: Omit<FDRequest, 'id' | 'investmentId'> & { years: number }) => void;
     approveFdRequest: (requestId: number) => void;
     rejectFdRequest: (requestId: number) => void;
     removeInvestment: (investmentId: number) => void;
@@ -113,6 +115,7 @@ const MOCK_BALANCE_HISTORY: BalanceHistory[] = [
 
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
+    const { user } = useAuth();
     const [users, setUsers] = useState<AppUser[]>(MOCK_USERS);
     const [investments, setInvestments] = useState<Investment[]>(MOCK_INVESTMENTS);
     const [fdRequests, setFdRequests] = useState<FDRequest[]>([]);
@@ -120,36 +123,69 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [userBalances, setUserBalances] = useState<UserBalance[]>(MOCK_USER_BALANCES);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>(MOCK_BALANCE_HISTORY);
 
-    const addFdRequest = (request: FDRequest) => {
-        setFdRequests(prev => [...prev, request]);
+    // This effect ensures a user profile exists in the mock DB when they log in.
+    useEffect(() => {
+        if (user && !users.find(u => u.id === user.uid)) {
+            const newUser: AppUser = {
+                id: user.uid,
+                name: user.displayName || "New User",
+                email: user.email || "",
+                avatar: user.photoURL || "/placeholder-user.jpg",
+                joinDate: new Date().toISOString().split('T')[0],
+            };
+            const newUserBalance: UserBalance = {
+                id: Date.now(),
+                userId: user.uid,
+                userName: user.displayName || "New User",
+                userAvatar: user.photoURL || "/placeholder-user.jpg",
+                balance: 0,
+            };
+            setUsers(prev => [...prev, newUser]);
+            setUserBalances(prev => [...prev, newUserBalance]);
+        }
+    }, [user, users]);
+
+    const addFdRequest = (requestData: Omit<FDRequest, 'id' | 'investmentId'> & { years: number }) => {
+        const newInvestmentId = Date.now();
+        const newInvestment: Investment = {
+            id: newInvestmentId,
+            userId: requestData.userId,
+            name: "New Fixed Deposit",
+            amount: requestData.amount,
+            interestRate: 0.07,
+            startDate: new Date().toISOString(),
+            maturityDate: addYears(new Date(), requestData.years).toISOString(),
+            status: 'Pending',
+        };
+        setInvestments(prev => [...prev, newInvestment]);
+
+        const newRequest: FDRequest = {
+            ...requestData,
+            id: Date.now() + 1,
+            investmentId: newInvestmentId,
+        };
+        setFdRequests(prev => [...prev, newRequest]);
     };
 
     const approveFdRequest = (requestId: number) => {
         const request = fdRequests.find(r => r.id === requestId);
         if (!request) return;
 
-        if (request.type === "Investment") {
-            const userBalance = userBalances.find(b => b.userId === request.userId);
+        if (request.type === "Investment" && request.investmentId) {
+             const userBalance = userBalances.find(b => b.userId === request.userId);
             if (!userBalance || userBalance.balance < request.amount) {
-                // Optionally: handle insufficient balance
-                setFdRequests(prev => prev.filter(r => r.id !== requestId));
+                // Optionally: handle insufficient balance by rejecting
+                rejectFdRequest(requestId);
                 return;
             }
 
-            const newInvestment: Investment = {
-                id: Date.now(),
-                userId: request.userId,
-                name: "New Fixed Deposit", // Or generate a better name
-                amount: request.amount,
-                interestRate: 0.07, // Default rate
-                startDate: new Date().toISOString(),
-                maturityDate: addYears(new Date(), request.years || 5).toISOString(),
-                status: 'Active',
-            };
-            setInvestments(prev => [...prev, newInvestment]);
-            // Deduct from balance
+            setInvestments(prev => prev.map(inv =>
+                inv.id === request.investmentId ? { ...inv, status: 'Active' } : inv
+            ));
+            
+             // Deduct from balance
             setUserBalances(prev => prev.map(b => b.userId === request.userId ? { ...b, balance: b.balance - request.amount } : b));
-            setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Investment #${newInvestment.id}`, amount: request.amount, type: "Debit" }]);
+            setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Investment #${request.investmentId}`, amount: request.amount, type: "Debit" }]);
 
         } else if (request.type === "Withdrawal" && request.investmentIdToWithdraw) {
             const investment = investments.find(inv => inv.id === request.investmentIdToWithdraw);
@@ -172,6 +208,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const rejectFdRequest = (requestId: number) => {
+        const request = fdRequests.find(r => r.id === requestId);
+        if (request && request.investmentId) {
+            setInvestments(prev => prev.filter(inv => inv.id !== request.investmentId));
+        }
         setFdRequests(prev => prev.filter(r => r.id !== requestId));
     };
     

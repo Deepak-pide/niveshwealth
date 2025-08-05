@@ -47,7 +47,7 @@ export default function InvestmentsPage() {
     }
 
     const userInvestments = investments.filter(inv => inv.userId === user.uid);
-    const activeInvestments = userInvestments.filter(inv => inv.status === 'Active');
+    const activeInvestments = userInvestments.filter(inv => inv.status === 'Active' || inv.status === 'Pending');
     const maturedInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
     
     const handleWithdraw = (investmentId: number) => {
@@ -130,13 +130,16 @@ export default function InvestmentsPage() {
                             { name: 'Total Interest', value: totalInterest },
                             { name: 'Principal Amount', value: principal },
                         ];
+                        
+                        const isPending = investment.status === 'Pending';
+                        
                         return (
                             <Dialog key={investment.id}>
-                                <DialogTrigger asChild>
-                                     <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer">
+                                <DialogTrigger asChild disabled={isPending}>
+                                     <Card className={`transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                                             <CardTitle className="text-lg font-medium">{investment.name}</CardTitle>
-                                            <Badge>{investment.status}</Badge>
+                                            <Badge variant={isPending ? "secondary" : "default"}>{investment.status}</Badge>
                                         </CardHeader>
                                         <CardContent>
                                             <div className="grid grid-cols-2 gap-4 text-sm">

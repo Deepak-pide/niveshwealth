@@ -47,7 +47,6 @@ export default function FdInvestmentPage() {
         }
 
         addFdRequest({
-            id: Date.now(),
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",
