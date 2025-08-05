@@ -33,7 +33,7 @@ const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 const ITEMS_PER_PAGE = 5;
 
 export default function InvestmentsPage() {
-    const { investments, addFdRequest } = useData();
+    const { investments, addFdWithdrawalRequest } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
@@ -58,15 +58,12 @@ export default function InvestmentsPage() {
         const investment = investments.find(inv => inv.id === investmentId);
         if (!investment || !user) return;
 
-        addFdRequest({
-            id: Date.now(),
+        addFdWithdrawalRequest({
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",
-            type: "Withdrawal",
             amount: investment.amount,
             date: new Date().toISOString().split('T')[0],
-            status: "Pending",
             investmentIdToWithdraw: investmentId,
         });
 

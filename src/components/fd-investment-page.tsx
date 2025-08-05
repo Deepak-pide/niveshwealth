@@ -18,7 +18,7 @@ import Image from "next/image";
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
-    const { addFdRequest } = useData();
+    const { addInvestmentRequest } = useData();
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
@@ -46,15 +46,13 @@ export default function FdInvestmentPage() {
             window.open(upiUrl, '_blank');
         }
 
-        addFdRequest({
+        addInvestmentRequest({
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",
-            type: "Investment",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
             years: years,
-            status: "Pending"
         });
 
         toast({

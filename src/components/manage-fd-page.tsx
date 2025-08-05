@@ -17,8 +17,19 @@ import { useData } from "@/hooks/use-data";
 const ITEMS_PER_PAGE = 10;
 
 export default function ManageFdPage() {
-    const { fdRequests, investments, users, approveFdRequest, rejectFdRequest } = useData();
-    const [visibleRequests, setVisibleRequests] = useState(ITEMS_PER_PAGE);
+    const { 
+        investmentRequests,
+        fdWithdrawalRequests,
+        investments, 
+        users, 
+        approveInvestmentRequest, 
+        rejectInvestmentRequest,
+        approveFdWithdrawalRequest,
+        rejectFdWithdrawalRequest
+    } = useData();
+
+    const [visibleInvestmentReqs, setVisibleInvestmentReqs] = useState(ITEMS_PER_PAGE);
+    const [visibleWithdrawalReqs, setVisibleWithdrawalReqs] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
     const userInvestments = users.map(user => {
@@ -60,8 +71,11 @@ export default function ManageFdPage() {
         XLSX.writeFile(workbook, "user_investments.xlsx");
     };
 
-    const visibleFdRequests = fdRequests.slice(0, visibleRequests);
-    const hasMoreRequests = fdRequests.length > visibleRequests;
+    const visibleInvestmentRequests = investmentRequests.slice(0, visibleInvestmentReqs);
+    const hasMoreInvestmentReqs = investmentRequests.length > visibleInvestmentReqs;
+    
+    const visibleFdWithdrawalRequests = fdWithdrawalRequests.slice(0, visibleWithdrawalReqs);
+    const hasMoreFdWithdrawalReqs = fdWithdrawalRequests.length > visibleWithdrawalReqs;
 
     const visibleUserInvestments = userInvestments.slice(0, visibleUsers);
     const hasMoreUsers = userInvestments.length > visibleUsers;
@@ -73,30 +87,31 @@ export default function ManageFdPage() {
                 <p className="text-muted-foreground">Approve, reject, and view all fixed deposits.</p>
             </header>
 
-            <Tabs defaultValue="requests">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="requests">FD Requests</TabsTrigger>
+            <Tabs defaultValue="investment-requests">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="investment-requests">Investment Requests</TabsTrigger>
+                    <TabsTrigger value="withdrawal-requests">Withdrawal Requests</TabsTrigger>
                     <TabsTrigger value="users">User Investments</TabsTrigger>
                 </TabsList>
-                <TabsContent value="requests">
+                <TabsContent value="investment-requests">
                     <Card>
                         <CardHeader>
-                            <CardTitle>FD Requests</CardTitle>
-                            <CardDescription>Review and process pending FD investment and withdrawal requests.</CardDescription>
+                            <CardTitle>FD Investment Requests</CardTitle>
+                            <CardDescription>Review and process pending FD investment requests.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>User</TableHead>
-                                        <TableHead>Type</TableHead>
                                         <TableHead>Amount</TableHead>
+                                        <TableHead>Years</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {visibleFdRequests.length > 0 ? visibleFdRequests.map((req) => (
+                                    {visibleInvestmentRequests.length > 0 ? visibleInvestmentRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -107,10 +122,8 @@ export default function ManageFdPage() {
                                                     <span className="font-medium">{req.userName}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>
-                                                <Badge variant={req.type === 'Investment' ? 'default' : 'destructive'}>{req.type}</Badge>
-                                            </TableCell>
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{req.years}</TableCell>
                                             <TableCell>{req.date}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <AlertDialog>
@@ -126,19 +139,83 @@ export default function ManageFdPage() {
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
                                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => rejectFdRequest(req.id)}>Confirm</AlertDialogAction>
+                                                            <AlertDialogAction onClick={() => rejectInvestmentRequest(req.id)}>Confirm</AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-                                                <Button size="sm" onClick={() => approveFdRequest(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => approveInvestmentRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
-                                    )) : <TableRow><TableCell colSpan={5} className="text-center">No pending requests.</TableCell></TableRow>}
+                                    )) : <TableRow><TableCell colSpan={5} className="text-center">No pending investment requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
-                            {hasMoreRequests && (
+                            {hasMoreInvestmentReqs && (
                                 <div className="pt-4 text-center">
-                                    <Button variant="outline" onClick={() => setVisibleRequests(prev => prev + ITEMS_PER_PAGE)}>
+                                    <Button variant="outline" onClick={() => setVisibleInvestmentReqs(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="withdrawal-requests">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>FD Withdrawal Requests</CardTitle>
+                            <CardDescription>Review and process pending FD withdrawal requests.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>User</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {visibleFdWithdrawalRequests.length > 0 ? visibleFdWithdrawalRequests.map((req) => (
+                                        <TableRow key={req.id}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <AvatarImage src={req.userAvatar} />
+                                                        <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium">{req.userName}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{req.date}</TableCell>
+                                            <TableCell className="text-right space-x-2">
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="outline" size="sm">Reject</Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently reject the withdrawal request.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => rejectFdWithdrawalRequest(req.id)}>Confirm</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                                <Button size="sm" onClick={() => approveFdWithdrawalRequest(req.id)}>Accept</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : <TableRow><TableCell colSpan={4} className="text-center">No pending withdrawal requests.</TableCell></TableRow>}
+                                </TableBody>
+                            </Table>
+                            {hasMoreFdWithdrawalReqs && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleWithdrawalReqs(prev => prev + ITEMS_PER_PAGE)}>
                                         Load More
                                     </Button>
                                 </div>
@@ -233,5 +310,3 @@ export default function ManageFdPage() {
         </div>
     );
 }
-
-    

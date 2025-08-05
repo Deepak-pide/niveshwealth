@@ -20,9 +20,19 @@ const ITEMS_PER_PAGE = 10;
 
 export default function ManageBalancePage() {
     const [interestRate, setInterestRate] = useState(6);
-    const { balanceRequests, userBalances, approveBalanceRequest, rejectBalanceRequest, payInterestToAll } = useData();
+    const { 
+        topupRequests, 
+        balanceWithdrawalRequests, 
+        userBalances, 
+        approveTopupRequest, 
+        rejectTopupRequest, 
+        approveBalanceWithdrawalRequest,
+        rejectBalanceWithdrawalRequest,
+        payInterestToAll 
+    } = useData();
     const { toast } = useToast();
-    const [visibleRequests, setVisibleRequests] = useState(ITEMS_PER_PAGE);
+    const [visibleTopups, setVisibleTopups] = useState(ITEMS_PER_PAGE);
+    const [visibleWithdrawals, setVisibleWithdrawals] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
@@ -55,9 +65,12 @@ export default function ManageBalancePage() {
         });
     }
     
-    const visibleBalanceRequests = balanceRequests.slice(0, visibleRequests);
-    const hasMoreRequests = balanceRequests.length > visibleRequests;
+    const visibleTopupRequests = topupRequests.slice(0, visibleTopups);
+    const hasMoreTopups = topupRequests.length > visibleTopups;
     
+    const visibleBalanceWithdrawalRequests = balanceWithdrawalRequests.slice(0, visibleWithdrawals);
+    const hasMoreWithdrawals = balanceWithdrawalRequests.length > visibleWithdrawals;
+
     const visibleUserBalances = userBalances.slice(0, visibleUsers);
     const hasMoreUsers = userBalances.length > visibleUsers;
 
@@ -68,30 +81,30 @@ export default function ManageBalancePage() {
                 <p className="text-muted-foreground">Approve balance requests and manage user interest payments.</p>
             </header>
 
-            <Tabs defaultValue="requests">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="requests">Balance Requests</TabsTrigger>
+            <Tabs defaultValue="topups">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="topups">Top-Up Requests</TabsTrigger>
+                    <TabsTrigger value="withdrawals">Withdrawal Requests</TabsTrigger>
                     <TabsTrigger value="users">User Balances</TabsTrigger>
                 </TabsList>
-                <TabsContent value="requests">
+                <TabsContent value="topups">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Balance Requests</CardTitle>
-                            <CardDescription>Review and process pending balance addition and withdrawal requests.</CardDescription>
+                            <CardTitle>Balance Top-Up Requests</CardTitle>
+                            <CardDescription>Review and process pending balance addition requests.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>User</TableHead>
-                                        <TableHead>Type</TableHead>
                                         <TableHead>Amount</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {visibleBalanceRequests.length > 0 ? visibleBalanceRequests.map((req) => (
+                                    {visibleTopupRequests.length > 0 ? visibleTopupRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -102,22 +115,67 @@ export default function ManageBalancePage() {
                                                     <span className="font-medium">{req.userName}</span>
                                                 </div>
                                             </TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{req.date}</TableCell>
+                                            <TableCell className="text-right space-x-2">
+                                                <Button variant="outline" size="sm" onClick={() => rejectTopupRequest(req.id)}>Reject</Button>
+                                                <Button size="sm" onClick={() => approveTopupRequest(req.id)}>Accept</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : <TableRow><TableCell colSpan={4} className="text-center">No pending top-up requests.</TableCell></TableRow>}
+                                </TableBody>
+                            </Table>
+                             {hasMoreTopups && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleTopups(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                 <TabsContent value="withdrawals">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Balance Withdrawal Requests</CardTitle>
+                            <CardDescription>Review and process pending balance withdrawal requests.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>User</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {visibleBalanceWithdrawalRequests.length > 0 ? visibleBalanceWithdrawalRequests.map((req) => (
+                                        <TableRow key={req.id}>
                                             <TableCell>
-                                                <Badge variant={req.type === 'Add' ? 'default' : 'destructive'}>{req.type}</Badge>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <AvatarImage src={req.userAvatar} />
+                                                        <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium">{req.userName}</span>
+                                                </div>
                                             </TableCell>
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{req.date}</TableCell>
                                             <TableCell className="text-right space-x-2">
-                                                <Button variant="outline" size="sm" onClick={() => rejectBalanceRequest(req.id)}>Reject</Button>
-                                                <Button size="sm" onClick={() => approveBalanceRequest(req.id)}>Accept</Button>
+                                                <Button variant="outline" size="sm" onClick={() => rejectBalanceWithdrawalRequest(req.id)}>Reject</Button>
+                                                <Button size="sm" onClick={() => approveBalanceWithdrawalRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
-                                    )) : <TableRow><TableCell colSpan={5} className="text-center">No pending requests.</TableCell></TableRow>}
+                                    )) : <TableRow><TableCell colSpan={4} className="text-center">No pending withdrawal requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
-                             {hasMoreRequests && (
+                             {hasMoreWithdrawals && (
                                 <div className="pt-4 text-center">
-                                    <Button variant="outline" onClick={() => setVisibleRequests(prev => prev + ITEMS_PER_PAGE)}>
+                                    <Button variant="outline" onClick={() => setVisibleWithdrawals(prev => prev + ITEMS_PER_PAGE)}>
                                         Load More
                                     </Button>
                                 </div>

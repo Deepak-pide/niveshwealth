@@ -17,30 +17,49 @@ interface Investment {
     status: 'Active' | 'Matured' | 'Withdrawn' | 'Pending';
 }
 
-interface FDRequest {
+interface InvestmentRequest {
     id: number;
     userId: string;
     userName: string;
     userAvatar: string;
-    type: 'Investment' | 'Withdrawal';
     amount: number;
+    years: number;
     date: string; // ISO string
-    status: 'Pending' | 'Approved' | 'Rejected';
-    years?: number;
-    investmentId?: number; // The ID of the investment this request is for
-    investmentIdToWithdraw?: number;
+    status: 'Pending';
+    investmentId: number;
 }
 
-interface BalanceRequest {
+interface FdWithdrawalRequest {
     id: number;
     userId: string;
     userName: string;
     userAvatar: string;
-    type: 'Add' | 'Withdraw';
     amount: number;
     date: string; // ISO string
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: 'Pending';
+    investmentIdToWithdraw: number;
 }
+
+interface TopupRequest {
+    id: number;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    amount: number;
+    date: string; // ISO string
+    status: 'Pending';
+}
+
+interface BalanceWithdrawalRequest {
+    id: number;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    amount: number;
+    date: string; // ISO string
+    status: 'Pending';
+}
+
 
 interface UserBalance {
     id: number;
@@ -72,17 +91,24 @@ interface AppUser {
 interface DataContextType {
     users: AppUser[];
     investments: Investment[];
-    fdRequests: FDRequest[];
-    balanceRequests: BalanceRequest[];
+    investmentRequests: InvestmentRequest[];
+    fdWithdrawalRequests: FdWithdrawalRequest[];
+    topupRequests: TopupRequest[];
+    balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    addFdRequest: (requestData: Omit<FDRequest, 'id' | 'status' | 'investmentId'> & { years?: number; investmentIdToWithdraw?: number; }) => void;
-    approveFdRequest: (requestId: number) => void;
-    rejectFdRequest: (requestId: number) => void;
-    removeInvestment: (investmentId: number) => void;
-    addBalanceRequest: (requestData: Omit<BalanceRequest, 'id' | 'status'>) => void;
-    approveBalanceRequest: (requestId: number) => void;
-    rejectBalanceRequest: (requestId: number) => void;
+    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'investmentId'>) => void;
+    addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status'>) => void;
+    approveInvestmentRequest: (requestId: number) => void;
+    rejectInvestmentRequest: (requestId: number) => void;
+    approveFdWithdrawalRequest: (requestId: number) => void;
+    rejectFdWithdrawalRequest: (requestId: number) => void;
+    addTopupRequest: (requestData: Omit<TopupRequest, 'id' | 'status'>) => void;
+    addBalanceWithdrawalRequest: (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status'>) => void;
+    approveTopupRequest: (requestId: number) => void;
+    rejectTopupRequest: (requestId: number) => void;
+    approveBalanceWithdrawalRequest: (requestId: number) => void;
+    rejectBalanceWithdrawalRequest: (requestId: number) => void;
     payInterestToAll: (annualRate: number) => void;
 }
 
@@ -118,12 +144,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const { user } = useAuth();
     const [users, setUsers] = useState<AppUser[]>(MOCK_USERS);
     const [investments, setInvestments] = useState<Investment[]>(MOCK_INVESTMENTS);
-    const [fdRequests, setFdRequests] = useState<FDRequest[]>([]);
-    const [balanceRequests, setBalanceRequests] = useState<BalanceRequest[]>([]);
+    const [investmentRequests, setInvestmentRequests] = useState<InvestmentRequest[]>([]);
+    const [fdWithdrawalRequests, setFdWithdrawalRequests] = useState<FdWithdrawalRequest[]>([]);
+    const [topupRequests, setTopupRequests] = useState<TopupRequest[]>([]);
+    const [balanceWithdrawalRequests, setBalanceWithdrawalRequests] = useState<BalanceWithdrawalRequest[]>([]);
     const [userBalances, setUserBalances] = useState<UserBalance[]>(MOCK_USER_BALANCES);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>(MOCK_BALANCE_HISTORY);
 
-    // This effect ensures a user profile exists in the mock DB when they log in.
     useEffect(() => {
         if (user && !users.find(u => u.id === user.uid)) {
             const newUser: AppUser = {
@@ -145,112 +172,114 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [user, users]);
 
-    const addFdRequest = (requestData: Omit<FDRequest, 'id' | 'status' | 'investmentId'> & { years?: number, investmentIdToWithdraw?: number }) => {
-        if (requestData.type === 'Investment' && requestData.years) {
-            const newInvestmentId = Date.now();
-            const newInvestment: Investment = {
-                id: newInvestmentId,
-                userId: requestData.userId,
-                name: "New Fixed Deposit",
-                amount: requestData.amount,
-                interestRate: 0.07,
-                startDate: new Date().toISOString(),
-                maturityDate: addYears(new Date(), requestData.years).toISOString(),
-                status: 'Pending',
-            };
-             setInvestments(prev => [...prev, newInvestment]);
-
-            const newRequest: FDRequest = {
-                ...requestData,
-                id: Date.now() + 1,
-                status: 'Pending',
-                investmentId: newInvestmentId,
-            };
-             setFdRequests(prev => [...prev, newRequest]);
-        } else if (requestData.type === 'Withdrawal' && requestData.investmentIdToWithdraw) {
-            const newRequest: FDRequest = {
-                ...requestData,
-                id: Date.now() + 1,
-                status: 'Pending',
-            };
-            setFdRequests(prev => [...prev, newRequest]);
-        }
-    };
-
-    const approveFdRequest = (requestId: number) => {
-        const request = fdRequests.find(r => r.id === requestId);
-        if (!request) return;
-
-        if (request.type === "Investment" && request.investmentId) {
-            setInvestments(prev => prev.map(inv =>
-                inv.id === request.investmentId ? { ...inv, status: 'Active' } : inv
-            ));
-        } else if (request.type === "Withdrawal" && request.investmentIdToWithdraw) {
-            const investment = investments.find(inv => inv.id === request.investmentIdToWithdraw);
-            if (!investment) return;
-
-            const penalizedRate = 0.065;
-            const years = differenceInYears(new Date(), parseISO(investment.startDate)) || 1; // Default to 1 year if less
-            const penalizedInterest = investment.amount * penalizedRate * years;
-            const totalValue = investment.amount + penalizedInterest;
-            
-            setInvestments(prev => prev.map(inv => inv.id === request.investmentIdToWithdraw ? { ...inv, status: 'Withdrawn' } : inv));
-            
-            setUserBalances(prev => prev.map(b => b.userId === request.userId ? { ...b, balance: b.balance + totalValue } : b));
-            setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Withdrawal #${investment.id}`, amount: totalValue, type: "Credit" }]);
-        }
-        
-        setFdRequests(prev => prev.filter(r => r.id !== requestId));
-    };
-
-    const rejectFdRequest = (requestId: number) => {
-        const request = fdRequests.find(r => r.id === requestId);
-        if (request && request.type === 'Investment' && request.investmentId) {
-            setInvestments(prev => prev.filter(inv => inv.id !== request.investmentId));
-        }
-        setFdRequests(prev => prev.filter(r => r.id !== requestId));
-    };
-    
-    const removeInvestment = (investmentId: number) => {
-        setInvestments(prev => prev.filter(inv => inv.id !== investmentId));
-    }
-
-    const addBalanceRequest = (requestData: Omit<BalanceRequest, 'id' | 'status'>) => {
-        const newRequest: BalanceRequest = {
-            ...requestData,
-            id: Date.now(),
+    const addInvestmentRequest = (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'investmentId'>) => {
+        const newInvestmentId = Date.now();
+        const newInvestment: Investment = {
+            id: newInvestmentId,
+            userId: requestData.userId,
+            name: "New Fixed Deposit",
+            amount: requestData.amount,
+            interestRate: 0.07,
+            startDate: new Date().toISOString(),
+            maturityDate: addYears(new Date(), requestData.years).toISOString(),
             status: 'Pending',
         };
-        setBalanceRequests(prev => [...prev, newRequest]);
+        setInvestments(prev => [...prev, newInvestment]);
+
+        const newRequest: InvestmentRequest = {
+            ...requestData,
+            id: Date.now() + 1,
+            status: 'Pending',
+            investmentId: newInvestmentId,
+        };
+        setInvestmentRequests(prev => [...prev, newRequest]);
     };
 
-    const approveBalanceRequest = (requestId: number) => {
-        const request = balanceRequests.find(r => r.id === requestId);
+    const addFdWithdrawalRequest = (requestData: Omit<FdWithdrawalRequest, 'id' | 'status'>) => {
+        const newRequest: FdWithdrawalRequest = { ...requestData, id: Date.now(), status: 'Pending' };
+        setFdWithdrawalRequests(prev => [...prev, newRequest]);
+    };
+
+    const approveInvestmentRequest = (requestId: number) => {
+        const request = investmentRequests.find(r => r.id === requestId);
         if (!request) return;
 
-        setUserBalances(prev => prev.map(b => {
-            if (b.userId === request.userId) {
-                const newBalance = request.type === "Add" ? b.balance + request.amount : b.balance - request.amount;
-                return { ...b, balance: newBalance };
-            }
-            return b;
-        }));
-
-        setBalanceHistory(prev => [...prev, {
-            id: Date.now(),
-            userId: request.userId,
-            date: new Date().toISOString(),
-            description: request.type === 'Add' ? 'Added to wallet' : 'Withdrawn from wallet',
-            amount: request.amount,
-            type: request.type === 'Add' ? 'Credit' : 'Debit'
-        }]);
-
-        setBalanceRequests(prev => prev.filter(r => r.id !== requestId));
+        setInvestments(prev => prev.map(inv =>
+            inv.id === request.investmentId ? { ...inv, status: 'Active' } : inv
+        ));
+        setInvestmentRequests(prev => prev.filter(r => r.id !== requestId));
     };
 
-    const rejectBalanceRequest = (requestId: number) => {
-        setBalanceRequests(prev => prev.filter(r => r.id !== requestId));
+    const rejectInvestmentRequest = (requestId: number) => {
+        const request = investmentRequests.find(r => r.id === requestId);
+        if (request) {
+            setInvestments(prev => prev.filter(inv => inv.id !== request.investmentId));
+        }
+        setInvestmentRequests(prev => prev.filter(r => r.id !== requestId));
     };
+
+    const approveFdWithdrawalRequest = (requestId: number) => {
+        const request = fdWithdrawalRequests.find(r => r.id === requestId);
+        if (!request) return;
+
+        const investment = investments.find(inv => inv.id === request.investmentIdToWithdraw);
+        if (!investment) return;
+
+        const penalizedRate = 0.065;
+        const years = differenceInYears(new Date(), parseISO(investment.startDate)) || 1;
+        const penalizedInterest = investment.amount * penalizedRate * years;
+        const totalValue = investment.amount + penalizedInterest;
+
+        setInvestments(prev => prev.map(inv => inv.id === request.investmentIdToWithdraw ? { ...inv, status: 'Withdrawn' } : inv));
+        setUserBalances(prev => prev.map(b => b.userId === request.userId ? { ...b, balance: b.balance + totalValue } : b));
+        setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Withdrawal #${investment.id}`, amount: totalValue, type: "Credit" }]);
+        setFdWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+    };
+
+    const rejectFdWithdrawalRequest = (requestId: number) => {
+        setFdWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+    };
+
+    const addTopupRequest = (requestData: Omit<TopupRequest, 'id' | 'status'>) => {
+        const newRequest: TopupRequest = { ...requestData, id: Date.now(), status: 'Pending' };
+        setTopupRequests(prev => [...prev, newRequest]);
+    };
+
+    const addBalanceWithdrawalRequest = (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status'>) => {
+        const newRequest: BalanceWithdrawalRequest = { ...requestData, id: Date.now(), status: 'Pending' };
+        setBalanceWithdrawalRequests(prev => [...prev, newRequest]);
+    };
+    
+    const approveTopupRequest = (requestId: number) => {
+        const request = topupRequests.find(r => r.id === requestId);
+        if (!request) return;
+
+        setUserBalances(prev => prev.map(b => 
+            b.userId === request.userId ? { ...b, balance: b.balance + request.amount } : b
+        ));
+        setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: 'Added to wallet', amount: request.amount, type: 'Credit' }]);
+        setTopupRequests(prev => prev.filter(r => r.id !== requestId));
+    };
+
+    const rejectTopupRequest = (requestId: number) => {
+        setTopupRequests(prev => prev.filter(r => r.id !== requestId));
+    };
+
+    const approveBalanceWithdrawalRequest = (requestId: number) => {
+        const request = balanceWithdrawalRequests.find(r => r.id === requestId);
+        if (!request) return;
+
+        setUserBalances(prev => prev.map(b => 
+            b.userId === request.userId ? { ...b, balance: b.balance - request.amount } : b
+        ));
+        setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: 'Withdrawn from wallet', amount: request.amount, type: 'Debit' }]);
+        setBalanceWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+    };
+    
+    const rejectBalanceWithdrawalRequest = (requestId: number) => {
+        setBalanceWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+    };
+
 
     const payInterestToAll = (annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
@@ -277,17 +306,24 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         <DataContext.Provider value={{
             users,
             investments,
-            fdRequests,
-            balanceRequests,
+            investmentRequests,
+            fdWithdrawalRequests,
+            topupRequests,
+            balanceWithdrawalRequests,
             userBalances,
             balanceHistory,
-            addFdRequest,
-            approveFdRequest,
-            rejectFdRequest,
-            removeInvestment,
-            addBalanceRequest,
-            approveBalanceRequest,
-            rejectBalanceRequest,
+            addInvestmentRequest,
+            addFdWithdrawalRequest,
+            approveInvestmentRequest,
+            rejectInvestmentRequest,
+            approveFdWithdrawalRequest,
+            rejectFdWithdrawalRequest,
+            addTopupRequest,
+            addBalanceWithdrawalRequest,
+            approveTopupRequest,
+            rejectTopupRequest,
+            approveBalanceWithdrawalRequest,
+            rejectBalanceWithdrawalRequest,
             payInterestToAll,
         }}>
             {children}

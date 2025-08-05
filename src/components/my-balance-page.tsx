@@ -22,7 +22,7 @@ export default function MyBalancePage() {
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [yearsToShow, setYearsToShow] = useState(1);
 
-    const { userBalances, balanceHistory, addBalanceRequest } = useData();
+    const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
 
@@ -56,14 +56,12 @@ export default function MyBalancePage() {
         const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
         window.open(upiUrl, '_blank');
 
-        addBalanceRequest({
+        addTopupRequest({
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",
-            type: "Add",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
-            status: "Pending"
         });
         toast({ title: "Request Submitted", description: "Your request to add balance has been submitted." });
         setAddAmount("");
@@ -79,14 +77,12 @@ export default function MyBalancePage() {
             toast({ title: "Insufficient Balance", description: "You cannot withdraw more than your current balance.", variant: "destructive" });
             return;
         }
-        addBalanceRequest({
+        addBalanceWithdrawalRequest({
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",
-            type: "Withdraw",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
-            status: "Pending"
         });
         toast({ title: "Request Submitted", description: "Your request to withdraw balance has been submitted." });
         setWithdrawAmount("");
