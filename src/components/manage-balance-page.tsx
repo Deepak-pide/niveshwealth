@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import * as XLSX from "xlsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Download } from "lucide-react";
 
 const balanceRequests = [
     { id: 1, userName: "Ramesh Patel", userAvatar: "/placeholder-user.jpg", type: "Add", amount: "10,000", date: "2024-07-31" },
@@ -32,6 +34,24 @@ export default function ManageBalancePage() {
         const monthlyRate = annualRate / 12 / 100;
         return (balance * monthlyRate).toFixed(2);
     };
+
+    const handleDownload = () => {
+        const title = "USER BALANCES";
+        const flattenedData = userBalances.map((user, index) => ({
+            'Sno': index + 1,
+            'User': user.userName,
+            'Amount': `₹${user.balance.toLocaleString('en-IN')}`,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(worksheet, [[title]], { origin: "A1" });
+        XLSX.utils.sheet_add_json(worksheet, flattenedData, { origin: "A2", skipHeader: false });
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "User Balances");
+        XLSX.writeFile(workbook, "user_balances.xlsx");
+    };
+
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -97,54 +117,60 @@ export default function ManageBalancePage() {
                                 <CardTitle>User Balances</CardTitle>
                                 <CardDescription>View all user balances and pay monthly interest.</CardDescription>
                             </div>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button>Pay Interest</Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[600px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Pay Monthly Interest</DialogTitle>
-                                        <DialogDescription>Set the annual interest rate and confirm to pay all eligible users for the month.</DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="flex items-center gap-4">
-                                            <Label htmlFor="interest-rate" className="w-40">Annual Interest Rate (% p.a.)</Label>
-                                            <Input
-                                                id="interest-rate"
-                                                type="number"
-                                                value={interestRate}
-                                                onChange={(e) => setInterestRate(Number(e.target.value))}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div className="max-h-64 overflow-y-auto">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>User</TableHead>
-                                                        <TableHead>Current Balance</TableHead>
-                                                        <TableHead className="text-right">Interest to Pay</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {userBalances.map((user) => (
-                                                        <TableRow key={user.id}>
-                                                            <TableCell className="font-medium">{user.userName}</TableCell>
-                                                            <TableCell>₹{user.balance.toLocaleString('en-IN')}</TableCell>
-                                                            <TableCell className="text-right font-semibold text-green-600">
-                                                                +₹{calculateMonthlyInterest(user.balance, interestRate)}
-                                                            </TableCell>
+                            <div className="flex gap-2">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button>Pay Interest</Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[600px]">
+                                        <DialogHeader>
+                                            <DialogTitle>Pay Monthly Interest</DialogTitle>
+                                            <DialogDescription>Set the annual interest rate and confirm to pay all eligible users for the month.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <Label htmlFor="interest-rate" className="w-40">Annual Interest Rate (% p.a.)</Label>
+                                                <Input
+                                                    id="interest-rate"
+                                                    type="number"
+                                                    value={interestRate}
+                                                    onChange={(e) => setInterestRate(Number(e.target.value))}
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                            <div className="max-h-64 overflow-y-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>User</TableHead>
+                                                            <TableHead>Current Balance</TableHead>
+                                                            <TableHead className="text-right">Interest to Pay</TableHead>
                                                         </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {userBalances.map((user) => (
+                                                            <TableRow key={user.id}>
+                                                                <TableCell className="font-medium">{user.userName}</TableCell>
+                                                                <TableCell>₹{user.balance.toLocaleString('en-IN')}</TableCell>
+                                                                <TableCell className="text-right font-semibold text-green-600">
+                                                                    +₹{calculateMonthlyInterest(user.balance, interestRate)}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button type="submit">Confirm Payment</Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                        <DialogFooter>
+                                            <Button type="submit">Confirm Payment</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button onClick={handleDownload} variant="outline">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Excel
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <Table>
