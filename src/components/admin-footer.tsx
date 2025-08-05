@@ -7,9 +7,13 @@ export default function AdminFooter() {
     <footer className="shrink-0 border-t bg-card shadow-inner">
       <div className="container mx-auto px-4">
         <nav className="flex h-16 items-center justify-around">
-          <Link href="/admin/manage" className="flex flex-col items-center gap-1 text-primary transition-colors hover:text-primary/80">
+          <Link href="/admin/manage" className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
             <LayoutDashboard className="h-6 w-6" />
             <span className="text-xs font-medium">Manage</span>
+          </Link>
+          <Link href="/admin/users" className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
+            <Users className="h-6 w-6" />
+            <span className="text-xs font-medium">Users</span>
           </Link>
         </nav>
       </div>
