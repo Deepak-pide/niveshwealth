@@ -10,36 +10,7 @@ export default function ManagePage() {
                 <p className="text-muted-foreground">Select a category to manage.</p>
             </header>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Link href="/investments">
-                    <Card className="cursor-pointer transition-colors hover:bg-accent/50">
-                        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-lg font-medium">
-                                Fixed Deposits
-                            </CardTitle>
-                            <Briefcase className="h-6 w-6 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                View and manage all user FDs.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-                <Link href="/my-balance">
-                    <Card className="cursor-pointer transition-colors hover:bg-accent/50">
-                        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-lg font-medium">
-                                Balances
-                            </CardTitle>
-                            <Wallet className="h-6 w-6 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                View and manage user balances.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
+                
             </div>
         </div>
     );
