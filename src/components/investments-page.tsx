@@ -2,19 +2,21 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { differenceInYears, format, addYears } from 'date-fns';
+import { differenceInYears, format, addYears, differenceInDays } from 'date-fns';
 import Link from "next/link";
 import { useData, Investment } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Timestamp } from "firebase/firestore";
+import { Separator } from "./ui/separator";
+
 
 const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: Timestamp, maturityDate: Timestamp }, customRate?: number) => {
     const principal = investment.amount;
@@ -34,11 +36,13 @@ const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 const ITEMS_PER_PAGE = 5;
 
 export default function InvestmentsPage() {
-    const { investments, investmentRequests, addFdWithdrawalRequest } = useData();
+    const { investments, investmentRequests, addFdWithdrawalRequest, userBalances } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
+
+    const liveGrowthRate = userBalances.find(b => b.userId === user?.uid)?.liveGrowthInterestRate || 0.09;
     
     if (!user) {
         return (
@@ -162,8 +166,14 @@ export default function InvestmentsPage() {
                             { name: 'Total Interest', value: totalInterest },
                             { name: 'Principal Amount', value: principal },
                         ];
-                        
+
                         const isPending = investment.status === 'Pending';
+                        const isActive = investment.status === 'Active';
+
+                        const daysSinceStart = isActive ? differenceInDays(new Date(), investment.startDate.toDate()) : 0;
+                        const dailyInterest = principal * (liveGrowthRate / 365);
+                        const liveInterestAccrued = daysSinceStart * dailyInterest;
+                        const liveTotalValue = principal + liveInterestAccrued;
                         
                         return (
                             <Dialog key={investment.id}>
@@ -215,7 +225,7 @@ export default function InvestmentsPage() {
                                                 <span className="font-semibold text-foreground">₹{principal.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Estimated Interest:</span>
+                                                <span className="text-muted-foreground">Estimated Interest at Maturity:</span>
                                                 <span className="font-semibold text-green-600">₹{totalInterest.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">
@@ -227,6 +237,29 @@ export default function InvestmentsPage() {
                                                 <span className="font-semibold text-foreground">{format(investment.maturityDate.toDate(), 'dd MMM yyyy')}</span>
                                             </div>
                                         </div>
+
+                                        {isActive && (
+                                            <>
+                                                <Separator />
+                                                <div className="space-y-2 text-sm">
+                                                    <h4 className="font-medium">Live Growth ({ (liveGrowthRate * 100).toFixed(2)}% p.a.)</h4>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Interest Per Day:</span>
+                                                        <span className="font-semibold text-green-600">+₹{dailyInterest.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Live Interest Accrued:</span>
+                                                        <span className="font-semibold text-green-600">₹{liveInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Live Total Value:</span>
+                                                        <span className="font-semibold text-foreground">₹{liveTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+
+
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <Button variant="destructive" className="w-full">Withdraw</Button>

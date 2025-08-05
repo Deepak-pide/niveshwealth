@@ -17,9 +17,10 @@ import {
     getDoc,
     writeBatch,
     Timestamp,
+    getDocs,
 } from 'firebase/firestore';
 import { useAuth } from './use-auth';
-import { addYears, parseISO, differenceInYears } from 'date-fns';
+import { addYears, parseISO, differenceInYears, differenceInDays } from 'date-fns';
 
 // Base Types
 interface BaseRequest {
@@ -62,6 +63,7 @@ export interface UserBalance {
     userName: string;
     userAvatar: string;
     balance: number;
+    liveGrowthInterestRate?: number;
 }
 
 export interface BalanceHistory {
@@ -105,6 +107,7 @@ interface DataContextType {
     approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
+    setLiveGrowthRate: (annualRate: number) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -147,6 +150,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         userName: authUser.displayName || "New User",
                         userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
                         balance: 0,
+                        liveGrowthInterestRate: 0.09,
                     };
                     const batch = writeBatch(db);
                     batch.set(userDocRef, newUser);
@@ -367,6 +371,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
+    const setLiveGrowthRate = async (annualRate: number) => {
+        const batch = writeBatch(db);
+        const querySnapshot = await getDocs(collection(db, "userBalances"));
+        querySnapshot.forEach((doc) => {
+            batch.update(doc.ref, { liveGrowthInterestRate: annualRate / 100 });
+        });
+        await batch.commit();
+    };
+
+
     const value = {
         users,
         investments,
@@ -389,6 +403,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
+        setLiveGrowthRate,
     };
 
     return (

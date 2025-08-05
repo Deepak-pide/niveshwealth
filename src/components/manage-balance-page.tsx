@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Download } from "lucide-react";
+import { Download, Settings } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { Separator } from "./ui/separator";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function ManageBalancePage() {
-    const [interestRate, setInterestRate] = useState(6);
     const { 
         topupRequests, 
         balanceWithdrawalRequests, 
@@ -28,13 +28,25 @@ export default function ManageBalancePage() {
         rejectTopupRequest, 
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
-        payInterestToAll 
+        payInterestToAll,
+        setLiveGrowthRate
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
+    
+    const [interestRate, setInterestRate] = useState(6);
+    const [liveGrowthRate, setLiveGrowthRateState] = useState(9);
+    
     const [visibleTopups, setVisibleTopups] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawals, setVisibleWithdrawals] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
+
+    useEffect(() => {
+        const adminBalance = userBalances.find(b => b.userId === adminUser?.uid);
+        if (adminBalance && adminBalance.liveGrowthInterestRate) {
+            setLiveGrowthRateState(adminBalance.liveGrowthInterestRate * 100);
+        }
+    }, [userBalances, adminUser]);
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
@@ -62,11 +74,12 @@ export default function ManageBalancePage() {
         XLSX.writeFile(workbook, "user_balances.xlsx");
     };
 
-    const handlePayInterest = () => {
+    const handleConfirmSettings = () => {
         payInterestToAll(interestRate);
+        setLiveGrowthRate(liveGrowthRate);
         toast({
-            title: "Interest Paid",
-            description: `Monthly interest at ${interestRate}% p.a. has been paid to all users.`,
+            title: "Settings Updated",
+            description: `Monthly interest paid at ${interestRate}% and live growth rate set to ${liveGrowthRate}%.`,
         });
     }
     
@@ -193,55 +206,76 @@ export default function ManageBalancePage() {
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>User Balances</CardTitle>
-                                <CardDescription>View all user balances and pay monthly interest.</CardDescription>
+                                <CardDescription>View all user balances and manage interest settings.</CardDescription>
                             </div>
                             <div className="flex gap-2">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button>Pay Interest</Button>
+                                        <Button>
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            Manage Rates
+                                        </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-[600px]">
                                         <DialogHeader>
-                                            <DialogTitle>Pay Monthly Interest</DialogTitle>
-                                            <DialogDescription>Set the annual interest rate and confirm to pay all eligible users for the month.</DialogDescription>
+                                            <DialogTitle>Manage Interest Rates</DialogTitle>
+                                            <DialogDescription>Set interest rates and confirm to pay monthly interest to all eligible users.</DialogDescription>
                                         </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="flex items-center gap-4">
-                                                <Label htmlFor="interest-rate" className="w-40">Annual Interest Rate (% p.a.)</Label>
-                                                <Input
-                                                    id="interest-rate"
-                                                    type="number"
-                                                    value={interestRate}
-                                                    onChange={(e) => setInterestRate(Number(e.target.value))}
-                                                    className="w-full"
-                                                />
-                                            </div>
-                                            <div className="max-h-64 overflow-y-auto">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>User</TableHead>
-                                                            <TableHead>Current Balance</TableHead>
-                                                            <TableHead className="text-right">Interest to Pay</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {filteredUserBalances.map((user) => (
-                                                            <TableRow key={user.id}>
-                                                                <TableCell className="font-medium">{user.userName}</TableCell>
-                                                                <TableCell>₹{user.balance.toLocaleString('en-IN')}</TableCell>
-                                                                <TableCell className="text-right font-semibold text-green-600">
-                                                                    +₹{calculateMonthlyInterest(user.balance, interestRate)}
-                                                                </TableCell>
+                                        <div className="grid gap-6 py-4">
+                                            <div className="space-y-4">
+                                                <h4 className="font-medium">Balance Interest</h4>
+                                                <div className="flex items-center gap-4">
+                                                    <Label htmlFor="interest-rate" className="w-48">Monthly Payout Rate (% p.a.)</Label>
+                                                    <Input
+                                                        id="interest-rate"
+                                                        type="number"
+                                                        value={interestRate}
+                                                        onChange={(e) => setInterestRate(Number(e.target.value))}
+                                                        className="w-full"
+                                                    />
+                                                </div>
+                                                 <div className="max-h-48 overflow-y-auto rounded-md border">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>User</TableHead>
+                                                                <TableHead>Balance</TableHead>
+                                                                <TableHead className="text-right">Interest to Pay</TableHead>
                                                             </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {filteredUserBalances.map((user) => (
+                                                                <TableRow key={user.id}>
+                                                                    <TableCell className="font-medium">{user.userName}</TableCell>
+                                                                    <TableCell>₹{user.balance.toLocaleString('en-IN')}</TableCell>
+                                                                    <TableCell className="text-right font-semibold text-green-600">
+                                                                        +₹{calculateMonthlyInterest(user.balance, interestRate)}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </div>
+                                            <Separator />
+                                            <div className="space-y-4">
+                                                <h4 className="font-medium">FD Live Growth</h4>
+                                                 <div className="flex items-center gap-4">
+                                                    <Label htmlFor="live-growth-rate" className="w-48">Live Growth Rate (% p.a.)</Label>
+                                                    <Input
+                                                        id="live-growth-rate"
+                                                        type="number"
+                                                        value={liveGrowthRate}
+                                                        onChange={(e) => setLiveGrowthRateState(Number(e.target.value))}
+                                                        className="w-full"
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">This rate is for displaying live daily growth on FDs to users. It does not affect final maturity value.</p>
                                             </div>
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
-                                                <Button type="submit" onClick={handlePayInterest}>Confirm Payment</Button>
+                                                <Button type="submit" onClick={handleConfirmSettings}>Confirm & Pay</Button>
                                             </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
