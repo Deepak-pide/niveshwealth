@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const balanceHistory = [
     {
@@ -62,10 +62,8 @@ export default function MyBalancePage() {
                                     <TableRow key={index}>
                                         <TableCell className="font-medium">{item.date}</TableCell>
                                         <TableCell>{item.description}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Badge variant={item.type === 'Credit' ? 'default' : 'destructive'}>
-                                                {item.type === 'Credit' ? '+' : '-'}₹{item.amount}
-                                            </Badge>
+                                        <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
+                                            {item.type === 'Credit' ? '+' : '-'}₹{item.amount}
                                         </TableCell>
                                     </TableRow>
                                 ))}
