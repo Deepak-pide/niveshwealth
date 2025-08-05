@@ -43,17 +43,18 @@ export default function UserNav() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                    <Link href="/">
-                        <DropdownMenuItem>
-                            <UserIcon className="mr-2 h-4 w-4" />
-                            <span>Home</span>
-                        </DropdownMenuItem>
-                    </Link>
-                    {isAdmin && (
+                    {isAdmin ? (
                         <Link href="/admin">
                             <DropdownMenuItem>
                                 <LayoutDashboard className="mr-2 h-4 w-4" />
                                 <span>Dashboard</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    ) : (
+                        <Link href="/">
+                            <DropdownMenuItem>
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span>Home</span>
                             </DropdownMenuItem>
                         </Link>
                     )}

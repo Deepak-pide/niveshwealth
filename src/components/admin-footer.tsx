@@ -11,10 +11,6 @@ export default function AdminFooter() {
             <LayoutDashboard className="h-6 w-6" />
             <span className="text-xs font-medium">Manage</span>
           </Link>
-          <Link href="/admin/users" className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
-            <Users className="h-6 w-6" />
-            <span className="text-xs font-medium">Users</span>
-          </Link>
         </nav>
       </div>
     </footer>

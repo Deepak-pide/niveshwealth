@@ -7,11 +7,15 @@ import { LineChart } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import UserNav from './user-nav';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const isAdmin = pathname.startsWith('/admin');
+  const { user } = useAuth();
+  const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+  const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
+  const isCorrectAdminPath = isAdmin && pathname.startsWith('/admin');
 
   const handleSwitchChange = (checked: boolean) => {
     if (checked) {
