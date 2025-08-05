@@ -49,8 +49,6 @@ export default function FdInvestmentPage() {
 
         addInvestmentRequest({
             userId: user.uid,
-            userName: user.displayName || user.email || 'Unknown User',
-            userAvatar: user.photoURL || "/placeholder-user.jpg",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
             years: years,

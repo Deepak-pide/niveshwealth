@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -60,8 +60,6 @@ export default function InvestmentsPage() {
 
         addFdWithdrawalRequest({
             userId: user.uid,
-            userName: user.displayName || user.email || 'Unknown User',
-            userAvatar: user.photoURL || "/placeholder-user.jpg",
             amount: investment.amount,
             date: new Date().toISOString().split('T')[0],
             investmentIdToWithdraw: investmentId,

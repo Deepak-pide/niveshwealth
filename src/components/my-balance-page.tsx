@@ -67,8 +67,6 @@ export default function MyBalancePage() {
 
         addTopupRequest({
             userId: user.uid,
-            userName: user.displayName || user.email || 'Unknown User',
-            userAvatar: user.photoURL || "/placeholder-user.jpg",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
@@ -88,8 +86,6 @@ export default function MyBalancePage() {
         }
         addBalanceWithdrawalRequest({
             userId: user.uid,
-            userName: user.displayName || user.email || 'Unknown User',
-            userAvatar: user.photoURL || "/placeholder-user.jpg",
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
