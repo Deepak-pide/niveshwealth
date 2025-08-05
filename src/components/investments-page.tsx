@@ -1,8 +1,12 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "./ui/scroll-area";
 
 const investments = [
     {
@@ -167,21 +171,66 @@ const investments = [
     }
 ];
 
+const activeInvestments = investments.filter(inv => inv.status === 'Active');
+const maturedInvestments = investments.filter(inv => inv.status === 'Matured');
 
 export default function InvestmentsPage() {
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-6">
-                <header>
-                    <h1 className="text-3xl font-bold tracking-tight">Investment History</h1>
-                    <p className="text-muted-foreground">Here is a list of your past and current investments.</p>
+                <header className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Active Investments</h1>
+                        <p className="text-muted-foreground">Here is a list of your current investments.</p>
+                    </div>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline">View History</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-xl">
+                            <DialogHeader>
+                                <DialogTitle>Investment History</DialogTitle>
+                                <DialogDescription>
+                                    Here is a list of your matured investments.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <ScrollArea className="h-96">
+                                <div className="space-y-4 pr-4">
+                                     {maturedInvestments.map((investment) => (
+                                        <Card key={investment.id}>
+                                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                                <CardTitle className="text-base font-medium">{investment.name}</CardTitle>
+                                                <Badge variant='secondary'>{investment.status}</Badge>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                                    <div>
+                                                        <p className="text-muted-foreground">Amount</p>
+                                                        <p className="font-semibold">₹{investment.amount}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-muted-foreground">Interest Rate</p>
+                                                        <p className="font-semibold">{investment.interestRate}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-muted-foreground">Maturity Date</p>
+                                                        <p className="font-semibold">{investment.maturityDate}</p>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </DialogContent>
+                    </Dialog>
                 </header>
                 <div className="space-y-4">
-                    {investments.map((investment) => (
+                    {activeInvestments.map((investment) => (
                         <Card key={investment.id} className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-lg font-medium">{investment.name}</CardTitle>
-                                <Badge variant={investment.status === 'Active' ? 'default' : 'secondary'}>{investment.status}</Badge>
+                                <Badge>{investment.status}</Badge>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
