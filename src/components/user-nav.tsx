@@ -11,7 +11,8 @@ import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
 
 export default function UserNav() {
     const { user, logout } = useAuth();
-    const isAdmin = user?.email === 'moneynivesh@gmail.com';
+    const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+    const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
 
     if (!user) {
         return (
