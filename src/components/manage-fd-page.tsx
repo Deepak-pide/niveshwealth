@@ -14,9 +14,12 @@ import { Download } from "lucide-react";
 import { differenceInYears, parseISO, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 
+const ITEMS_PER_PAGE = 10;
 
 export default function ManageFdPage() {
     const { fdRequests, investments, users, approveFdRequest, rejectFdRequest } = useData();
+    const [visibleRequests, setVisibleRequests] = useState(ITEMS_PER_PAGE);
+    const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
     const userInvestments = users.map(user => {
         const userFDs = investments.filter(inv => inv.userId === user.id);
@@ -57,6 +60,11 @@ export default function ManageFdPage() {
         XLSX.writeFile(workbook, "user_investments.xlsx");
     };
 
+    const visibleFdRequests = fdRequests.slice(0, visibleRequests);
+    const hasMoreRequests = fdRequests.length > visibleRequests;
+
+    const visibleUserInvestments = userInvestments.slice(0, visibleUsers);
+    const hasMoreUsers = userInvestments.length > visibleUsers;
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -88,7 +96,7 @@ export default function ManageFdPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {fdRequests.length > 0 ? fdRequests.map((req) => (
+                                    {visibleFdRequests.length > 0 ? visibleFdRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -128,6 +136,13 @@ export default function ManageFdPage() {
                                     )) : <TableRow><TableCell colSpan={5} className="text-center">No pending requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
+                            {hasMoreRequests && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleRequests(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -153,7 +168,7 @@ export default function ManageFdPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {userInvestments.map((user) => (
+                                    {visibleUserInvestments.map((user) => (
                                         <TableRow key={user.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -204,6 +219,13 @@ export default function ManageFdPage() {
                                     ))}
                                 </TableBody>
                             </Table>
+                            {hasMoreUsers && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleUsers(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -211,3 +233,5 @@ export default function ManageFdPage() {
         </div>
     );
 }
+
+    

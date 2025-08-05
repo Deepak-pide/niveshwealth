@@ -16,10 +16,14 @@ import { Download } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ManageBalancePage() {
     const [interestRate, setInterestRate] = useState(6);
     const { balanceRequests, userBalances, approveBalanceRequest, rejectBalanceRequest, payInterestToAll } = useData();
     const { toast } = useToast();
+    const [visibleRequests, setVisibleRequests] = useState(ITEMS_PER_PAGE);
+    const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
@@ -50,6 +54,12 @@ export default function ManageBalancePage() {
             description: `Monthly interest at ${interestRate}% p.a. has been paid to all users.`,
         });
     }
+    
+    const visibleBalanceRequests = balanceRequests.slice(0, visibleRequests);
+    const hasMoreRequests = balanceRequests.length > visibleRequests;
+    
+    const visibleUserBalances = userBalances.slice(0, visibleUsers);
+    const hasMoreUsers = userBalances.length > visibleUsers;
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -81,7 +91,7 @@ export default function ManageBalancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {balanceRequests.length > 0 ? balanceRequests.map((req) => (
+                                    {visibleBalanceRequests.length > 0 ? visibleBalanceRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -105,6 +115,13 @@ export default function ManageBalancePage() {
                                     )) : <TableRow><TableCell colSpan={5} className="text-center">No pending requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
+                             {hasMoreRequests && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleRequests(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -179,7 +196,7 @@ export default function ManageBalancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {userBalances.map((user) => (
+                                    {visibleUserBalances.map((user) => (
                                         <TableRow key={user.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -195,6 +212,13 @@ export default function ManageBalancePage() {
                                     ))}
                                 </TableBody>
                             </Table>
+                            {hasMoreUsers && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleUsers(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -202,3 +226,5 @@ export default function ManageBalancePage() {
         </div>
     );
 }
+
+    

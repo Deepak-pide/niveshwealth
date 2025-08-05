@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,9 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useData } from "@/hooks/use-data";
 
+const ITEMS_PER_PAGE = 10;
 
 export default function UsersPage() {
     const { users, investments, userBalances } = useData();
+    const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
+
+    const visibleUsersList = users.slice(0, visibleUsers);
+    const hasMoreUsers = users.length > visibleUsers;
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -34,7 +40,7 @@ export default function UsersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.map((user) => {
+                            {visibleUsersList.map((user) => {
                                 const userInvestments = investments.filter(inv => inv.userId === user.id);
                                 const totalInvestment = userInvestments.reduce((acc, inv) => acc + inv.amount, 0);
                                 const userBalance = userBalances.find(bal => bal.userId === user.id)?.balance || 0;
@@ -88,8 +94,17 @@ export default function UsersPage() {
                             )})}
                         </TableBody>
                     </Table>
+                    {hasMoreUsers && (
+                        <div className="pt-4 text-center">
+                            <Button variant="outline" onClick={() => setVisibleUsers(prev => prev + ITEMS_PER_PAGE)}>
+                                Load More
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
     );
 }
+
+    

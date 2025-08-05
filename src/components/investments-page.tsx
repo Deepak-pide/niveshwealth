@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,14 @@ const calculateInvestmentDetails = (investment: { amount: number, interestRate: 
 };
 
 const COLORS = ['hsl(var(--primary))', '#3b82f6'];
+const ITEMS_PER_PAGE = 5;
 
 export default function InvestmentsPage() {
     const { investments, addFdRequest } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
+    const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
+    const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
     
     if (!user) {
         return (
@@ -71,6 +75,13 @@ export default function InvestmentsPage() {
             description: "Your withdrawal request has been submitted for approval.",
         });
     };
+    
+    const visibleActiveInvestments = activeInvestments.slice(0, visibleActive);
+    const hasMoreActive = activeInvestments.length > visibleActive;
+
+    const visiblePastInvestments = pastInvestments.slice(0, visiblePast);
+    const hasMorePast = pastInvestments.length > visiblePast;
+
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -93,7 +104,7 @@ export default function InvestmentsPage() {
                             </DialogHeader>
                             <ScrollArea className="h-96">
                                 <div className="space-y-4 pr-4">
-                                     {pastInvestments.length > 0 ? pastInvestments.map((investment) => (
+                                     {visiblePastInvestments.length > 0 ? visiblePastInvestments.map((investment) => (
                                         <Card key={investment.id}>
                                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                                 <CardTitle className="text-base font-medium">{investment.name}</CardTitle>
@@ -116,14 +127,21 @@ export default function InvestmentsPage() {
                                                 </div>
                                             </CardContent>
                                         </Card>
-                                    )) : <p className="text-muted-foreground text-center">No past investments found.</p>}
+                                     )) : <p className="text-muted-foreground text-center">No past investments found.</p>}
+                                     {hasMorePast && (
+                                        <div className="pt-4 text-center">
+                                            <Button variant="outline" onClick={() => setVisiblePast(prev => prev + ITEMS_PER_PAGE)}>
+                                                Load More
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </ScrollArea>
                         </DialogContent>
                     </Dialog>
                 </header>
                 <div className="space-y-4">
-                    {activeInvestments.length > 0 ? activeInvestments.map((investment) => {
+                    {visibleActiveInvestments.length > 0 ? visibleActiveInvestments.map((investment) => {
                         const { principal, totalInterest, totalValue } = calculateInvestmentDetails(investment);
                         const penalizedDetails = calculateInvestmentDetails(investment, 0.065);
                         const chartData = [
@@ -238,8 +256,17 @@ export default function InvestmentsPage() {
                             </Button>
                         </Card>
                     )}
+                    {hasMoreActive && (
+                        <div className="text-center">
+                            <Button variant="outline" onClick={() => setVisibleActive(prev => prev + ITEMS_PER_PAGE)}>
+                                Load More
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
 }
+
+    
