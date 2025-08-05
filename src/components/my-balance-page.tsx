@@ -45,11 +45,10 @@ export default function MyBalancePage() {
         }
 
         const transactionNote = "Add to Nivesh Wallet";
-        const upiUrl = `upi://pay?pa=payee@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+        const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
         window.open(upiUrl, '_blank');
 
         addBalanceRequest({
-            id: Date.now(),
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",
@@ -73,7 +72,6 @@ export default function MyBalancePage() {
             return;
         }
         addBalanceRequest({
-            id: Date.now(),
             userId: user.uid,
             userName: user.displayName || user.email || 'Unknown User',
             userAvatar: user.photoURL || "/placeholder-user.jpg",

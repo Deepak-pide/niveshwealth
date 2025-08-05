@@ -76,11 +76,11 @@ interface DataContextType {
     balanceRequests: BalanceRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    addFdRequest: (requestData: Omit<FDRequest, 'id' | 'investmentId'> & { years?: number; investmentIdToWithdraw?: number; }) => void;
+    addFdRequest: (requestData: Omit<FDRequest, 'id' | 'status' | 'investmentId'> & { years?: number; investmentIdToWithdraw?: number; }) => void;
     approveFdRequest: (requestId: number) => void;
     rejectFdRequest: (requestId: number) => void;
     removeInvestment: (investmentId: number) => void;
-    addBalanceRequest: (request: BalanceRequest) => void;
+    addBalanceRequest: (requestData: Omit<BalanceRequest, 'id' | 'status'>) => void;
     approveBalanceRequest: (requestId: number) => void;
     rejectBalanceRequest: (requestId: number) => void;
     payInterestToAll: (annualRate: number) => void;
@@ -145,7 +145,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [user, users]);
 
-    const addFdRequest = (requestData: Omit<FDRequest, 'id' | 'investmentId'> & { years?: number, investmentIdToWithdraw?: number }) => {
+    const addFdRequest = (requestData: Omit<FDRequest, 'id' | 'status' | 'investmentId'> & { years?: number, investmentIdToWithdraw?: number }) => {
         if (requestData.type === 'Investment' && requestData.years) {
             const newInvestmentId = Date.now();
             const newInvestment: Investment = {
@@ -158,18 +158,20 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 maturityDate: addYears(new Date(), requestData.years).toISOString(),
                 status: 'Pending',
             };
-            setInvestments(prev => [...prev, newInvestment]);
+             setInvestments(prev => [...prev, newInvestment]);
 
             const newRequest: FDRequest = {
                 ...requestData,
                 id: Date.now() + 1,
+                status: 'Pending',
                 investmentId: newInvestmentId,
             };
-            setFdRequests(prev => [...prev, newRequest]);
+             setFdRequests(prev => [...prev, newRequest]);
         } else if (requestData.type === 'Withdrawal') {
             const newRequest: FDRequest = {
                 ...requestData,
                 id: Date.now() + 1,
+                status: 'Pending',
             };
             setFdRequests(prev => [...prev, newRequest]);
         }
@@ -180,27 +182,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         if (!request) return;
 
         if (request.type === "Investment" && request.investmentId) {
-             const userBalance = userBalances.find(b => b.userId === request.userId);
-            if (!userBalance || userBalance.balance < request.amount) {
-                // Optionally: handle insufficient balance by rejecting
-                rejectFdRequest(requestId);
-                return;
-            }
-
             setInvestments(prev => prev.map(inv =>
                 inv.id === request.investmentId ? { ...inv, status: 'Active' } : inv
             ));
-            
-             // Deduct from balance
-            setUserBalances(prev => prev.map(b => b.userId === request.userId ? { ...b, balance: b.balance - request.amount } : b));
-            setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Investment #${request.investmentId}`, amount: request.amount, type: "Debit" }]);
-
         } else if (request.type === "Withdrawal" && request.investmentIdToWithdraw) {
             const investment = investments.find(inv => inv.id === request.investmentIdToWithdraw);
             if (!investment) return;
 
             const penalizedRate = 0.065;
-            const years = differenceInYears(new Date(), parseISO(investment.startDate));
+            const years = differenceInYears(new Date(), parseISO(investment.startDate)) || 1; // Default to 1 year if less
             const penalizedInterest = investment.amount * penalizedRate * years;
             const totalValue = investment.amount + penalizedInterest;
             
@@ -227,8 +217,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setInvestments(prev => prev.filter(inv => inv.id !== investmentId));
     }
 
-    const addBalanceRequest = (request: BalanceRequest) => {
-        setBalanceRequests(prev => [...prev, request]);
+    const addBalanceRequest = (requestData: Omit<BalanceRequest, 'id' | 'status'>) => {
+        const newRequest: BalanceRequest = {
+            ...requestData,
+            id: Date.now(),
+            status: 'Pending',
+        };
+        setBalanceRequests(prev => [...prev, newRequest]);
     };
 
     const approveBalanceRequest = (requestId: number) => {
