@@ -1,5 +1,11 @@
 "use client";
 
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, TrendingUp } from "lucide-react";
 
@@ -34,16 +40,24 @@ export default function InvestmentPage() {
                 </section>
 
                 <section>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>About Us</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">
-                                Nivesh Insights is a premier financial technology company dedicated to empowering individuals to achieve their financial goals. We provide innovative tools and expert insights to help you make informed investment decisions and build a secure financial future. Our mission is to democratize wealth creation by making sophisticated investment strategies accessible to everyone.
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Accordion type="single" collapsible className="w-full">
+                        <Card>
+                            <AccordionItem value="item-1" className="border-b-0">
+                                <AccordionTrigger className="hover:no-underline">
+                                    <CardHeader>
+                                        <CardTitle>About Us</CardTitle>
+                                    </CardHeader>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <CardContent>
+                                        <p className="text-muted-foreground">
+                                            Nivesh Insights is a premier financial technology company dedicated to empowering individuals to achieve their financial goals. We provide innovative tools and expert insights to help you make informed investment decisions and build a secure financial future. Our mission is to democratize wealth creation by making sophisticated investment strategies accessible to everyone.
+                                        </p>
+                                    </CardContent>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Card>
+                    </Accordion>
                 </section>
             </div>
         </div>
