@@ -75,7 +75,7 @@ export default function AboutUsPage() {
                                 <blockquote className="text-lg italic text-foreground border-l-4 border-primary pl-4">
                                     "Investment is a must-know part of life for a secured future. Don't let your money lose value. Invest in safe assets and see it grow."
                                 </blockquote>
-                                <p className="mt-4 text-right font-semibold text-primary">- Founder, Nivesh</p>
+                                <p className="mt-4 text-right font-semibold text-primary">-Founder</p>
                             </div>
                         </div>
                     </Card>
