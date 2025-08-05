@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 export default function AppHeader() {
   return (
-    <header className="border-b bg-card">
+    <header className="shrink-0 border-b bg-card">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
