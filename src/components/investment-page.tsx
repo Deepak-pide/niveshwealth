@@ -36,13 +36,15 @@ export default function InvestmentPage() {
                         </Card>
                     </Link>
 
-                    <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50">
-                        <div className="mb-4 rounded-full bg-primary/10 p-3">
-                            <TrendingUp className="h-8 w-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground">Start Invest in FD</h3>
-                        <p className="text-sm text-muted-foreground">Grow your wealth securely</p>
-                    </Card>
+                    <Link href="/fd-investment">
+                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50">
+                            <div className="mb-4 rounded-full bg-primary/10 p-3">
+                                <TrendingUp className="h-8 w-8 text-primary" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground">Start Invest in FD</h3>
+                            <p className="text-sm text-muted-foreground">Grow your wealth securely</p>
+                        </Card>
+                    </Link>
                 </section>
 
                 <section>
