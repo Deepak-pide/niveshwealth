@@ -58,7 +58,7 @@ export default function UsersPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>{user.email}</TableCell>
-                                    <TableCell>{user.joinDate}</TableCell>
+                                    <TableCell>{user.joinDate.toDate().toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right">
                                         <Dialog>
                                             <DialogTrigger asChild>
@@ -72,7 +72,7 @@ export default function UsersPage() {
                                                 <div className="grid gap-4 py-4 text-sm">
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Join Date:</span>
-                                                        <span className="font-semibold">{user.joinDate}</span>
+                                                        <span className="font-semibold">{user.joinDate.toDate().toLocaleDateString()}</span>
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Total Balance:</span>

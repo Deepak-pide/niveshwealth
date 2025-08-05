@@ -14,7 +14,7 @@ import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
-import { subYears, isAfter, parseISO } from "date-fns";
+import { subYears, isAfter } from "date-fns";
 import { Badge } from "./ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
@@ -42,10 +42,10 @@ export default function MyBalancePage() {
     }
 
     const currentUserBalance = userBalances.find(b => b.userId === user.uid)?.balance || 0;
-    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => b.date.toMillis() - a.date.toMillis());
 
     const dateCutoff = subYears(new Date(), yearsToShow);
-    const visibleHistory = allUserHistory.filter(item => isAfter(parseISO(item.date), dateCutoff));
+    const visibleHistory = allUserHistory.filter(item => isAfter(item.date.toDate(), dateCutoff));
     const hasMoreHistory = visibleHistory.length < allUserHistory.length;
 
     const pendingTopupRequests = topupRequests.filter(req => req.userId === user.uid);
@@ -241,7 +241,7 @@ export default function MyBalancePage() {
                                 <TableBody>
                                     {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
                                         <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                            <TableCell className="font-medium">{new Date(item.date).toLocaleDateString()}</TableCell>
+                                            <TableCell className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell>{item.description}</TableCell>
                                             <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                 {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}

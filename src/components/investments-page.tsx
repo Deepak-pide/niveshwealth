@@ -9,16 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { differenceInYears, parseISO, format } from 'date-fns';
+import { differenceInYears, format } from 'date-fns';
 import Link from "next/link";
-import { useData } from "@/hooks/use-data";
+import { useData, Investment } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { Timestamp } from "firebase/firestore";
 
-const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: string, maturityDate: string }, customRate?: number) => {
+const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: Timestamp, maturityDate: Timestamp }, customRate?: number) => {
     const principal = investment.amount;
     const rate = customRate || investment.interestRate;
-    const years = differenceInYears(parseISO(investment.maturityDate), parseISO(investment.startDate));
+    const years = differenceInYears(investment.maturityDate.toDate(), investment.startDate.toDate());
     const totalInterest = principal * rate * years;
     const totalValue = principal + totalInterest;
 
@@ -54,7 +55,7 @@ export default function InvestmentsPage() {
     const activeInvestments = userInvestments.filter(inv => inv.status === 'Active' || inv.status === 'Pending');
     const pastInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
     
-    const handleWithdraw = (investmentId: number) => {
+    const handleWithdraw = (investmentId: string) => {
         const investment = investments.find(inv => inv.id === investmentId);
         if (!investment || !user) return;
 
@@ -117,7 +118,7 @@ export default function InvestmentsPage() {
                                                     </div>
                                                     <div>
                                                         <p className="text-muted-foreground">Maturity Date</p>
-                                                        <p className="font-semibold">{format(parseISO(investment.maturityDate), 'dd MMM yyyy')}</p>
+                                                        <p className="font-semibold">{format(investment.maturityDate.toDate(), 'dd MMM yyyy')}</p>
                                                     </div>
                                                 </div>
                                             </CardContent>
@@ -166,7 +167,7 @@ export default function InvestmentsPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-muted-foreground">Maturity Date</p>
-                                                    <p className="font-semibold">{format(parseISO(investment.maturityDate), 'dd MMM yyyy')}</p>
+                                                    <p className="font-semibold">{format(investment.maturityDate.toDate(), 'dd MMM yyyy')}</p>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -205,7 +206,7 @@ export default function InvestmentsPage() {
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Maturity Date:</span>
-                                                <span className="font-semibold text-foreground">{format(parseISO(investment.maturityDate), 'dd MMM yyyy')}</span>
+                                                <span className="font-semibold text-foreground">{format(investment.maturityDate.toDate(), 'dd MMM yyyy')}</span>
                                             </div>
                                         </div>
                                         <AlertDialog>
@@ -263,5 +264,3 @@ export default function InvestmentsPage() {
         </div>
     );
 }
-
-    

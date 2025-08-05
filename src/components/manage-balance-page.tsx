@@ -115,7 +115,7 @@ export default function ManageBalancePage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell>{req.date}</TableCell>
+                                            <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <Button variant="outline" size="sm" onClick={() => rejectTopupRequest(req.id)}>Reject</Button>
                                                 <Button size="sm" onClick={() => approveTopupRequest(req.id)}>Accept</Button>
@@ -163,7 +163,7 @@ export default function ManageBalancePage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell>{req.date}</TableCell>
+                                            <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <Button variant="outline" size="sm" onClick={() => rejectBalanceWithdrawalRequest(req.id)}>Reject</Button>
                                                 <Button size="sm" onClick={() => approveBalanceWithdrawalRequest(req.id)}>Accept</Button>

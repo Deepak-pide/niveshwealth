@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Download } from "lucide-react";
-import { differenceInYears, parseISO, format } from 'date-fns';
+import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
+import { Timestamp } from "firebase/firestore";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -49,8 +50,8 @@ export default function ManageFdPage() {
         const title = "USER INVESTMENTS";
         const flattenedData = investments.map(fd => {
             const user = users.find(u => u.id === fd.userId);
-            const startDate = parseISO(fd.startDate);
-            const maturityDate = parseISO(fd.maturityDate);
+            const startDate = fd.startDate.toDate();
+            const maturityDate = fd.maturityDate.toDate();
             const years = differenceInYears(maturityDate, startDate);
             const totalValue = fd.amount * (1 + fd.interestRate * years);
 
@@ -125,7 +126,7 @@ export default function ManageFdPage() {
                                             </TableCell>
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{req.years}</TableCell>
-                                            <TableCell>{req.date}</TableCell>
+                                            <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -189,7 +190,7 @@ export default function ManageFdPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell>{req.date}</TableCell>
+                                            <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -281,7 +282,7 @@ export default function ManageFdPage() {
                                                                         <TableRow key={fd.id}>
                                                                             <TableCell>{fd.name}</TableCell>
                                                                             <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
-                                                                            <TableCell>{format(parseISO(fd.maturityDate), 'dd MMM yyyy')}</TableCell>
+                                                                            <TableCell>{format(fd.maturityDate.toDate(), 'dd MMM yyyy')}</TableCell>
                                                                         </TableRow>
                                                                     ))}
                                                                 </TableBody>

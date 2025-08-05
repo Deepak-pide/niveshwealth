@@ -2,87 +2,83 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { addYears, parseISO, differenceInYears } from 'date-fns';
+import { db } from '@/lib/firebase';
+import { 
+    collection, 
+    onSnapshot, 
+    addDoc, 
+    deleteDoc, 
+    doc, 
+    updateDoc, 
+    serverTimestamp,
+    query,
+    where,
+    documentId,
+    getDoc,
+    writeBatch,
+    Timestamp,
+} from 'firebase/firestore';
 import { useAuth } from './use-auth';
+import { addYears, parseISO, differenceInYears } from 'date-fns';
 
-// Types
-interface Investment {
-    id: number;
+// Base Types
+interface BaseRequest {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    amount: number;
+    date: Timestamp;
+    status: 'Pending';
+}
+
+// Specific Types
+export interface Investment {
+    id: string;
     userId: string;
     name: string;
     amount: number;
     interestRate: number;
-    startDate: string; // ISO string
-    maturityDate: string; // ISO string
+    startDate: Timestamp;
+    maturityDate: Timestamp;
     status: 'Active' | 'Matured' | 'Withdrawn' | 'Pending';
 }
 
-interface InvestmentRequest {
-    id: number;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    amount: number;
+export interface InvestmentRequest extends Omit<BaseRequest, 'date'> {
+    date: Timestamp;
     years: number;
-    date: string; // ISO string
-    status: 'Pending';
 }
 
-interface FdWithdrawalRequest {
-    id: number;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    amount: number;
-    date: string; // ISO string
-    status: 'Pending';
-    investmentIdToWithdraw: number;
+export interface FdWithdrawalRequest extends BaseRequest {
+    investmentIdToWithdraw: string;
 }
 
-interface TopupRequest {
-    id: number;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    amount: number;
-    date: string; // ISO string
-    status: 'Pending';
-}
+export type TopupRequest = BaseRequest;
+export type BalanceWithdrawalRequest = BaseRequest;
 
-interface BalanceWithdrawalRequest {
-    id: number;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    amount: number;
-    date: string; // ISO string
-    status: 'Pending';
-}
-
-
-interface UserBalance {
-    id: number;
+export interface UserBalance {
+    id: string;
     userId: string;
     userName: string;
     userAvatar: string;
     balance: number;
 }
 
-interface BalanceHistory {
-    id: number,
+export interface BalanceHistory {
+    id: string;
     userId: string;
-    date: string; // ISO string
+    date: Timestamp;
     description: string;
     amount: number;
     type: "Credit" | "Debit";
 }
 
-interface AppUser {
+export interface AppUser {
     id: string;
     name: string;
     email: string;
     avatar: string;
-    joinDate: string;
+    joinDate: Timestamp;
 }
 
 
@@ -96,22 +92,33 @@ interface DataContextType {
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => void;
-    addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => void;
-    approveInvestmentRequest: (requestId: number) => void;
-    rejectInvestmentRequest: (requestId: number) => void;
-    approveFdWithdrawalRequest: (requestId: number) => void;
-    rejectFdWithdrawalRequest: (requestId: number) => void;
-    addTopupRequest: (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => void;
-    addBalanceWithdrawalRequest: (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => void;
-    approveTopupRequest: (requestId: number) => void;
-    rejectTopupRequest: (requestId: number) => void;
-    approveBalanceWithdrawalRequest: (requestId: number) => void;
-    rejectBalanceWithdrawalRequest: (requestId: number) => void;
-    payInterestToAll: (annualRate: number) => void;
+    addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
+    addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
+    approveInvestmentRequest: (requestId: string) => Promise<void>;
+    rejectInvestmentRequest: (requestId: string) => Promise<void>;
+    approveFdWithdrawalRequest: (requestId: string) => Promise<void>;
+    rejectFdWithdrawalRequest: (requestId: string) => Promise<void>;
+    addTopupRequest: (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
+    addBalanceWithdrawalRequest: (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'| 'date'> & { date: string }) => Promise<void>;
+    approveTopupRequest: (requestId: string) => Promise<void>;
+    rejectTopupRequest: (requestId: string) => Promise<void>;
+    approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
+    rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
+    payInterestToAll: (annualRate: number) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
+
+const-data-fetching-hook = (collectionName: string, setState: Function) => {
+    useEffect(() => {
+        const q = collection(db, collectionName);
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const items = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            setState(items);
+        });
+        return () => unsubscribe();
+    }, [collectionName, setState]);
+};
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
     const { user: authUser } = useAuth();
@@ -125,179 +132,266 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
 
     useEffect(() => {
-        if (authUser && !users.find(u => u.id === authUser.uid)) {
-            const newUser: AppUser = {
-                id: authUser.uid,
-                name: authUser.displayName || "New User",
-                email: authUser.email || "",
-                avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
-                joinDate: new Date().toISOString().split('T')[0],
-            };
-            const newUserBalance: UserBalance = {
-                id: Date.now(),
-                userId: authUser.uid,
-                userName: authUser.displayName || "New User",
-                userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
-                balance: 0,
-            };
-            setUsers(prev => [...prev, newUser]);
-            setUserBalances(prev => [...prev, newUserBalance]);
+        if (authUser) {
+            const userDocRef = doc(db, 'users', authUser.uid);
+            getDoc(userDocRef).then(docSnap => {
+                if (!docSnap.exists()) {
+                    const newUser: Omit<AppUser, 'id'> = {
+                        name: authUser.displayName || "New User",
+                        email: authUser.email || "",
+                        avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
+                        joinDate: Timestamp.now(),
+                    };
+                    const newUserBalance: Omit<UserBalance, 'id' | 'userId'> = {
+                        userName: authUser.displayName || "New User",
+                        userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
+                        balance: 0,
+                    };
+                    const batch = writeBatch(db);
+                    batch.set(userDocRef, newUser);
+                    batch.set(doc(db, 'userBalances', authUser.uid), newUserBalance);
+                    batch.commit();
+                }
+            });
         }
     }, [authUser]);
+
+    const-data-fetching-hook('users', setUsers);
+    const-data-fetching-hook('investments', setInvestments);
+    const-data-fetching-hook('investmentRequests', setInvestmentRequests);
+    const-data-fetching-hook('fdWithdrawalRequests', setFdWithdrawalRequests);
+    const-data-fetching-hook('topupRequests', setTopupRequests);
+    const-data-fetching-hook('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
+    const-data-fetching-hook('userBalances', setUserBalances);
+    const-data-fetching-hook('balanceHistory', setBalanceHistory);
 
     const getUserInfo = (userId: string) => {
         const user = users.find(u => u.id === userId);
         return {
             userName: user?.name || authUser?.displayName || 'Unknown User',
-            userAvatar: user?.avatar || authUser?.photoURL ||`https://placehold.co/100x100.png`
+            userAvatar: user?.avatar || authUser?.photoURL || `https://placehold.co/100x100.png`
         };
     };
 
-    const addInvestmentRequest = (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => {
-        const { userName, userAvatar } = getUserInfo(requestData.userId);
-        const newRequest: InvestmentRequest = { ...requestData, id: Date.now(), status: 'Pending', userName, userAvatar };
-        setInvestmentRequests(prev => [...prev, newRequest]);
+    const addInvestmentRequest = async (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
+        if (!authUser) return;
+        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const newRequest = { 
+            ...requestData, 
+            status: 'Pending' as const, 
+            userName, 
+            userAvatar,
+            date: Timestamp.fromDate(new Date(requestData.date))
+        };
+        await addDoc(collection(db, 'investmentRequests'), newRequest);
     };
 
-    const addFdWithdrawalRequest = (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => {
-        const { userName, userAvatar } = getUserInfo(requestData.userId);
-        const newRequest: FdWithdrawalRequest = { ...requestData, id: Date.now(), status: 'Pending', userName, userAvatar };
-        setFdWithdrawalRequests(prev => [...prev, newRequest]);
+    const addFdWithdrawalRequest = async (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
+        if (!authUser) return;
+        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const newRequest = { 
+            ...requestData, 
+            status: 'Pending' as const, 
+            userName, 
+            userAvatar,
+            date: Timestamp.fromDate(new Date(requestData.date))
+        };
+        await addDoc(collection(db, 'fdWithdrawalRequests'), newRequest);
     };
 
-    const approveInvestmentRequest = (requestId: number) => {
-        const request = investmentRequests.find(r => r.id === requestId);
-        if (!request) return;
+    const approveInvestmentRequest = async (requestId: string) => {
+        const requestDocRef = doc(db, 'investmentRequests', requestId);
+        const request = await getDoc(requestDocRef);
+        if (!request.exists()) return;
+        const requestData = request.data() as InvestmentRequest;
 
-        const newInvestment: Investment = {
-            id: Date.now() + 1,
-            userId: request.userId,
-            name: `FD for ${request.years} years`,
-            amount: request.amount,
+        const newInvestment = {
+            userId: requestData.userId,
+            name: `FD for ${requestData.years} years`,
+            amount: requestData.amount,
             interestRate: 0.09,
-            startDate: new Date().toISOString(),
-            maturityDate: addYears(new Date(), request.years).toISOString(),
-            status: 'Active',
+            startDate: Timestamp.now(),
+            maturityDate: Timestamp.fromDate(addYears(new Date(), requestData.years)),
+            status: 'Active' as const,
         };
-        setInvestments(prev => [...prev, newInvestment]);
-        setInvestmentRequests(prev => prev.filter(r => r.id !== requestId));
+        
+        const batch = writeBatch(db);
+        batch.set(doc(collection(db, 'investments')), newInvestment);
+        batch.delete(requestDocRef);
+        await batch.commit();
     };
 
-    const rejectInvestmentRequest = (requestId: number) => {
-        setInvestmentRequests(prev => prev.filter(r => r.id !== requestId));
+    const rejectInvestmentRequest = async (requestId: string) => {
+        await deleteDoc(doc(db, 'investmentRequests', requestId));
     };
 
-    const approveFdWithdrawalRequest = (requestId: number) => {
-        const request = fdWithdrawalRequests.find(r => r.id === requestId);
-        if (!request) return;
+     const approveFdWithdrawalRequest = async (requestId: string) => {
+        const requestDocRef = doc(db, 'fdWithdrawalRequests', requestId);
+        const requestSnap = await getDoc(requestDocRef);
+        if (!requestSnap.exists()) return;
+        const request = requestSnap.data() as FdWithdrawalRequest;
 
-        const investment = investments.find(inv => inv.id === request.investmentIdToWithdraw);
-        if (!investment) return;
+        const investmentDocRef = doc(db, 'investments', request.investmentIdToWithdraw);
+        const investmentSnap = await getDoc(investmentDocRef);
+        if (!investmentSnap.exists()) return;
+        const investment = investmentSnap.data() as Investment;
 
         const penalizedRate = 0.065;
-        const years = Math.max(differenceInYears(new Date(), parseISO(investment.startDate)), 1);
+        const years = Math.max(differenceInYears(new Date(), investment.startDate.toDate()), 1);
         const penalizedInterest = investment.amount * penalizedRate * years;
         const totalValue = investment.amount + penalizedInterest;
+        
+        const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+        const userBalanceSnap = await getDoc(userBalanceDocRef);
+        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
 
-        setInvestments(prev => prev.map(inv => inv.id === request.investmentIdToWithdraw ? { ...inv, status: 'Withdrawn' } : inv));
-        setUserBalances(prev => prev.map(b => b.userId === request.userId ? { ...b, balance: b.balance + totalValue } : b));
-        setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Withdrawal #${investment.id}`, amount: totalValue, type: "Credit" }]);
-        setFdWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+        const batch = writeBatch(db);
+        batch.update(investmentDocRef, { status: 'Withdrawn' });
+        batch.update(userBalanceDocRef, { balance: currentBalance + totalValue });
+        batch.set(doc(collection(db, 'balanceHistory')), { 
+            userId: request.userId, 
+            date: Timestamp.now(), 
+            description: `FD Withdrawal #${investmentSnap.id}`, 
+            amount: totalValue, 
+            type: "Credit" 
+        });
+        batch.delete(requestDocRef);
+        await batch.commit();
     };
 
-    const rejectFdWithdrawalRequest = (requestId: number) => {
-        setFdWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+    const rejectFdWithdrawalRequest = async (requestId: string) => {
+        await deleteDoc(doc(db, 'fdWithdrawalRequests', requestId));
     };
 
-    const addTopupRequest = (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => {
-        const { userName, userAvatar } = getUserInfo(requestData.userId);
-        const newRequest: TopupRequest = { ...requestData, id: Date.now(), status: 'Pending', userName, userAvatar };
-        setTopupRequests(prev => [...prev, newRequest]);
+    const addTopupRequest = async (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
+        if (!authUser) return;
+        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const newRequest = { 
+            ...requestData, 
+            status: 'Pending' as const, 
+            userName, 
+            userAvatar,
+            date: Timestamp.fromDate(new Date(requestData.date))
+        };
+        await addDoc(collection(db, 'topupRequests'), newRequest);
+    };
+    
+    const addBalanceWithdrawalRequest = async (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'| 'date'> & { date: string }) => {
+        if (!authUser) return;
+        const { userName, userAvatar } = getUserInfo(authUser.uid);
+         const newRequest = { 
+            ...requestData, 
+            status: 'Pending' as const, 
+            userName, 
+            userAvatar,
+            date: Timestamp.fromDate(new Date(requestData.date))
+        };
+        await addDoc(collection(db, 'balanceWithdrawalRequests'), newRequest);
     };
 
-    const addBalanceWithdrawalRequest = (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'>) => {
-        const { userName, userAvatar } = getUserInfo(requestData.userId);
-        const newRequest: BalanceWithdrawalRequest = { ...requestData, id: Date.now(), status: 'Pending', userName, userAvatar };
-        setBalanceWithdrawalRequests(prev => [...prev, newRequest]);
+    const approveTopupRequest = async (requestId: string) => {
+        const requestDocRef = doc(db, 'topupRequests', requestId);
+        const requestSnap = await getDoc(requestDocRef);
+        if (!requestSnap.exists()) return;
+        const request = requestSnap.data() as TopupRequest;
+
+        const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+        const userBalanceSnap = await getDoc(userBalanceDocRef);
+        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
+        
+        const batch = writeBatch(db);
+        batch.update(userBalanceDocRef, { balance: currentBalance + request.amount });
+        batch.set(doc(collection(db, 'balanceHistory')), {
+            userId: request.userId,
+            date: Timestamp.now(),
+            description: 'Added to wallet',
+            amount: request.amount,
+            type: 'Credit'
+        });
+        batch.delete(requestDocRef);
+        await batch.commit();
     };
 
-    const approveTopupRequest = (requestId: number) => {
-        const request = topupRequests.find(r => r.id === requestId);
-        if (!request) return;
-
-        setUserBalances(prev => prev.map(b =>
-            b.userId === request.userId ? { ...b, balance: b.balance + request.amount } : b
-        ));
-        setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: 'Added to wallet', amount: request.amount, type: 'Credit' }]);
-        setTopupRequests(prev => prev.filter(r => r.id !== requestId));
+    const rejectTopupRequest = async (requestId: string) => {
+        await deleteDoc(doc(db, 'topupRequests', requestId));
     };
 
-    const rejectTopupRequest = (requestId: number) => {
-        setTopupRequests(prev => prev.filter(r => r.id !== requestId));
+    const approveBalanceWithdrawalRequest = async (requestId: string) => {
+        const requestDocRef = doc(db, 'balanceWithdrawalRequests', requestId);
+        const requestSnap = await getDoc(requestDocRef);
+        if (!requestSnap.exists()) return;
+        const request = requestSnap.data() as BalanceWithdrawalRequest;
+
+        const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+        const userBalanceSnap = await getDoc(userBalanceDocRef);
+        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
+
+        const batch = writeBatch(db);
+        batch.update(userBalanceDocRef, { balance: currentBalance - request.amount });
+        batch.set(doc(collection(db, 'balanceHistory')), {
+            userId: request.userId,
+            date: Timestamp.now(),
+            description: 'Withdrawn from wallet',
+            amount: request.amount,
+            type: 'Debit'
+        });
+        batch.delete(requestDocRef);
+        await batch.commit();
     };
 
-    const approveBalanceWithdrawalRequest = (requestId: number) => {
-        const request = balanceWithdrawalRequests.find(r => r.id === requestId);
-        if (!request) return;
-
-        setUserBalances(prev => prev.map(b =>
-            b.userId === request.userId ? { ...b, balance: b.balance - request.amount } : b
-        ));
-        setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: 'Withdrawn from wallet', amount: request.amount, type: 'Debit' }]);
-        setBalanceWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
+    const rejectBalanceWithdrawalRequest = async (requestId: string) => {
+        await deleteDoc(doc(db, 'balanceWithdrawalRequests', requestId));
     };
 
-    const rejectBalanceWithdrawalRequest = (requestId: number) => {
-        setBalanceWithdrawalRequests(prev => prev.filter(r => r.id !== requestId));
-    };
-
-
-    const payInterestToAll = (annualRate: number) => {
+    const payInterestToAll = async (annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
-        const newHistory: BalanceHistory[] = [];
-        const updatedBalances = userBalances.map(userBalance => {
+        const batch = writeBatch(db);
+
+        userBalances.forEach(userBalance => {
             if (userBalance.balance > 0) {
-                const interest = userBalance.balance * monthlyRate;
-                newHistory.push({
-                    id: Date.now() + userBalance.id,
+                const interest = parseFloat((userBalance.balance * monthlyRate).toFixed(2));
+                const userBalanceRef = doc(db, 'userBalances', userBalance.id);
+                batch.update(userBalanceRef, { balance: userBalance.balance + interest });
+
+                const historyRef = doc(collection(db, 'balanceHistory'));
+                batch.set(historyRef, {
                     userId: userBalance.userId,
-                    date: new Date().toISOString(),
+                    date: Timestamp.now(),
                     description: "Monthly Interest",
-                    amount: parseFloat(interest.toFixed(2)),
+                    amount: interest,
                     type: 'Credit'
                 });
-                return { ...userBalance, balance: userBalance.balance + interest };
             }
-            return userBalance;
         });
-        setUserBalances(updatedBalances);
-        setBalanceHistory(prev => [...prev, ...newHistory]);
+        await batch.commit();
+    };
+
+    const value = {
+        users,
+        investments,
+        investmentRequests,
+        fdWithdrawalRequests,
+        topupRequests,
+        balanceWithdrawalRequests,
+        userBalances,
+        balanceHistory,
+        addInvestmentRequest,
+        addFdWithdrawalRequest,
+        approveInvestmentRequest,
+        rejectInvestmentRequest,
+        approveFdWithdrawalRequest,
+        rejectFdWithdrawalRequest,
+        addTopupRequest,
+        addBalanceWithdrawalRequest,
+        approveTopupRequest,
+        rejectTopupRequest,
+        approveBalanceWithdrawalRequest,
+        rejectBalanceWithdrawalRequest,
+        payInterestToAll,
     };
 
     return (
-        <DataContext.Provider value={{
-            users,
-            investments,
-            investmentRequests,
-            fdWithdrawalRequests,
-            topupRequests,
-            balanceWithdrawalRequests,
-            userBalances,
-            balanceHistory,
-            addInvestmentRequest,
-            addFdWithdrawalRequest,
-            approveInvestmentRequest,
-            rejectInvestmentRequest,
-            approveFdWithdrawalRequest,
-            rejectFdWithdrawalRequest,
-            addTopupRequest,
-            addBalanceWithdrawalRequest,
-            approveTopupRequest,
-            rejectTopupRequest,
-            approveBalanceWithdrawalRequest,
-            rejectBalanceWithdrawalRequest,
-            payInterestToAll,
-        }}>
+        <DataContext.Provider value={value}>
             {children}
         </DataContext.Provider>
     );
