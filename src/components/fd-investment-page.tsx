@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogClose } from "@/components/ui/alert-dialog";
 import { addYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import Image from "next/image";
 
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
@@ -20,6 +22,7 @@ export default function FdInvestmentPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
+    const isMobile = useIsMobile();
 
 
     const fdRate = 0.07;
@@ -37,10 +40,11 @@ export default function FdInvestmentPage() {
             return;
         }
 
-        const transactionNote = `FD Investment for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
-        const upiUrl = `upi://pay?pa=payee@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
-        
-        window.open(upiUrl, '_blank');
+        if (isMobile) {
+            const transactionNote = `FD Investment for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
+            const upiUrl = `upi://pay?pa=payee@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+            window.open(upiUrl, '_blank');
+        }
 
         addFdRequest({
             id: Date.now(),
@@ -117,15 +121,36 @@ export default function FdInvestmentPage() {
                                                 <span className="text-muted-foreground">Maturity Date:</span>
                                                 <span className="font-semibold text-foreground">{format(maturityDate, 'PPP')}</span>
                                             </div>
-                                             <div className="pt-4 text-center text-muted-foreground">
-                                                You will be redirected to your UPI app to complete the payment.
-                                            </div>
+                                            {isMobile ? (
+                                                <div className="pt-4 text-center text-muted-foreground">
+                                                    You will be redirected to your UPI app to complete the payment.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4 pt-4 text-center">
+                                                    <div className="flex justify-center">
+                                                        <Image
+                                                            src="https://placehold.co/200x200.png"
+                                                            alt="UPI QR Code"
+                                                            width={150}
+                                                            height={150}
+                                                            data-ai-hint="upi qr code"
+                                                        />
+                                                    </div>
+                                                    <p className="text-muted-foreground">Scan the QR code with your UPI app</p>
+                                                    <p className="font-semibold">UPI ID: 9179349919-2@axl</p>
+                                                    <p className="font-semibold">Mobile: 9179349919</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                     <AlertDialogAction onClick={handleConfirmInvestment}>Pay using UPI</AlertDialogAction>
+                                    {isMobile ? (
+                                        <AlertDialogAction onClick={handleConfirmInvestment}>Pay using UPI</AlertDialogAction>
+                                    ) : (
+                                        <AlertDialogAction onClick={handleConfirmInvestment}>I Have Paid</AlertDialogAction>
+                                    )}
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
