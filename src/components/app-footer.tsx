@@ -14,10 +14,10 @@ export default function AppFooter() {
             <Briefcase className="h-6 w-6" />
             <span className="text-xs font-medium">Investments</span>
           </Link>
-          <a href="#" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
+          <Link href="/my-balance" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
             <Wallet className="h-6 w-6" />
             <span className="text-xs font-medium">My Balance</span>
-          </a>
+          </Link>
         </nav>
       </div>
     </footer>
