@@ -3,27 +3,25 @@
 
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { LineChart } from 'lucide-react';
+import { LineChart, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import UserNav from './user-nav';
 import { useAuth } from '@/hooks/use-auth';
+import { useData } from '@/hooks/use-data';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Button } from './ui/button';
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
+  const { investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests } = useData();
+
   const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
   const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
-  const isCorrectAdminPath = isAdmin && pathname.startsWith('/admin');
 
-  const handleSwitchChange = (checked: boolean) => {
-    if (checked) {
-      router.push('/admin');
-    } else {
-      router.push('/');
-    }
-  };
+  const totalPendingRequests = investmentRequests.length + fdWithdrawalRequests.length + topupRequests.length + balanceWithdrawalRequests.length;
 
   return (
     <header className="shrink-0 border-b bg-card shadow-sm">
@@ -36,6 +34,71 @@ export default function AppHeader() {
             </h1>
           </Link>
           <div className="flex items-center gap-4">
+             {isAdmin && (
+               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5" />
+                        {totalPendingRequests > 0 && (
+                            <span className="absolute top-1 right-1 flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                        )}
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                    <DropdownMenuLabel>Pending Requests</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {totalPendingRequests > 0 ? (
+                        <>
+                            {investmentRequests.length > 0 && (
+                                <Link href="/admin/manage/fd">
+                                    <DropdownMenuItem>
+                                        <div className="flex justify-between w-full">
+                                            <span>FD Investments</span>
+                                            <span className="font-bold">{investmentRequests.length}</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                </Link>
+                            )}
+                            {fdWithdrawalRequests.length > 0 && (
+                                <Link href="/admin/manage/fd">
+                                    <DropdownMenuItem>
+                                        <div className="flex justify-between w-full">
+                                            <span>FD Withdrawals</span>
+                                            <span className="font-bold">{fdWithdrawalRequests.length}</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                </Link>
+                            )}
+                             {topupRequests.length > 0 && (
+                                <Link href="/admin/manage/balance">
+                                    <DropdownMenuItem>
+                                        <div className="flex justify-between w-full">
+                                            <span>Balance Top-ups</span>
+                                            <span className="font-bold">{topupRequests.length}</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                </Link>
+                            )}
+                            {balanceWithdrawalRequests.length > 0 && (
+                                <Link href="/admin/manage/balance">
+                                    <DropdownMenuItem>
+                                        <div className="flex justify-between w-full">
+                                            <span>Balance Withdrawals</span>
+                                            <span className="font-bold">{balanceWithdrawalRequests.length}</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                </Link>
+                            )}
+                        </>
+                    ) : (
+                        <DropdownMenuItem disabled>No pending requests</DropdownMenuItem>
+                    )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
              <UserNav />
           </div>
         </div>
