@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import * as XLSX from "xlsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Download } from "lucide-react";
 
 const fdRequests = [
     { id: 1, userName: "Ravi Kumar", userAvatar: "/placeholder-user.jpg", type: "Investment", amount: "50,000", date: "2024-07-30" },
@@ -49,6 +51,25 @@ const userInvestments = [
 
 
 export default function ManageFdPage() {
+
+    const handleDownload = () => {
+        const flattenedData = userInvestments.flatMap(user =>
+            user.activeFDs.map(fd => ({
+                'User Name': user.userName,
+                'Total Investment': `₹${user.totalInvestment}`,
+                'FD Name': fd.name,
+                'FD Amount': `₹${fd.amount}`,
+                'FD Maturity Date': fd.maturityDate,
+            }))
+        );
+
+        const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "User Investments");
+        XLSX.writeFile(workbook, "user_investments.xlsx");
+    };
+
+
     return (
         <div className="container mx-auto p-4 md:p-8">
             <header className="mb-6">
@@ -108,9 +129,15 @@ export default function ManageFdPage() {
                 </TabsContent>
                 <TabsContent value="users">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>User Investments</CardTitle>
-                            <CardDescription>View total FD investments by user and their active FDs.</CardDescription>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                             <div>
+                                <CardTitle>User Investments</CardTitle>
+                                <CardDescription>View total FD investments by user and their active FDs.</CardDescription>
+                            </div>
+                             <Button onClick={handleDownload} variant="outline">
+                                <Download className="mr-2 h-4 w-4" />
+                                Download Excel
+                            </Button>
                         </CardHeader>
                         <CardContent>
                             <Table>
