@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useState } from "react";
 import {
     Accordion,
     AccordionContent,
@@ -8,8 +10,24 @@ import {
 } from "@/components/ui/accordion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, TrendingUp } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 
 export default function InvestmentPage() {
+    const [amount, setAmount] = useState(50000);
+    const [years, setYears] = useState(5);
+
     return (
         <div className="container mx-auto p-4 md:p-8">
             <div className="space-y-8">
@@ -23,13 +41,73 @@ export default function InvestmentPage() {
                 </section>
 
                 <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50">
-                        <div className="mb-4 rounded-full bg-primary/10 p-3">
-                            <Calculator className="h-8 w-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground">Investment Calculator</h3>
-                        <p className="text-sm text-muted-foreground">Calculate your potential returns</p>
-                    </Card>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50">
+                                <div className="mb-4 rounded-full bg-primary/10 p-3">
+                                    <Calculator className="h-8 w-8 text-primary" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-foreground">Investment Calculator</h3>
+                                <p className="text-sm text-muted-foreground">Calculate your potential returns</p>
+                            </Card>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Investment Calculator</DialogTitle>
+                                <DialogDescription>
+                                    Estimate your returns by setting the investment amount and duration.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-6 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="amount">Amount</Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        value={amount}
+                                        onChange={(e) => setAmount(Math.min(Number(e.target.value), 50000))}
+                                        className="w-full"
+                                        max="50000"
+                                    />
+                                    <Slider
+                                        value={[amount]}
+                                        onValueChange={(value) => setAmount(value[0])}
+                                        max={50000}
+                                        step={1000}
+                                    />
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span>₹0</span>
+                                        <span>₹50,000</span>
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="years">Years</Label>
+                                    <Input
+                                        id="years"
+                                        type="number"
+                                        value={years}
+                                        onChange={(e) => setYears(Math.min(Number(e.target.value), 30))}
+                                        className="w-full"
+                                        max="30"
+                                    />
+                                    <Slider
+                                        value={[years]}
+                                        onValueChange={(value) => setYears(value[0])}
+                                        max={30}
+                                        step={1}
+                                    />
+                                     <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span>1 Year</span>
+                                        <span>30 Years</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit">Calculate</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
                     <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50">
                         <div className="mb-4 rounded-full bg-primary/10 p-3">
                             <TrendingUp className="h-8 w-8 text-primary" />
