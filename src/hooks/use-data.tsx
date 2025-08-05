@@ -109,7 +109,7 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const-data-fetching-hook = (collectionName: string, setState: Function) => {
+const useDataFetching = (collectionName: string, setState: Function) => {
     useEffect(() => {
         const q = collection(db, collectionName);
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -142,7 +142,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
                         joinDate: Timestamp.now(),
                     };
-                    const newUserBalance: Omit<UserBalance, 'id' | 'userId'> = {
+                    const newUserBalance: Omit<UserBalance, 'id' > = {
+                        userId: authUser.uid,
                         userName: authUser.displayName || "New User",
                         userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
                         balance: 0,
@@ -156,14 +157,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [authUser]);
 
-    const-data-fetching-hook('users', setUsers);
-    const-data-fetching-hook('investments', setInvestments);
-    const-data-fetching-hook('investmentRequests', setInvestmentRequests);
-    const-data-fetching-hook('fdWithdrawalRequests', setFdWithdrawalRequests);
-    const-data-fetching-hook('topupRequests', setTopupRequests);
-    const-data-fetching-hook('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
-    const-data-fetching-hook('userBalances', setUserBalances);
-    const-data-fetching-hook('balanceHistory', setBalanceHistory);
+    useDataFetching('users', setUsers);
+    useDataFetching('investments', setInvestments);
+    useDataFetching('investmentRequests', setInvestmentRequests);
+    useDataFetching('fdWithdrawalRequests', setFdWithdrawalRequests);
+    useDataFetching('topupRequests', setTopupRequests);
+    useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
+    useDataFetching('userBalances', setUserBalances);
+    useDataFetching('balanceHistory', setBalanceHistory);
 
     const getUserInfo = (userId: string) => {
         const user = users.find(u => u.id === userId);
