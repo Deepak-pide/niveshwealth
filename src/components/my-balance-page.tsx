@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { subYears, isAfter, parseISO } from "date-fns";
 import { Badge } from "./ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+import Image from "next/image";
 
 
 export default function MyBalancePage() {
@@ -26,6 +28,7 @@ export default function MyBalancePage() {
     const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest, topupRequests, balanceWithdrawalRequests } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
+    const isMobile = useIsMobile();
 
     if (!user) {
         return (
@@ -56,9 +59,11 @@ export default function MyBalancePage() {
             return;
         }
 
-        const transactionNote = "Add to Nivesh Wallet";
-        const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
-        window.open(upiUrl, '_blank');
+        if (isMobile) {
+            const transactionNote = "Add to Nivesh Wallet";
+            const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+            window.open(upiUrl, '_blank');
+        }
 
         addTopupRequest({
             userId: user.uid,
@@ -124,10 +129,28 @@ export default function MyBalancePage() {
                                             className="col-span-3"
                                         />
                                     </div>
+                                    { !isMobile && (
+                                        <div className="space-y-4 pt-4 text-center">
+                                            <div className="flex justify-center">
+                                                <Image
+                                                    src="https://placehold.co/200x200.png"
+                                                    alt="UPI QR Code"
+                                                    width={150}
+                                                    height={150}
+                                                    data-ai-hint="upi qr code"
+                                                />
+                                            </div>
+                                            <p className="text-muted-foreground">Scan the QR code with your UPI app</p>
+                                            <p className="font-semibold">UPI ID: 9179349919-2@axl</p>
+                                            <p className="font-semibold">Mobile: 9179349919</p>
+                                        </div>
+                                    )}
                                 </div>
                                 <DialogFooter>
                                     <DialogClose asChild>
-                                        <Button type="submit" onClick={handleAddBalance}>Pay using UPI</Button>
+                                        <Button type="submit" onClick={handleAddBalance}>
+                                            {isMobile ? 'Pay using UPI' : 'I Have Paid'}
+                                        </Button>
                                     </DialogClose>
                                 </DialogFooter>
                             </DialogContent>
