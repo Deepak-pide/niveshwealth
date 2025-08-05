@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Briefcase, Wallet } from "lucide-react";
 
 export default function AdminPage() {
     return (
@@ -13,28 +14,28 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Total Users
+                                Total FD
                             </CardTitle>
-                             <Users className="h-4 w-4 text-muted-foreground" />
+                             <Briefcase className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">1,257</div>
+                            <div className="text-2xl font-bold">₹12,50,000</div>
                             <p className="text-xs text-muted-foreground">
-                                +20.1% from last month
+                                +15% from last month
                             </p>
                         </CardContent>
                     </Card>
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Total Investments
+                                Total Balance
                             </CardTitle>
-                             <DollarSign className="h-4 w-4 text-muted-foreground" />
+                             <Wallet className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">₹2,35,48,590</div>
+                            <div className="text-2xl font-bold">₹5,48,590</div>
                              <p className="text-xs text-muted-foreground">
-                                +180.1% from last month
+                                +18.1% from last month
                             </p>
                         </CardContent>
                     </Card>
@@ -42,47 +43,4 @@ export default function AdminPage() {
             </div>
         </div>
     );
-}
-
-function DollarSign(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <line x1="12" x2="12" y1="2" y2="22" />
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-    )
-}
-
-
-function Users(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-    )
 }
