@@ -167,7 +167,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 investmentId: newInvestmentId,
             };
              setFdRequests(prev => [...prev, newRequest]);
-        } else if (requestData.type === 'Withdrawal') {
+        } else if (requestData.type === 'Withdrawal' && requestData.investmentIdToWithdraw) {
             const newRequest: FDRequest = {
                 ...requestData,
                 id: Date.now() + 1,
@@ -194,10 +194,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             const penalizedInterest = investment.amount * penalizedRate * years;
             const totalValue = investment.amount + penalizedInterest;
             
-            // Update investment status
             setInvestments(prev => prev.map(inv => inv.id === request.investmentIdToWithdraw ? { ...inv, status: 'Withdrawn' } : inv));
             
-            // Add to balance
             setUserBalances(prev => prev.map(b => b.userId === request.userId ? { ...b, balance: b.balance + totalValue } : b));
             setBalanceHistory(prev => [...prev, { id: Date.now(), userId: request.userId, date: new Date().toISOString(), description: `FD Withdrawal #${investment.id}`, amount: totalValue, type: "Credit" }]);
         }
