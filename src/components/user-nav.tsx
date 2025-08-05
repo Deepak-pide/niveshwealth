@@ -11,6 +11,7 @@ import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
 
 export default function UserNav() {
     const { user, logout } = useAuth();
+    const isAdmin = user?.email === 'moneynivesh@gmail.com';
 
     if (!user) {
         return (
@@ -47,12 +48,14 @@ export default function UserNav() {
                             <span>Home</span>
                         </DropdownMenuItem>
                     </Link>
-                    <Link href="/admin">
-                         <DropdownMenuItem>
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                            <span>Dashboard</span>
-                        </DropdownMenuItem>
-                    </Link>
+                    {isAdmin && (
+                        <Link href="/admin">
+                            <DropdownMenuItem>
+                                <LayoutDashboard className="mr-2 h-4 w-4" />
+                                <span>Dashboard</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
@@ -63,4 +66,3 @@ export default function UserNav() {
         </DropdownMenu>
     )
 }
-
