@@ -1,13 +1,7 @@
 
 "use client";
 
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Calculator, TrendingUp, Info } from "lucide-react";
 import Link from "next/link";
 
