@@ -1,4 +1,9 @@
+
+"use client";
+
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { LineChart } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,7 +18,12 @@ export default function AppHeader() {
               Nivesh
             </h1>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="role-switch">User</Label>
+              <Switch id="role-switch" />
+              <Label htmlFor="role-switch">Admin</Label>
+            </div>
             <Button>Login</Button>
           </div>
         </div>
