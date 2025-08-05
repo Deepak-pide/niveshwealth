@@ -1,4 +1,4 @@
-import { DollarSign } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function AppHeader() {
@@ -8,7 +8,7 @@ export default function AppHeader() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-              <DollarSign className="h-6 w-6" />
+              <TrendingUp className="h-6 w-6" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               Nivesh Insights
