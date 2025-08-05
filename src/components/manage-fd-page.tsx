@@ -8,13 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Download } from "lucide-react";
 import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { Timestamp } from "firebase/firestore";
+import { useAuth } from "@/hooks/use-auth";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -29,6 +29,7 @@ export default function ManageFdPage() {
         approveFdWithdrawalRequest,
         rejectFdWithdrawalRequest
     } = useData();
+    const { user: adminUser } = useAuth();
 
     const [visibleInvestmentReqs, setVisibleInvestmentReqs] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawalReqs, setVisibleWithdrawalReqs] = useState(ITEMS_PER_PAGE);
@@ -44,7 +45,7 @@ export default function ManageFdPage() {
             totalInvestment: totalInvestment,
             activeFDs: userFDs.filter(fd => fd.status === 'Active')
         }
-    });
+    }).filter(user => user.totalInvestment > 0 && user.id !== adminUser?.uid);
 
     const handleDownload = () => {
         const title = "USER INVESTMENTS";

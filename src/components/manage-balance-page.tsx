@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -30,6 +31,7 @@ export default function ManageBalancePage() {
         payInterestToAll 
     } = useData();
     const { toast } = useToast();
+    const { user: adminUser } = useAuth();
     const [visibleTopups, setVisibleTopups] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawals, setVisibleWithdrawals] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
@@ -39,9 +41,11 @@ export default function ManageBalancePage() {
         return (balance * monthlyRate).toFixed(2);
     };
 
+    const filteredUserBalances = userBalances.filter(user => user.balance > 0 && user.userId !== adminUser?.uid);
+
     const handleDownload = () => {
         const title = "USER BALANCES";
-        const flattenedData = userBalances.map((user, index) => ({
+        const flattenedData = filteredUserBalances.map((user, index) => ({
             'Sno': index + 1,
             'User': user.userName,
             'Amount': `₹${user.balance.toLocaleString('en-IN')}`,
@@ -70,8 +74,8 @@ export default function ManageBalancePage() {
     const visibleBalanceWithdrawalRequests = balanceWithdrawalRequests.slice(0, visibleWithdrawals);
     const hasMoreWithdrawals = balanceWithdrawalRequests.length > visibleWithdrawals;
 
-    const visibleUserBalances = userBalances.slice(0, visibleUsers);
-    const hasMoreUsers = userBalances.length > visibleUsers;
+    const visibleUserBalances = filteredUserBalances.slice(0, visibleUsers);
+    const hasMoreUsers = filteredUserBalances.length > visibleUsers;
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -220,7 +224,7 @@ export default function ManageBalancePage() {
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {userBalances.map((user) => (
+                                                        {filteredUserBalances.map((user) => (
                                                             <TableRow key={user.id}>
                                                                 <TableCell className="font-medium">{user.userName}</TableCell>
                                                                 <TableCell>₹{user.balance.toLocaleString('en-IN')}</TableCell>
