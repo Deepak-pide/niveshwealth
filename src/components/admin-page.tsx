@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, Wallet } from "lucide-react";
+import { Briefcase, Wallet, Activity } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 
 export default function AdminPage() {
@@ -10,6 +10,7 @@ export default function AdminPage() {
 
     const totalFD = investments.reduce((acc, inv) => acc + inv.amount, 0);
     const totalBalance = userBalances.reduce((acc, user) => acc + user.balance, 0);
+    const totalActiveFDs = investments.filter(inv => inv.status === 'Active').length;
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -22,7 +23,7 @@ export default function AdminPage() {
                     <Card className="transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Total FD
+                                Total FD Amount
                             </CardTitle>
                              <Briefcase className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
@@ -39,6 +40,17 @@ export default function AdminPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">₹{totalBalance.toLocaleString('en-IN')}</div>
+                        </CardContent>
+                    </Card>
+                     <Card className="transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Total Active FD
+                            </CardTitle>
+                             <Activity className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{totalActiveFDs}</div>
                         </CardContent>
                     </Card>
                 </div>
