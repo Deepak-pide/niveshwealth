@@ -6,69 +6,148 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+interface CalculationResult {
+    name: string;
+    investment: number;
+    return: number;
+    total: number;
+}
 
 export default function InvestmentCalculatorPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
+    const [results, setResults] = useState<CalculationResult[] | null>(null);
+
+    const handleCalculate = () => {
+        const rates = {
+            "Nivesh": 0.09,
+            "FD": 0.07,
+            "Post Office": 0.0714
+        };
+
+        const calculatedData: CalculationResult[] = Object.entries(rates).map(([name, rate]) => {
+            const investment = amount;
+            // Simple interest calculation: P * R * T
+            const simpleReturn = investment * rate * years;
+            const total = investment + simpleReturn;
+            return {
+                name,
+                investment,
+                return: parseFloat(simpleReturn.toFixed(2)),
+                total: parseFloat(total.toFixed(2))
+            };
+        });
+
+        setResults(calculatedData);
+    };
+
+
+    const niveshResult = results ? results.find(r => r.name === 'Nivesh') : null;
 
     return (
         <div className="container mx-auto p-4 md:p-8 flex justify-center">
-            <Card className="w-full max-w-lg">
-                <CardHeader>
-                    <CardTitle>Investment Calculator</CardTitle>
-                    <CardDescription>
-                        Estimate your returns by setting the investment amount and duration.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-6 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="amount">Amount</Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                value={amount}
-                                onChange={(e) => setAmount(Math.min(Number(e.target.value), 50000))}
-                                className="w-full"
-                                max="50000"
-                            />
-                            <Slider
-                                value={[amount]}
-                                onValueChange={(value) => setAmount(value[0])}
-                                max={50000}
-                                step={1000}
-                            />
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>₹0</span>
-                                <span>₹50,000</span>
+            <div className="w-full max-w-lg space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Investment Calculator</CardTitle>
+                        <CardDescription>
+                            Estimate your returns by setting the investment amount and duration.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-6 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="amount">Amount</Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => setAmount(Math.min(Number(e.target.value), 50000))}
+                                    className="w-full"
+                                    max="50000"
+                                />
+                                <Slider
+                                    value={[amount]}
+                                    onValueChange={(value) => setAmount(value[0])}
+                                    max={50000}
+                                    step={1000}
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>₹0</span>
+                                    <span>₹50,000</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="years">Years</Label>
-                            <Input
-                                id="years"
-                                type="number"
-                                value={years}
-                                onChange={(e) => setYears(Math.min(Number(e.target.value), 5))}
-                                className="w-full"
-                                max="5"
-                            />
-                            <Slider
-                                value={[years]}
-                                onValueChange={(value) => setYears(value[0])}
-                                max={5}
-                                step={1}
-                            />
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>1 Year</span>
-                                <span>5 Years</span>
+                            <div className="grid gap-2">
+                                <Label htmlFor="years">Years</Label>
+                                <Input
+                                    id="years"
+                                    type="number"
+                                    value={years}
+                                    onChange={(e) => setYears(Math.min(Number(e.target.value), 5))}
+                                    className="w-full"
+                                    max="5"
+                                />
+                                <Slider
+                                    value={[years]}
+                                    onValueChange={(value) => setYears(value[0])}
+                                    max={5}
+                                    step={1}
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>1 Year</span>
+                                    <span>5 Years</span>
+                                </div>
                             </div>
+                            <Button onClick={handleCalculate}>Calculate</Button>
                         </div>
-                        <Button type="submit">Calculate</Button>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                {results && niveshResult && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Calculation Results</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={results} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" />
+                                        <YAxis />
+                                        <Tooltip
+                                            formatter={(value, name) => [
+                                                `₹${(value as number).toLocaleString('en-IN')}`,
+                                                name.charAt(0).toUpperCase() + name.slice(1)
+                                            ]}
+                                        />
+                                        <Legend />
+                                        <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" name="Investment" />
+                                        <Bar dataKey="return" stackId="a" fill="hsl(var(--primary))" name="Return" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Investment Amount</p>
+                                    <p className="text-lg font-semibold">₹{niveshResult.investment.toLocaleString('en-IN')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Return</p>
+                                    <p className="text-lg font-semibold text-green-600">₹{niveshResult.return.toLocaleString('en-IN')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Total Value</p>
+                                    <p className="text-lg font-semibold">₹{niveshResult.total.toLocaleString('en-IN')}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
         </div>
     );
 }
