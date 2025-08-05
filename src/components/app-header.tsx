@@ -9,7 +9,7 @@ export default function AppHeader() {
           <div className="flex items-center gap-3">
             <LineChart className="h-8 w-8 text-primary" />
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Nivesh Insights
+              Nivesh
             </h1>
           </div>
           <div className="flex items-center gap-2">
