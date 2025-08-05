@@ -18,9 +18,11 @@ import {
     writeBatch,
     Timestamp,
     getDocs,
+    runTransaction,
 } from 'firebase/firestore';
 import { useAuth } from './use-auth';
 import { addYears, parseISO, differenceInYears, differenceInDays } from 'date-fns';
+import { useToast } from './use-toast';
 
 // Base Types
 interface BaseRequest {
@@ -95,6 +97,7 @@ interface DataContextType {
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
+    addInvestmentRequestFromBalance: (requestData: { userId: string, amount: number, years: number }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     approveInvestmentRequest: (requestId: string) => Promise<void>;
     rejectInvestmentRequest: (requestId: string) => Promise<void>;
@@ -125,6 +128,7 @@ const useDataFetching = (collectionName: string, setState: Function) => {
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
     const { user: authUser } = useAuth();
+    const { toast } = useToast();
     const [users, setUsers] = useState<AppUser[]>([]);
     const [investments, setInvestments] = useState<Investment[]>([]);
     const [investmentRequests, setInvestmentRequests] = useState<InvestmentRequest[]>([]);
@@ -135,16 +139,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
 
     useEffect(() => {
-        if (authUser) {
+        if (authUser?.uid) {
             const userDocRef = doc(db, 'users', authUser.uid);
+            const userBalanceDocRef = doc(db, 'userBalances', authUser.uid);
+    
             getDoc(userDocRef).then(docSnap => {
                 if (!docSnap.exists()) {
+                    const batch = writeBatch(db);
+                    
                     const newUser: Omit<AppUser, 'id'> = {
                         name: authUser.displayName || "New User",
                         email: authUser.email || "",
                         avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
                         joinDate: Timestamp.now(),
                     };
+                    batch.set(userDocRef, newUser);
+    
                     const newUserBalance: Omit<UserBalance, 'id' > = {
                         userId: authUser.uid,
                         userName: authUser.displayName || "New User",
@@ -152,9 +162,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         balance: 0,
                         liveGrowthInterestRate: 0.09,
                     };
-                    const batch = writeBatch(db);
-                    batch.set(userDocRef, newUser);
-                    batch.set(doc(db, 'userBalances', authUser.uid), newUserBalance);
+                    batch.set(userBalanceDocRef, newUserBalance);
+    
                     batch.commit();
                 }
             });
@@ -172,9 +181,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const getUserInfo = (userId: string) => {
         const user = users.find(u => u.id === userId);
+        if (user) {
+            return {
+                userName: user.name,
+                userAvatar: user.avatar,
+            }
+        }
         return {
-            userName: user?.name || authUser?.displayName || 'Unknown User',
-            userAvatar: user?.avatar || authUser?.photoURL || `https://placehold.co/100x100.png`
+            userName: authUser?.displayName || 'Unknown User',
+            userAvatar: authUser?.photoURL || `https://placehold.co/100x100.png`
         };
     };
 
@@ -189,6 +204,59 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             date: Timestamp.fromDate(new Date(requestData.date))
         };
         await addDoc(collection(db, 'investmentRequests'), newRequest);
+    };
+
+     const addInvestmentRequestFromBalance = async (requestData: { userId: string, amount: number, years: number }) => {
+        if (!authUser) return;
+        const { userId, amount, years } = requestData;
+        const userBalanceDocRef = doc(db, 'userBalances', userId);
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const userBalanceSnap = await transaction.get(userBalanceDocRef);
+                if (!userBalanceSnap.exists()) {
+                    throw "User balance document does not exist!";
+                }
+
+                const currentBalance = userBalanceSnap.data().balance;
+                if (currentBalance < amount) {
+                    throw "Insufficient balance.";
+                }
+
+                // 1. Deduct balance
+                transaction.update(userBalanceDocRef, { balance: currentBalance - amount });
+                
+                // 2. Add to balance history
+                const historyRef = doc(collection(db, 'balanceHistory'));
+                transaction.set(historyRef, {
+                    userId: userId,
+                    date: Timestamp.now(),
+                    description: `FD Investment (${years} years)`,
+                    amount: amount,
+                    type: "Debit"
+                });
+
+                // 3. Create investment directly (approved)
+                const investmentRef = doc(collection(db, 'investments'));
+                const newInvestment = {
+                    userId: userId,
+                    name: `FD for ${years} years`,
+                    amount: amount,
+                    interestRate: 0.09,
+                    startDate: Timestamp.now(),
+                    maturityDate: Timestamp.fromDate(addYears(new Date(), years)),
+                    status: 'Active' as const,
+                };
+                transaction.set(investmentRef, newInvestment);
+            });
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+             toast({
+                title: "Investment Failed",
+                description: typeof e === 'string' ? e : "An unexpected error occurred during the transaction.",
+                variant: "destructive",
+            });
+        }
     };
 
     const addFdWithdrawalRequest = async (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
@@ -206,9 +274,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const approveInvestmentRequest = async (requestId: string) => {
         const requestDocRef = doc(db, 'investmentRequests', requestId);
-        const request = await getDoc(requestDocRef);
-        if (!request.exists()) return;
-        const requestData = request.data() as InvestmentRequest;
+        const requestSnap = await getDoc(requestDocRef);
+        if (!requestSnap.exists()) return;
+        const requestData = requestSnap.data() as InvestmentRequest;
 
         const newInvestment = {
             userId: requestData.userId,
@@ -247,16 +315,19 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const totalValue = investment.amount + penalizedInterest;
         
         const userBalanceDocRef = doc(db, 'userBalances', request.userId);
-        const userBalanceSnap = await getDoc(userBalanceDocRef);
-        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
 
         const batch = writeBatch(db);
-        batch.update(investmentDocRef, { status: 'Withdrawn' });
+        
+        const userBalanceSnap = await getDoc(userBalanceDocRef);
+        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
+        
         batch.update(userBalanceDocRef, { balance: currentBalance + totalValue });
+        batch.update(investmentDocRef, { status: 'Withdrawn' });
+
         batch.set(doc(collection(db, 'balanceHistory')), { 
             userId: request.userId, 
             date: Timestamp.now(), 
-            description: `FD Withdrawal #${investmentSnap.id}`, 
+            description: `FD Withdrawal #${investmentSnap.id.substring(0, 5)}`, 
             amount: totalValue, 
             type: "Credit" 
         });
@@ -331,6 +402,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceSnap = await getDoc(userBalanceDocRef);
         const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
 
+        if (currentBalance < request.amount) {
+            toast({ title: "Action Failed", description: "User has insufficient balance.", variant: "destructive" });
+            return;
+        }
+
         const batch = writeBatch(db);
         batch.update(userBalanceDocRef, { balance: currentBalance - request.amount });
         batch.set(doc(collection(db, 'balanceHistory')), {
@@ -391,6 +467,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         userBalances,
         balanceHistory,
         addInvestmentRequest,
+        addInvestmentRequestFromBalance,
         addFdWithdrawalRequest,
         approveInvestmentRequest,
         rejectInvestmentRequest,

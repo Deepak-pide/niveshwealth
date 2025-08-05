@@ -18,19 +18,21 @@ import Image from "next/image";
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
-    const { addInvestmentRequest } = useData();
+    const { addInvestmentRequest, addInvestmentRequestFromBalance, userBalances } = useData();
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
     const isMobile = useIsMobile();
-
+    
+    const currentUserBalance = user ? userBalances.find(b => b.userId === user.uid)?.balance || 0 : 0;
+    const hasSufficientBalance = currentUserBalance >= amount;
 
     const fdRate = 0.09; // Using the higher 9% rate
     const calculatedReturn = amount * fdRate * years;
     const totalAmount = amount + calculatedReturn;
     const maturityDate = addYears(new Date(), years);
 
-    const handleConfirmInvestment = () => {
+    const handleUpiInvestment = () => {
         if (!user) {
             toast({
                 title: "Authentication Error",
@@ -57,6 +59,39 @@ export default function FdInvestmentPage() {
         toast({
             title: "Investment Request Submitted",
             description: "Your FD investment request has been submitted for approval.",
+        });
+
+        router.push('/investments');
+    };
+
+    const handleBalanceInvestment = () => {
+        if (!user) {
+            toast({
+                title: "Authentication Error",
+                description: "You must be logged in to make an investment.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (!hasSufficientBalance) {
+             toast({
+                title: "Insufficient Balance",
+                description: "You do not have enough balance to make this investment.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        addInvestmentRequestFromBalance({
+            userId: user.uid,
+            amount: amount,
+            years: years,
+        });
+
+        toast({
+            title: "Investment Successful",
+            description: "Your FD has been created and the amount deducted from your balance.",
         });
 
         router.push('/investments');
@@ -94,7 +129,7 @@ export default function FdInvestmentPage() {
                     <CardFooter>
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button className="w-full">Invest Now</Button>
+                                <Button className="w-full" disabled={!user}>Invest Now</Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -104,6 +139,10 @@ export default function FdInvestmentPage() {
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Investment Amount:</span>
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
+                                            </div>
+                                             <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Your Balance:</span>
+                                                <span className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>₹{currentUserBalance.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Estimated Return (at {fdRate*100}%):</span>
@@ -119,10 +158,11 @@ export default function FdInvestmentPage() {
                                             </div>
                                             {isMobile ? (
                                                 <div className="pt-4 text-center text-muted-foreground">
-                                                    You will be redirected to your UPI app to complete the payment.
+                                                    You can pay from your balance or be redirected to your UPI app to complete the payment.
                                                 </div>
                                             ) : (
-                                                <div className="space-y-4 pt-4 text-center">
+                                                 <div className="space-y-4 pt-4 text-center">
+                                                    <p className="font-semibold text-muted-foreground">Pay using UPI</p>
                                                     <div className="flex justify-center">
                                                         <Image
                                                             src="https://placehold.co/200x200.png"
@@ -142,10 +182,11 @@ export default function FdInvestmentPage() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    {hasSufficientBalance && <AlertDialogAction onClick={handleBalanceInvestment}>Pay from Balance</AlertDialogAction>}
                                     {isMobile ? (
-                                        <AlertDialogAction onClick={handleConfirmInvestment}>Pay using UPI</AlertDialogAction>
+                                        <AlertDialogAction onClick={handleUpiInvestment}>Pay using UPI</AlertDialogAction>
                                     ) : (
-                                        <AlertDialogAction onClick={handleConfirmInvestment}>I Have Paid</AlertDialogAction>
+                                        <AlertDialogAction onClick={handleUpiInvestment}>I Have Paid</AlertDialogAction>
                                     )}
                                 </AlertDialogFooter>
                             </AlertDialogContent>
