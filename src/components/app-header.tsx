@@ -7,9 +7,7 @@ export default function AppHeader() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-              <LineChart className="h-6 w-6" />
-            </div>
+            <LineChart className="h-8 w-8 text-primary" />
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               Nivesh Insights
             </h1>
