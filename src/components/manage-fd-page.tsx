@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Download } from "lucide-react";
+import { differenceInYears, parseISO, addYears, format } from 'date-fns';
 
 const fdRequests = [
     { id: 1, userName: "Ravi Kumar", userAvatar: "/placeholder-user.jpg", type: "Investment", amount: "50,000", date: "2024-07-30" },
@@ -25,8 +26,8 @@ const userInvestments = [
         userAvatar: "/placeholder-user.jpg",
         totalInvestment: "2,50,000",
         activeFDs: [
-            { id: 101, name: "HDFC FD", amount: "1,00,000", maturityDate: "2028-08-15" },
-            { id: 102, name: "SBI FD", amount: "1,50,000", maturityDate: "2029-07-24" },
+            { id: 101, name: "HDFC FD", amount: 100000, maturityDate: "2028-08-15", startDate: "2023-08-15", interestRate: 0.0725 },
+            { id: 102, name: "SBI FD", amount: 150000, maturityDate: "2029-07-24", startDate: "2024-07-24", interestRate: 0.07 },
         ]
     },
     {
@@ -35,7 +36,7 @@ const userInvestments = [
         userAvatar: "/placeholder-user.jpg",
         totalInvestment: "1,75,000",
         activeFDs: [
-            { id: 201, name: "ICICI FD", amount: "1,75,000", maturityDate: "2027-01-10" },
+            { id: 201, name: "ICICI FD", amount: 175000, maturityDate: "2027-01-10", startDate: "2022-01-10", interestRate: 0.071 },
         ]
     },
      {
@@ -44,7 +45,7 @@ const userInvestments = [
         userAvatar: "/placeholder-user.jpg",
         totalInvestment: "3,00,000",
         activeFDs: [
-            { id: 301, name: "Axis Bank FD", amount: "3,00,000", maturityDate: "2026-11-20" },
+            { id: 301, name: "Axis Bank FD", amount: 300000, maturityDate: "2026-11-20", startDate: "2021-11-20", interestRate: 0.069 },
         ]
     },
 ];
@@ -53,17 +54,28 @@ const userInvestments = [
 export default function ManageFdPage() {
 
     const handleDownload = () => {
+        const title = "USER INVESTMENTS";
         const flattenedData = userInvestments.flatMap(user =>
-            user.activeFDs.map(fd => ({
-                'User Name': user.userName,
-                'Total Investment': `₹${user.totalInvestment}`,
-                'FD Name': fd.name,
-                'FD Amount': `₹${fd.amount}`,
-                'FD Maturity Date': fd.maturityDate,
-            }))
+            user.activeFDs.map(fd => {
+                const startDate = parseISO(fd.startDate);
+                const maturityDate = parseISO(fd.maturityDate);
+                const years = differenceInYears(maturityDate, startDate);
+                const totalValue = fd.amount * (1 + fd.interestRate * years);
+
+                return {
+                    'User': user.userName,
+                    'Amount': `₹${fd.amount.toLocaleString('en-IN')}`,
+                    'Year': years,
+                    'Maturity Date': format(maturityDate, 'yyyy-MM-dd'),
+                    'Total Value': `₹${totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                };
+            })
         );
 
-        const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(worksheet, [[title]], { origin: "A1" });
+        XLSX.utils.sheet_add_json(worksheet, flattenedData, { origin: "A2", skipHeader: false });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "User Investments");
         XLSX.writeFile(workbook, "user_investments.xlsx");
@@ -183,7 +195,7 @@ export default function ManageFdPage() {
                                                                     {user.activeFDs.map(fd => (
                                                                         <TableRow key={fd.id}>
                                                                             <TableCell>{fd.name}</TableCell>
-                                                                            <TableCell>₹{fd.amount}</TableCell>
+                                                                            <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
                                                                             <TableCell>{fd.maturityDate}</TableCell>
                                                                         </TableRow>
                                                                     ))}
