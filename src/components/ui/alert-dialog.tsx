@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -12,7 +13,7 @@ const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
 const AlertDialogPortal = AlertDialogPrimitive.Portal
 
-const AlertDialogClose = AlertDialogPrimitive.Close
+const AlertDialogClose = AlertDialogPrimitive.Cancel
 
 const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
