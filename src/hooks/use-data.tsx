@@ -113,42 +113,16 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Mock Data
-const MOCK_USERS: AppUser[] = [
-    { id: "user1", name: "Ramesh Patel", email: "ramesh.patel@example.com", avatar: "https://placehold.co/100x100.png", joinDate: "2023-01-15" },
-    { id: "user2", name: "Sunita Reddy", email: "sunita.reddy@example.com", avatar: "https://placehold.co/100x100.png", joinDate: "2023-02-20" },
-    { id: "user3", name: "Vijay Verma", email: "vijay.verma@example.com", avatar: "https://placehold.co/100x100.png", joinDate: "2023-03-10" },
-];
-
-const MOCK_INVESTMENTS: Investment[] = [
-    { id: 1, userId: "user1", name: "SBI Fixed Deposit", amount: 50000, interestRate: 0.09, startDate: "2024-07-24", maturityDate: "2029-07-24", status: "Active" },
-    { id: 2, userId: "user2", name: "HDFC Fixed Deposit", amount: 100000, interestRate: 0.09, startDate: "2023-08-15", maturityDate: "2028-08-15", status: "Active" },
-    { id: 3, userId: "user1", name: "Post Office TD", amount: 25000, interestRate: 0.09, startDate: "2021-01-01", maturityDate: "2024-01-01", status: "Matured" },
-];
-
-const MOCK_USER_BALANCES: UserBalance[] = [
-    { id: 1, userId: "user1", userName: "Ramesh Patel", userAvatar: "https://placehold.co/100x100.png", balance: 55000 },
-    { id: 2, userId: "user2", userName: "Sunita Reddy", userAvatar: "https://placehold.co/100x100.png", balance: 75000 },
-    { id: 3, userId: "user3", userName: "Vijay Verma", userAvatar: "https://placehold.co/100x100.png", balance: 120000 },
-];
-
-const MOCK_BALANCE_HISTORY: BalanceHistory[] = [
-    { id: 1, userId: 'user1', date: "2024-07-28", description: "Added to wallet", amount: 5000, type: "Credit" },
-    { id: 2, userId: 'user1', date: "2024-07-27", description: "FD Investment", amount: 50000, type: "Debit" },
-    { id: 3, userId: 'user2', date: "2024-07-25", description: "Added to wallet", amount: 60000, type: "Credit" },
-];
-
-
 export const DataProvider = ({ children }: { children: ReactNode }) => {
     const { user } = useAuth();
-    const [users, setUsers] = useState<AppUser[]>(MOCK_USERS);
-    const [investments, setInvestments] = useState<Investment[]>(MOCK_INVESTMENTS);
+    const [users, setUsers] = useState<AppUser[]>([]);
+    const [investments, setInvestments] = useState<Investment[]>([]);
     const [investmentRequests, setInvestmentRequests] = useState<InvestmentRequest[]>([]);
     const [fdWithdrawalRequests, setFdWithdrawalRequests] = useState<FdWithdrawalRequest[]>([]);
     const [topupRequests, setTopupRequests] = useState<TopupRequest[]>([]);
     const [balanceWithdrawalRequests, setBalanceWithdrawalRequests] = useState<BalanceWithdrawalRequest[]>([]);
-    const [userBalances, setUserBalances] = useState<UserBalance[]>(MOCK_USER_BALANCES);
-    const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>(MOCK_BALANCE_HISTORY);
+    const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
+    const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
 
     useEffect(() => {
         if (user && !users.find(u => u.id === user.uid)) {
