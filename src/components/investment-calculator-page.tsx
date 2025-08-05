@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -49,19 +50,19 @@ export default function InvestmentCalculatorPage() {
                                 id="years"
                                 type="number"
                                 value={years}
-                                onChange={(e) => setYears(Math.min(Number(e.target.value), 30))}
+                                onChange={(e) => setYears(Math.min(Number(e.target.value), 5))}
                                 className="w-full"
-                                max="30"
+                                max="5"
                             />
                             <Slider
                                 value={[years]}
                                 onValueChange={(value) => setYears(value[0])}
-                                max={30}
+                                max={5}
                                 step={1}
                             />
                             <div className="flex justify-between text-xs text-muted-foreground">
                                 <span>1 Year</span>
-                                <span>30 Years</span>
+                                <span>5 Years</span>
                             </div>
                         </div>
                         <Button type="submit">Calculate</Button>
