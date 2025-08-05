@@ -48,7 +48,7 @@ export default function InvestmentsPage() {
 
     const userInvestments = investments.filter(inv => inv.userId === user.uid);
     const activeInvestments = userInvestments.filter(inv => inv.status === 'Active' || inv.status === 'Pending');
-    const maturedInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
+    const pastInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
     
     const handleWithdraw = (investmentId: number) => {
         const investment = investments.find(inv => inv.id === investmentId);
@@ -93,7 +93,7 @@ export default function InvestmentsPage() {
                             </DialogHeader>
                             <ScrollArea className="h-96">
                                 <div className="space-y-4 pr-4">
-                                     {maturedInvestments.length > 0 ? maturedInvestments.map((investment) => (
+                                     {pastInvestments.length > 0 ? pastInvestments.map((investment) => (
                                         <Card key={investment.id}>
                                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                                 <CardTitle className="text-base font-medium">{investment.name}</CardTitle>
@@ -116,7 +116,7 @@ export default function InvestmentsPage() {
                                                 </div>
                                             </CardContent>
                                         </Card>
-                                    )) : <p className="text-muted-foreground text-center">No matured investments found.</p>}
+                                    )) : <p className="text-muted-foreground text-center">No past investments found.</p>}
                                 </div>
                             </ScrollArea>
                         </DialogContent>
