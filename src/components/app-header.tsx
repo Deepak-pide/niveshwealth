@@ -25,7 +25,7 @@ export default function AppHeader() {
     <header className="shrink-0 border-b bg-card">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center gap-3">
             <LineChart className="h-8 w-8 text-primary" />
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               Nivesh
