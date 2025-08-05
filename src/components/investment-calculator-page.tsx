@@ -53,9 +53,6 @@ export default function InvestmentCalculatorPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Investment Calculator</CardTitle>
-                        <CardDescription>
-                            Estimate your returns by setting the investment amount and duration.
-                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-6 py-4">
