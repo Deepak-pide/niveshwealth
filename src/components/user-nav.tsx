@@ -1,16 +1,22 @@
 
 "use client";
 
+import * as XLSX from "xlsx";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
-import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, Download } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useData } from "@/hooks/use-data";
+import { format } from "date-fns";
 
 
 export default function UserNav() {
     const { user, logout } = useAuth();
+    const { investments, balanceHistory } = useData();
+    const isMobile = useIsMobile();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
 
@@ -21,6 +27,38 @@ export default function UserNav() {
             </Link>
         )
     }
+
+    const handleDownload = () => {
+        if (!user) return;
+        
+        const userInvestments = investments
+            .filter(inv => inv.userId === user.id)
+            .map(inv => ({
+                'Name': inv.name,
+                'Amount': inv.amount,
+                'Interest Rate': `${(inv.interestRate * 100).toFixed(2)}%`,
+                'Start Date': format(inv.startDate.toDate(), 'yyyy-MM-dd'),
+                'Maturity Date': format(inv.maturityDate.toDate(), 'yyyy-MM-dd'),
+                'Status': inv.status,
+            }));
+
+        const userBalanceHistory = balanceHistory
+            .filter(bh => bh.userId === user.id)
+            .map(bh => ({
+                'Date': format(bh.date.toDate(), 'yyyy-MM-dd'),
+                'Description': bh.description,
+                'Amount': bh.amount,
+                'Type': bh.type,
+            }));
+
+        const wb = XLSX.utils.book_new();
+        const wsInvestments = XLSX.utils.json_to_sheet(userInvestments);
+        const wsBalanceHistory = XLSX.utils.json_to_sheet(userBalanceHistory);
+
+        XLSX.utils.book_append_sheet(wb, wsInvestments, "Investments");
+        XLSX.utils.book_append_sheet(wb, wsBalanceHistory, "Balance History");
+        XLSX.writeFile(wb, "nivesh_data.xlsx");
+    };
 
     return (
         <DropdownMenu>
@@ -51,12 +89,20 @@ export default function UserNav() {
                             </DropdownMenuItem>
                         </Link>
                     ) : (
-                        <Link href="/">
-                            <DropdownMenuItem>
-                                <UserIcon className="mr-2 h-4 w-4" />
-                                <span>Home</span>
-                            </DropdownMenuItem>
-                        </Link>
+                        !isMobile && (
+                            <Link href="/">
+                                <DropdownMenuItem>
+                                    <UserIcon className="mr-2 h-4 w-4" />
+                                    <span>Home</span>
+                                </DropdownMenuItem>
+                            </Link>
+                        )
+                    )}
+                    {!isMobile && (
+                         <DropdownMenuItem onClick={handleDownload}>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Download Data</span>
+                        </DropdownMenuItem>
                     )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

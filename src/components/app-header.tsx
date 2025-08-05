@@ -11,12 +11,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { useData } from '@/hooks/use-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Button } from './ui/button';
+import { UserSidebar } from './user-sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
   const { investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests } = useData();
+  const isMobile = useIsMobile();
 
   const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
   const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -27,12 +30,15 @@ export default function AppHeader() {
     <header className="shrink-0 border-b bg-card shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center gap-3 group">
-            <LineChart className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Nivesh
-            </h1>
-          </Link>
+          <div className="flex items-center gap-3">
+            {isMobile && !isAdmin && <UserSidebar />}
+            <Link href={isAdmin ? '/admin' : '/'} className="flex items-center gap-3 group">
+              <LineChart className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
+                Nivesh
+              </h1>
+            </Link>
+          </div>
           <div className="flex items-center gap-4">
              {isAdmin && (
                <DropdownMenu>
