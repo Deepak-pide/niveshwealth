@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, TrendingUp, Handshake, PiggyBank } from "lucide-react";
+import { ShieldCheck, TrendingUp, Handshake, PiggyBank, FileText, Info } from "lucide-react";
 import Image from 'next/image';
+import { Button } from "./ui/button";
 
 
 export default function AboutUsPage() {
@@ -75,6 +76,28 @@ export default function AboutUsPage() {
                                 <p className="mt-4 text-right font-semibold text-primary">- Founder, Nivesh Insights</p>
                             </div>
                         </div>
+                    </Card>
+                </section>
+
+                <section>
+                    <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
+                        <CardHeader className="flex flex-row items-center gap-4">
+                            <div className="rounded-full bg-primary/10 p-3">
+                                <Info className="h-8 w-8 text-primary" />
+                            </div>
+                            <CardTitle>Company Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-muted-foreground">
+                                Nivesh Insights is a leading financial services company dedicated to helping individuals achieve their financial goals. We offer a range of investment products designed for security and growth. Our team of experts is committed to providing personalized advice and transparent services to empower our clients on their investment journey.
+                            </p>
+                            <a href="/company-document.pdf" download>
+                                <Button variant="outline">
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    View Document
+                                </Button>
+                            </a>
+                        </CardContent>
                     </Card>
                 </section>
             </div>
