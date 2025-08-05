@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, TrendingUp } from "lucide-react";
 
 export default function InvestmentPage() {
@@ -30,6 +30,19 @@ export default function InvestmentPage() {
                         </div>
                         <h3 className="text-lg font-semibold text-foreground">Start Invest in FD</h3>
                         <p className="text-sm text-muted-foreground">Grow your wealth securely</p>
+                    </Card>
+                </section>
+
+                <section>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>About Us</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">
+                                Nivesh Insights is a premier financial technology company dedicated to empowering individuals to achieve their financial goals. We provide innovative tools and expert insights to help you make informed investment decisions and build a secure financial future. Our mission is to democratize wealth creation by making sophisticated investment strategies accessible to everyone.
+                            </p>
+                        </CardContent>
                     </Card>
                 </section>
             </div>
