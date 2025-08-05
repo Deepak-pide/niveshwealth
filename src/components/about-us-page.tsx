@@ -59,15 +59,17 @@ export default function AboutUsPage() {
 
                 <section>
                     <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl overflow-hidden">
-                        <div className="md:flex">
-                             <div className="md:w-1/3 relative h-64 md:h-auto">
-                                <Image
-                                    src="https://placehold.co/400x400.png"
-                                    alt="Founder's Photo"
-                                    layout="fill"
-                                    objectFit="cover"
-                                    data-ai-hint="professional portrait"
-                                />
+                        <div className="md:flex items-center">
+                             <div className="md:w-1/3 p-6 flex justify-center">
+                                <div className="relative h-48 w-48 rounded-full overflow-hidden shadow-lg">
+                                    <Image
+                                        src="https://placehold.co/400x400.png"
+                                        alt="Founder's Photo"
+                                        layout="fill"
+                                        objectFit="cover"
+                                        data-ai-hint="professional portrait"
+                                    />
+                                </div>
                             </div>
                             <div className="md:w-2/3 p-6 md:p-8 flex flex-col justify-center">
                                 <blockquote className="text-lg italic text-foreground border-l-4 border-primary pl-4">
