@@ -143,13 +143,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             setUsers(prev => [...prev, newUser]);
             setUserBalances(prev => [...prev, newUserBalance]);
         }
-    }, [authUser, users]);
+    }, [authUser]);
 
     const getUserInfo = (userId: string) => {
         const user = users.find(u => u.id === userId);
         return {
-            userName: user?.name || 'Unknown User',
-            userAvatar: user?.avatar || `https://placehold.co/100x100.png`
+            userName: user?.name || authUser?.displayName || 'Unknown User',
+            userAvatar: user?.avatar || authUser?.photoURL ||`https://placehold.co/100x100.png`
         };
     };
 
