@@ -35,7 +35,7 @@ export default function AboutUsPage() {
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-12">
                 <section className="text-center">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">About Nivesh Insights</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">About Nivesh</h1>
                     <p className="mt-4 text-lg text-muted-foreground">
                         Our commitment to building your secure financial future.
                     </p>
@@ -73,7 +73,7 @@ export default function AboutUsPage() {
                                 <blockquote className="text-lg italic text-foreground border-l-4 border-primary pl-4">
                                     "Investment is a must-know part of life for a secured future. Don't let your money lose value. Invest in safe assets and see it grow."
                                 </blockquote>
-                                <p className="mt-4 text-right font-semibold text-primary">- Founder, Nivesh Insights</p>
+                                <p className="mt-4 text-right font-semibold text-primary">- Founder, Nivesh</p>
                             </div>
                         </div>
                     </Card>
@@ -89,7 +89,7 @@ export default function AboutUsPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-muted-foreground">
-                                Nivesh Insights is a leading financial services company dedicated to helping individuals achieve their financial goals. We offer a range of investment products designed for security and growth. Our team of experts is committed to providing personalized advice and transparent services to empower our clients on their investment journey.
+                                Nivesh is a leading financial services company dedicated to helping individuals achieve their financial goals. We offer a range of investment products designed for security and growth. Our team of experts is committed to providing personalized advice and transparent services to empower our clients on their investment journey.
                             </p>
                             <a href="/company-document.pdf" download>
                                 <Button variant="outline">
