@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { differenceInYears, parse } from 'date-fns';
@@ -197,9 +198,9 @@ const maturedInvestments = investments.filter(inv => inv.status === 'Matured');
 
 const parseDate = (dateStr: string) => parse(dateStr, 'dd MMM yyyy', new Date());
 
-const calculateInvestmentDetails = (investment: typeof investments[0]) => {
+const calculateInvestmentDetails = (investment: typeof investments[0], customRate?: number) => {
     const principal = parseFloat(investment.amount.replace(/,/g, ''));
-    const rate = parseFloat(investment.interestRate) / 100;
+    const rate = customRate || parseFloat(investment.interestRate) / 100;
     const years = differenceInYears(parseDate(investment.maturityDate), parseDate(investment.startDate));
     const totalInterest = principal * rate * years;
     const totalValue = principal + totalInterest;
@@ -267,6 +268,7 @@ export default function InvestmentsPage() {
                 <div className="space-y-4">
                     {activeInvestments.map((investment) => {
                         const { principal, totalInterest, totalValue } = calculateInvestmentDetails(investment);
+                        const penalizedDetails = calculateInvestmentDetails(investment, 0.065);
                         const chartData = [
                             { name: 'Principal Amount', value: principal },
                             { name: 'Total Interest', value: totalInterest },
@@ -333,7 +335,37 @@ export default function InvestmentsPage() {
                                                 <span className="font-semibold text-foreground">{investment.maturityDate}</span>
                                             </div>
                                         </div>
-                                        <Button variant="destructive" className="w-full">Withdraw</Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive" className="w-full">Withdraw</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Early Withdrawal Confirmation</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Withdrawing early will reduce your interest rate to 6.5%. Please review the updated calculations below before confirming.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <div className="space-y-4 text-sm pt-4">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Principal Amount:</span>
+                                                        <span className="font-semibold text-foreground">₹{penalizedDetails.principal.toLocaleString('en-IN')}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Penalized Interest (6.5%):</span>
+                                                        <span className="font-semibold text-red-600">₹{penalizedDetails.totalInterest.toLocaleString('en-IN')}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">New Total Value:</span>
+                                                        <span className="font-semibold text-foreground">₹{penalizedDetails.totalValue.toLocaleString('en-IN')}</span>
+                                                    </div>
+                                                </div>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction>Confirm Withdrawal</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
                                 </DialogContent>
                             </Dialog>
