@@ -22,11 +22,11 @@ export default function AppHeader() {
   };
 
   return (
-    <header className="shrink-0 border-b bg-card">
+    <header className="shrink-0 border-b bg-card shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center gap-3">
-            <LineChart className="h-8 w-8 text-primary" />
+          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center gap-3 group">
+            <LineChart className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               Nivesh
             </h1>
@@ -41,7 +41,7 @@ export default function AppHeader() {
               />
               <Label htmlFor="role-switch">Admin</Label>
             </div>
-            <Button>Login</Button>
+            <Button className="transform transition-transform duration-300 hover:scale-105">Login</Button>
           </div>
         </div>
       </div>

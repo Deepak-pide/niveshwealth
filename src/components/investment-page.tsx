@@ -14,7 +14,7 @@ import Link from "next/link";
 export default function InvestmentPage() {
 
     return (
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-8">
                 <section className="text-center">
                     <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -25,9 +25,9 @@ export default function InvestmentPage() {
                     </p>
                 </section>
 
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <Link href="/investment-calculator">
-                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50 h-full">
+                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1 h-full">
                             <div className="mb-4 rounded-full bg-primary/10 p-3">
                                 <Calculator className="h-8 w-8 text-primary" />
                             </div>
@@ -37,7 +37,7 @@ export default function InvestmentPage() {
                     </Link>
 
                     <Link href="/fd-investment">
-                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-colors hover:bg-accent/50">
+                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1">
                             <div className="mb-4 rounded-full bg-primary/10 p-3">
                                 <TrendingUp className="h-8 w-8 text-primary" />
                             </div>
@@ -49,12 +49,10 @@ export default function InvestmentPage() {
 
                 <section>
                     <Accordion type="single" collapsible className="w-full">
-                        <Card>
+                        <Card className="transition-shadow hover:shadow-md">
                             <AccordionItem value="item-1" className="border-b-0">
-                                <AccordionTrigger className="hover:no-underline">
-                                    <CardHeader>
-                                        <CardTitle>About Us</CardTitle>
-                                    </CardHeader>
+                                <AccordionTrigger className="hover:no-underline p-6">
+                                    <CardTitle>About Us</CardTitle>
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <CardContent>
