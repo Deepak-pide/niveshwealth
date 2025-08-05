@@ -13,8 +13,7 @@ export default function AppHeader() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost">Sign In</Button>
-            <Button>Sign Up</Button>
+            <Button>Login</Button>
           </div>
         </div>
       </div>
