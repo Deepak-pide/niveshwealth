@@ -14,11 +14,14 @@ import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
+import { subYears, isAfter, parseISO } from "date-fns";
 
 
 export default function MyBalancePage() {
     const [addAmount, setAddAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
+    const [yearsToShow, setYearsToShow] = useState(1);
+
     const { userBalances, balanceHistory, addBalanceRequest } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
@@ -35,7 +38,12 @@ export default function MyBalancePage() {
     }
 
     const currentUserBalance = userBalances.find(b => b.userId === user.uid)?.balance || 0;
-    const currentUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const dateCutoff = subYears(new Date(), yearsToShow);
+    const visibleHistory = allUserHistory.filter(item => isAfter(parseISO(item.date), dateCutoff));
+    const hasMoreHistory = visibleHistory.length < allUserHistory.length;
+
 
     const handleAddBalance = () => {
         const amount = parseFloat(addAmount);
@@ -172,7 +180,7 @@ export default function MyBalancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {currentUserHistory.length > 0 ? currentUserHistory.map((item, index) => (
+                                    {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
                                         <TableRow key={index} className="transition-colors hover:bg-muted/50">
                                             <TableCell className="font-medium">{new Date(item.date).toLocaleDateString()}</TableCell>
                                             <TableCell>{item.description}</TableCell>
@@ -184,6 +192,13 @@ export default function MyBalancePage() {
                                 </TableBody>
                             </Table>
                         </ScrollArea>
+                          {hasMoreHistory && (
+                            <div className="pt-4 text-center">
+                                <Button variant="outline" onClick={() => setYearsToShow(prev => prev + 1)}>
+                                    Load More
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
