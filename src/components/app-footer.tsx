@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Wallet } from 'lucide-react';
+import { Home, TrendingUp, Wallet, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AppFooter() {
@@ -9,6 +9,10 @@ export default function AppFooter() {
           <Link href="/" className="flex flex-col items-center gap-1 text-primary">
             <Home className="h-6 w-6" />
             <span className="text-xs font-medium">Home</span>
+          </Link>
+          <Link href="/investments" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
+            <Briefcase className="h-6 w-6" />
+            <span className="text-xs font-medium">Investments</span>
           </Link>
           <Link href="/fd-investment" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
             <TrendingUp className="h-6 w-6" />
