@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { subYears, isAfter, parseISO } from "date-fns";
+import { Badge } from "./ui/badge";
 
 
 export default function MyBalancePage() {
@@ -22,7 +23,7 @@ export default function MyBalancePage() {
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [yearsToShow, setYearsToShow] = useState(1);
 
-    const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest } = useData();
+    const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest, topupRequests, balanceWithdrawalRequests } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
 
@@ -44,6 +45,9 @@ export default function MyBalancePage() {
     const visibleHistory = allUserHistory.filter(item => isAfter(parseISO(item.date), dateCutoff));
     const hasMoreHistory = visibleHistory.length < allUserHistory.length;
 
+    const pendingTopupRequests = topupRequests.filter(req => req.userId === user.uid);
+    const pendingWithdrawalRequests = balanceWithdrawalRequests.filter(req => req.userId === user.uid);
+    const hasPendingRequests = pendingTopupRequests.length > 0 || pendingWithdrawalRequests.length > 0;
 
     const handleAddBalance = () => {
         const amount = parseFloat(addAmount);
@@ -159,6 +163,46 @@ export default function MyBalancePage() {
                         </Dialog>
                     </CardFooter>
                 </Card>
+
+                {hasPendingRequests && (
+                     <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
+                        <CardHeader>
+                            <CardTitle>Pending Requests</CardTitle>
+                            <CardDescription>The following requests are awaiting approval.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                        <TableHead className="text-right">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {pendingTopupRequests.map(req => (
+                                        <TableRow key={`topup-${req.id}`}>
+                                            <TableCell>Add Balance</TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Badge variant="secondary">{req.status}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {pendingWithdrawalRequests.map(req => (
+                                         <TableRow key={`withdraw-${req.id}`}>
+                                            <TableCell>Withdrawal</TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Badge variant="secondary">{req.status}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>
