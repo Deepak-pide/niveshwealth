@@ -1,4 +1,4 @@
-import { Home, Landmark, Wallet } from 'lucide-react';
+import { Home, TrendingUp, Wallet } from 'lucide-react';
 
 export default function AppFooter() {
   return (
@@ -10,7 +10,7 @@ export default function AppFooter() {
             <span className="text-xs font-medium">Home</span>
           </a>
           <a href="#" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
-            <Landmark className="h-6 w-6" />
+            <TrendingUp className="h-6 w-6" />
             <span className="text-xs font-medium">FD</span>
           </a>
           <a href="#" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary">
