@@ -19,11 +19,12 @@ import { Badge } from "./ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
 
+const ITEMS_PER_PAGE = 10;
 
 export default function MyBalancePage() {
     const [addAmount, setAddAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
-    const [yearsToShow, setYearsToShow] = useState(1);
+    const [visibleHistoryCount, setVisibleHistoryCount] = useState(ITEMS_PER_PAGE);
 
     const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest, topupRequests, balanceWithdrawalRequests } = useData();
     const { toast } = useToast();
@@ -44,9 +45,8 @@ export default function MyBalancePage() {
     const currentUserBalance = userBalances.find(b => b.userId === user.uid)?.balance || 0;
     const allUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => b.date.toMillis() - a.date.toMillis());
 
-    const dateCutoff = subYears(new Date(), yearsToShow);
-    const visibleHistory = allUserHistory.filter(item => isAfter(item.date.toDate(), dateCutoff));
-    const hasMoreHistory = visibleHistory.length < allUserHistory.length;
+    const visibleHistory = allUserHistory.slice(0, visibleHistoryCount);
+    const hasMoreHistory = allUserHistory.length > visibleHistoryCount;
 
     const pendingTopupRequests = topupRequests.filter(req => req.userId === user.uid);
     const pendingWithdrawalRequests = balanceWithdrawalRequests.filter(req => req.userId === user.uid);
@@ -92,6 +92,10 @@ export default function MyBalancePage() {
         toast({ title: "Request Submitted", description: "Your request to withdraw balance has been submitted." });
         setWithdrawAmount("");
     }
+    
+    const loadMoreHistory = () => {
+        setVisibleHistoryCount(prev => prev + ITEMS_PER_PAGE);
+    };
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -253,7 +257,7 @@ export default function MyBalancePage() {
                         </ScrollArea>
                           {hasMoreHistory && (
                             <div className="pt-4 text-center">
-                                <Button variant="outline" onClick={() => setYearsToShow(prev => prev + 1)}>
+                                <Button variant="outline" onClick={loadMoreHistory}>
                                     Load More
                                 </Button>
                             </div>

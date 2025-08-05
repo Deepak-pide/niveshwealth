@@ -15,6 +15,7 @@ import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { Timestamp } from "firebase/firestore";
 import { useAuth } from "@/hooks/use-auth";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -45,7 +46,8 @@ export default function ManageFdPage() {
             totalInvestment: totalInvestment,
             activeFDs: userFDs.filter(fd => fd.status === 'Active')
         }
-    }).filter(user => user.totalInvestment > 0 && user.id !== adminUser?.uid);
+    }).filter(user => user.totalInvestment > 0 && user.id !== adminUser?.uid)
+      .sort((a, b) => b.totalInvestment - a.totalInvestment);
 
     const handleDownload = () => {
         const title = "USER INVESTMENTS";

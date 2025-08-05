@@ -41,7 +41,9 @@ export default function ManageBalancePage() {
         return (balance * monthlyRate).toFixed(2);
     };
 
-    const filteredUserBalances = userBalances.filter(user => user.balance > 0 && user.userId !== adminUser?.uid);
+    const filteredUserBalances = userBalances
+        .filter(user => user.balance > 0 && user.userId !== adminUser?.uid)
+        .sort((a, b) => b.balance - a.balance);
 
     const handleDownload = () => {
         const title = "USER BALANCES";
