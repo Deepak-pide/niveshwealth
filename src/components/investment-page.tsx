@@ -8,7 +8,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, TrendingUp } from "lucide-react";
+import { Calculator, TrendingUp, Info } from "lucide-react";
 import Link from "next/link";
 
 export default function InvestmentPage() {
@@ -48,22 +48,15 @@ export default function InvestmentPage() {
                 </section>
 
                 <section>
-                    <Accordion type="single" collapsible className="w-full">
-                        <Card className="transition-shadow hover:shadow-md">
-                            <AccordionItem value="item-1" className="border-b-0">
-                                <AccordionTrigger className="hover:no-underline p-6">
-                                    <CardTitle>About Us</CardTitle>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <CardContent>
-                                        <p className="text-muted-foreground">
-                                            Nivesh Insights is a premier financial technology company dedicated to empowering individuals to achieve their financial goals. We provide innovative tools and expert insights to help you make informed investment decisions and build a secure financial future. Our mission is to democratize wealth creation by making sophisticated investment strategies accessible to everyone.
-                                        </p>
-                                    </CardContent>
-                                </AccordionContent>
-                            </AccordionItem>
+                    <Link href="/about-us">
+                         <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1 h-full">
+                            <div className="mb-4 rounded-full bg-primary/10 p-3">
+                                <Info className="h-8 w-8 text-primary" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground">About Us</h3>
+                            <p className="text-sm text-muted-foreground">Learn more about our commitment to you</p>
                         </Card>
-                    </Accordion>
+                    </Link>
                 </section>
             </div>
         </div>
