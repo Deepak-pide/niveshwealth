@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -9,6 +8,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { differenceInYears, parse } from 'date-fns';
+import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
+import { Lock } from "lucide-react";
 
 const investments = [
     {
@@ -215,6 +217,19 @@ const calculateInvestmentDetails = (investment: typeof investments[0], customRat
 const COLORS = ['#3b82f6', 'hsl(var(--primary))'];
 
 export default function InvestmentsPage() {
+    const { user } = useAuth();
+
+    if (!user) {
+        return (
+            <div className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center text-center h-full animate-fade-in">
+                <Lock className="h-16 w-16 text-primary mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
+                <p className="text-muted-foreground mb-4">Please log in to view your investments.</p>
+                {/* The login button is in the header, so no need to add another one here. */}
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-6">

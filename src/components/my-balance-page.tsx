@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
+import { Lock } from "lucide-react";
+import Link from "next/link";
 
 const balanceHistory = [
     {
@@ -53,6 +56,17 @@ const balanceHistory = [
 export default function MyBalancePage() {
     const [addAmount, setAddAmount] = useState(0);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
+    const { user } = useAuth();
+
+    if (!user) {
+        return (
+            <div className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center text-center h-full animate-fade-in">
+                <Lock className="h-16 w-16 text-primary mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
+                <p className="text-muted-foreground mb-4">Please log in to view your balance.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -157,6 +171,4 @@ export default function MyBalancePage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
-    );
-}
+        

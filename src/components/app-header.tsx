@@ -7,11 +7,15 @@ import { Switch } from '@/components/ui/switch';
 import { LineChart } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import UserNav from './user-nav';
+import LoginPage from './login-page';
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const isAdmin = pathname.startsWith('/admin');
+  const { user } = useAuth();
 
   const handleSwitchChange = (checked: boolean) => {
     if (checked) {
@@ -38,10 +42,11 @@ export default function AppHeader() {
                 id="role-switch"
                 checked={isAdmin}
                 onCheckedChange={handleSwitchChange}
+                disabled={!user}
               />
               <Label htmlFor="role-switch">Admin</Label>
             </div>
-            <Button className="transform transition-transform duration-300 hover:scale-105">Login</Button>
+            {user ? <UserNav /> : <LoginPage />}
           </div>
         </div>
       </div>
