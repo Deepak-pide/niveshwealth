@@ -24,9 +24,9 @@ export default function FdInvestmentPage() {
     };
 
     return (
-        <div className="container mx-auto p-4 md:p-8 flex justify-center">
+        <div className="container mx-auto p-4 md:p-8 flex justify-center animate-fade-in">
             <div className="w-full max-w-lg space-y-8">
-                <Card>
+                <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>
                         <CardTitle>Invest in Fixed Deposit (FD)</CardTitle>
                     </CardHeader>

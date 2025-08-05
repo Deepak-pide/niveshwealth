@@ -48,9 +48,9 @@ export default function InvestmentCalculatorPage() {
     const niveshResult = results ? results.find(r => r.name === 'Nivesh') : null;
 
     return (
-        <div className="container mx-auto p-4 md:p-8 flex justify-center">
+        <div className="container mx-auto p-4 md:p-8 flex justify-center animate-fade-in">
             <div className="w-full max-w-lg space-y-8">
-                <Card>
+                <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>
                         <CardTitle>Investment Calculator</CardTitle>
                     </CardHeader>
@@ -108,7 +108,7 @@ export default function InvestmentCalculatorPage() {
                 </Card>
 
                 {results && niveshResult && (
-                    <Card>
+                    <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                         <CardHeader>
                             <CardTitle>Calculation Results</CardTitle>
                         </CardHeader>

@@ -55,9 +55,9 @@ export default function MyBalancePage() {
     const [withdrawAmount, setWithdrawAmount] = useState(0);
 
     return (
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-8">
-                <Card>
+                <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>
                         <CardTitle>Your Balance</CardTitle>
                     </CardHeader>
@@ -126,7 +126,7 @@ export default function MyBalancePage() {
                     </CardFooter>
                 </Card>
 
-                <Card>
+                <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>
                         <CardTitle>Balance History</CardTitle>
                         <CardDescription>A record of your recent transactions.</CardDescription>
@@ -143,7 +143,7 @@ export default function MyBalancePage() {
                                 </TableHeader>
                                 <TableBody>
                                     {balanceHistory.map((item, index) => (
-                                        <TableRow key={index}>
+                                        <TableRow key={index} className="transition-colors hover:bg-muted/50">
                                             <TableCell className="font-medium">{item.date}</TableCell>
                                             <TableCell>{item.description}</TableCell>
                                             <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>

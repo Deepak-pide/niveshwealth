@@ -34,7 +34,7 @@ const investments = [
 
 export default function InvestmentsPage() {
     return (
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="space-y-6">
                 <header>
                     <h1 className="text-3xl font-bold tracking-tight">My Investments</h1>
@@ -42,7 +42,7 @@ export default function InvestmentsPage() {
                 </header>
                 <div className="space-y-4">
                     {investments.map((investment) => (
-                        <Card key={investment.id}>
+                        <Card key={investment.id} className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-lg font-medium">{investment.name}</CardTitle>
                                 <Badge variant={investment.status === 'Active' ? 'default' : 'secondary'}>{investment.status}</Badge>
@@ -70,4 +70,3 @@ export default function InvestmentsPage() {
         </div>
     );
 }
-

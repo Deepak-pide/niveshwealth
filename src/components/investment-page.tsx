@@ -37,7 +37,7 @@ export default function InvestmentPage() {
                     </Link>
 
                     <Link href="/fd-investment">
-                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1">
+                        <Card className="flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1 h-full">
                             <div className="mb-4 rounded-full bg-primary/10 p-3">
                                 <TrendingUp className="h-8 w-8 text-primary" />
                             </div>
