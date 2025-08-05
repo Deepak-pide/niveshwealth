@@ -18,15 +18,9 @@ export default function AppHeader() {
               strokeLinejoin="round"
               className="text-primary"
             >
-              <path d="M7 21h10" />
-              <path d="M10 21v-5.14a2 2 0 0 1 .55-1.42L12 13l1.45 1.44A2 2 0 0 1 14 15.86V21" />
-              <path d="M12 13a4 4 0 0 1 4-4h2V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v3h2a4 4 0 0 1 4 4Z" />
-              <path d="M12 13h.01" />
-              <path d="m14 7 1 1" />
-              <path d="m5 13 1 1" />
-              <path d="M12 3v2" />
-              <path d="M18 10h-1" />
-              <path d="M7 10H6" />
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
             </svg>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               Nivesh
