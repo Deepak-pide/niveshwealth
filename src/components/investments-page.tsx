@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { differenceInYears, format } from 'date-fns';
+import { differenceInYears, format, addYears } from 'date-fns';
 import Link from "next/link";
 import { useData, Investment } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,7 @@ const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 const ITEMS_PER_PAGE = 5;
 
 export default function InvestmentsPage() {
-    const { investments, addFdWithdrawalRequest } = useData();
+    const { investments, investmentRequests, addFdWithdrawalRequest } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
@@ -52,7 +52,25 @@ export default function InvestmentsPage() {
     }
 
     const userInvestments = investments.filter(inv => inv.userId === user.uid);
-    const activeInvestments = userInvestments.filter(inv => inv.status === 'Active' || inv.status === 'Pending');
+    
+    const pendingUserInvestments = investmentRequests
+        .filter(req => req.userId === user.uid)
+        .map(req => ({
+            id: req.id,
+            userId: req.userId,
+            name: `FD for ${req.years} years`,
+            amount: req.amount,
+            interestRate: 0.09, // Assumed rate for display
+            startDate: req.date, // Request date as start date for now
+            maturityDate: Timestamp.fromDate(addYears(req.date.toDate(), req.years)),
+            status: 'Pending' as const,
+        }));
+    
+    const combinedActiveInvestments = [
+        ...pendingUserInvestments,
+        ...userInvestments.filter(inv => inv.status === 'Active')
+    ];
+
     const pastInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
     
     const handleWithdraw = (investmentId: string) => {
@@ -72,8 +90,8 @@ export default function InvestmentsPage() {
         });
     };
     
-    const visibleActiveInvestments = activeInvestments.slice(0, visibleActive);
-    const hasMoreActive = activeInvestments.length > visibleActive;
+    const visibleActiveInvestments = combinedActiveInvestments.slice(0, visibleActive);
+    const hasMoreActive = combinedActiveInvestments.length > visibleActive;
 
     const visiblePastInvestments = pastInvestments.slice(0, visiblePast);
     const hasMorePast = pastInvestments.length > visiblePast;
@@ -264,3 +282,5 @@ export default function InvestmentsPage() {
         </div>
     );
 }
+
+    
