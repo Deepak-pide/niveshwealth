@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useData } from "@/hooks/use-data";
@@ -178,7 +179,23 @@ export default function MyBalancePage() {
                                 </div>
                                 <DialogFooter>
                                     <DialogClose asChild>
-                                         <Button type="submit" onClick={handleWithdrawBalance}>Withdraw</Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive">Withdraw</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Confirm Withdrawal</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Are you sure you want to withdraw ₹{parseFloat(withdrawAmount).toLocaleString('en-IN')}?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={handleWithdrawBalance}>Confirm</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </DialogClose>
                                 </DialogFooter>
                             </DialogContent>
@@ -234,22 +251,22 @@ export default function MyBalancePage() {
                         <CardDescription>A record of your recent transactions.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-72 w-full whitespace-nowrap">
-                             <div className="overflow-auto">
+                        <ScrollArea className="h-72 w-full">
+                             <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Date</TableHead>
+                                            <TableHead className="whitespace-nowrap">Date</TableHead>
                                             <TableHead>Description</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
+                                            <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
                                             <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                                <TableCell className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
+                                                <TableCell className="font-medium whitespace-nowrap">{item.date.toDate().toLocaleDateString()}</TableCell>
                                                 <TableCell>{item.description}</TableCell>
-                                                <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
+                                                <TableCell className={cn("text-right font-semibold whitespace-nowrap", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                     {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                                 </TableCell>
                                             </TableRow>
