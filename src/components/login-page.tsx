@@ -14,7 +14,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/');
+      const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+      const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
+      if (isAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     }
   }, [user, loading, router]);
 
