@@ -25,7 +25,7 @@ const profileSchema = z.object({
 
 export default function CompleteProfilePage() {
     const { user } = useAuth();
-    const { addProfileCompletionRequest } = useData();
+    const { updateUserProfile } = useData();
     const { toast } = useToast();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
@@ -50,11 +50,11 @@ export default function CompleteProfilePage() {
         setIsLoading(true);
 
         try {
-            await addProfileCompletionRequest(values);
-            toast({ title: "Profile Submitted", description: "Your profile details have been submitted for verification." });
+            await updateUserProfile(user.id, values);
+            toast({ title: "Profile Updated", description: "Your profile details have been saved successfully." });
             router.push("/");
         } catch (error) {
-            toast({ title: "Submission Failed", description: "An error occurred while submitting your profile.", variant: "destructive" });
+            toast({ title: "Update Failed", description: "An error occurred while saving your profile.", variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
@@ -65,7 +65,7 @@ export default function CompleteProfilePage() {
             <Card className="w-full max-w-2xl">
                 <CardHeader>
                     <CardTitle>Complete Your Profile</CardTitle>
-                    <CardDescription>Please fill in your details for verification.</CardDescription>
+                    <CardDescription>Please fill in your details to complete your profile.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -137,7 +137,7 @@ export default function CompleteProfilePage() {
                             />
                             <Button type="submit" className="w-full" disabled={isLoading}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Submit for Verification
+                                Save Profile
                             </Button>
                         </form>
                     </Form>

@@ -71,17 +71,12 @@ export interface FdWithdrawalRequest extends BaseRequest {
 export type TopupRequest = BaseRequest;
 export type BalanceWithdrawalRequest = BaseRequest;
 
-export interface ProfileCompletionRequest {
-    id: string;
-    userId: string;
-    userName: string;
-    userAvatar: string;
+interface UserProfileData {
     phoneNumber: string;
     address: string;
     occupation: string;
     panCard: string;
     aadharCard: string;
-    status: 'Pending';
 }
 
 
@@ -126,7 +121,6 @@ interface DataContextType {
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
-    profileCompletionRequests: ProfileCompletionRequest[];
     templates: Template[];
     fdTenureRates: {[key: number]: number};
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -143,9 +137,7 @@ interface DataContextType {
     approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
-    addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar'>) => Promise<void>;
-    approveProfileCompletionRequest: (requestId: string) => Promise<void>;
-    rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
+    updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
     getUserPhoneNumber: (userId: string) => string | undefined;
     addTemplate: (templateData: Omit<Template, 'id'>) => Promise<void>;
@@ -176,7 +168,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [balanceWithdrawalRequests, setBalanceWithdrawalRequests] = useState<BalanceWithdrawalRequest[]>([]);
     const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
-    const [profileCompletionRequests, setProfileCompletionRequests] = useState<ProfileCompletionRequest[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
 
@@ -234,7 +225,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
     useDataFetching('userBalances', setUserBalances);
     useDataFetching('balanceHistory', setBalanceHistory);
-    useDataFetching('profileCompletionRequests', setProfileCompletionRequests);
     useDataFetching('templates', setTemplates);
 
     const getUserInfo = (userId: string) => {
@@ -575,46 +565,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
-    const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar'>) => {
-        if (!authUser) return;
-        
-        const { userName, userAvatar } = getUserInfo(authUser.uid);
-
-        const newRequest = { 
-            ...requestData,
-            userId: authUser.uid,
-            status: 'Pending' as const, 
-            userName, 
-            userAvatar,
-        };
-
-        await addDoc(collection(db, 'profileCompletionRequests'), newRequest);
-    };
-
-    const approveProfileCompletionRequest = async (requestId: string) => {
-        const requestDocRef = doc(db, 'profileCompletionRequests', requestId);
-        const requestSnap = await getDoc(requestDocRef);
-        if (!requestSnap.exists()) return;
-        const requestData = requestSnap.data() as ProfileCompletionRequest;
-
-        const userDocRef = doc(db, 'users', requestData.userId);
-        
-        const batch = writeBatch(db);
-        batch.update(userDocRef, {
-            phoneNumber: requestData.phoneNumber,
-            address: requestData.address,
-            occupation: requestData.occupation,
-            panCard: requestData.panCard,
-            aadharCard: requestData.aadharCard,
-        });
-        batch.delete(requestDocRef);
-        await batch.commit();
-        toast({ title: "Profile Approved", description: `Details for ${requestData.userName} have been updated.` });
-    };
-
-    const rejectProfileCompletionRequest = async (requestId: string) => {
-        await deleteDoc(doc(db, 'profileCompletionRequests', requestId));
-        toast({ title: "Request Rejected", variant: "destructive" });
+    const updateUserProfile = async (userId: string, data: UserProfileData) => {
+        const userDocRef = doc(db, "users", userId);
+        await updateDoc(userDocRef, data);
     };
 
     const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {
@@ -641,7 +594,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         balanceWithdrawalRequests,
         userBalances,
         balanceHistory,
-        profileCompletionRequests,
         templates,
         fdTenureRates,
         addInvestmentRequest,
@@ -658,9 +610,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
-        addProfileCompletionRequest,
-        approveProfileCompletionRequest,
-        rejectProfileCompletionRequest,
+        updateUserProfile,
         setFdInterestRatesForTenures,
         getUserPhoneNumber,
         addTemplate,
@@ -681,9 +631,3 @@ export const useData = () => {
     }
     return context;
 };
-
-    
-
-
-
-

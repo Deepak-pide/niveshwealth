@@ -16,7 +16,7 @@ import React, { useState, useEffect } from "react";
 
 export default function UserNav() {
     const { user, logout } = useAuth();
-    const { investments, balanceHistory, users, profileCompletionRequests, userBalances } = useData();
+    const { investments, balanceHistory, users, userBalances } = useData();
     const isMobile = useIsMobile();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -52,9 +52,7 @@ export default function UserNav() {
     }
     
     const currentUser = users.find(u => u.id === user.id);
-    const hasPendingRequest = profileCompletionRequests.some(req => req.userId === user.id);
     const isProfileComplete = currentUser?.panCard;
-    const canCompleteProfile = !isProfileComplete && !hasPendingRequest;
 
 
     const handleDownload = () => {
@@ -166,13 +164,11 @@ export default function UserNav() {
                         
                     )}
 
-                    {!isAdmin && (
+                    {!isAdmin && !isProfileComplete && (
                         <Link href="/complete-profile">
-                             <DropdownMenuItem disabled={!canCompleteProfile}>
+                             <DropdownMenuItem>
                                 <FileText className="mr-2 h-4 w-4" />
-                                <span>
-                                    {isProfileComplete ? "Profile Complete" : (hasPendingRequest ? "Verification Pending" : "Complete Profile")}
-                                </span>
+                                <span>Complete Profile</span>
                             </DropdownMenuItem>
                         </Link>
                     )}
