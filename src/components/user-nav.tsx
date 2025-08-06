@@ -89,21 +89,21 @@ export default function UserNav() {
                             </DropdownMenuItem>
                         </Link>
                     ) : (
-                        !isMobile && (
+                        
                             <Link href="/">
                                 <DropdownMenuItem>
                                     <UserIcon className="mr-2 h-4 w-4" />
                                     <span>Home</span>
                                 </DropdownMenuItem>
                             </Link>
-                        )
+                        
                     )}
-                    {!isMobile && (
+                    
                          <DropdownMenuItem onClick={handleDownload}>
                             <Download className="mr-2 h-4 w-4" />
                             <span>Download Data</span>
                         </DropdownMenuItem>
-                    )}
+                    
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>

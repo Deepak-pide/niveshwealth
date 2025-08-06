@@ -31,7 +31,7 @@ export default function AppHeader() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            {isMobile && !isAdmin && <UserSidebar />}
+            
             <Link href={isAdmin ? '/admin' : '/'} className="flex items-center gap-3 group">
               <LineChart className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
               <h1 className="text-xl font-bold tracking-tight text-foreground">
