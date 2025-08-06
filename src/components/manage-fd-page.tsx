@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -18,10 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Slider } from "./ui/slider";
 
 const ITEMS_PER_PAGE = 10;
-const currentYear = new Date().getFullYear();
 
 export default function ManageFdPage() {
     const { 
@@ -33,7 +32,8 @@ export default function ManageFdPage() {
         rejectInvestmentRequest,
         approveFdWithdrawalRequest,
         rejectFdWithdrawalRequest,
-        setFdInterestRateForYear
+        setFdInterestRatesForTenures,
+        fdTenureRates
     } = useData();
     const { user: adminUser } = useAuth();
     const { toast } = useToast();
@@ -41,9 +41,25 @@ export default function ManageFdPage() {
     const [visibleInvestmentReqs, setVisibleInvestmentReqs] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawalReqs, setVisibleWithdrawalReqs] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
+    
+    const [tenureRates, setTenureRates] = useState<{[key: number]: string}>({
+        1: (fdTenureRates['1'] * 100).toString(),
+        2: (fdTenureRates['2'] * 100).toString(),
+        3: (fdTenureRates['3'] * 100).toString(),
+        4: (fdTenureRates['4'] * 100).toString(),
+        5: (fdTenureRates['5'] * 100).toString(),
+    });
 
-    const [year, setYear] = useState(currentYear);
-    const [interestRate, setInterestRate] = useState('');
+    React.useEffect(() => {
+        setTenureRates({
+            1: ((fdTenureRates['1'] || 0) * 100).toString(),
+            2: ((fdTenureRates['2'] || 0) * 100).toString(),
+            3: ((fdTenureRates['3'] || 0) * 100).toString(),
+            4: ((fdTenureRates['4'] || 0) * 100).toString(),
+            5: ((fdTenureRates['5'] || 0) * 100).toString(),
+        });
+    }, [fdTenureRates]);
+
 
     const userInvestments = users.map(user => {
         const userFDs = investments.filter(inv => inv.userId === user.id);
@@ -85,25 +101,27 @@ export default function ManageFdPage() {
         XLSX.writeFile(workbook, "user_investments.xlsx");
     };
 
-    const handleSetBulkRate = async () => {
-        const rate = parseFloat(interestRate);
-
-        if (isNaN(rate)) {
-            toast({
-                title: "Invalid Input",
-                description: "Please provide a valid interest rate.",
-                variant: "destructive"
-            });
-            return;
+    const handleSetTenureRates = async () => {
+        const ratesToSet: {[key: number]: number} = {};
+        for (const year in tenureRates) {
+            const rate = parseFloat(tenureRates[year]);
+            if (isNaN(rate) || rate < 0) {
+                toast({
+                    title: "Invalid Input",
+                    description: `Please provide a valid interest rate for ${year} year(s).`,
+                    variant: "destructive"
+                });
+                return;
+            }
+            ratesToSet[year] = rate / 100;
         }
 
         try {
-            await setFdInterestRateForYear(year, rate);
+            await setFdInterestRatesForTenures(ratesToSet);
             toast({
                 title: "Success",
-                description: `Interest rate for FDs created in ${year} has been updated to ${rate}%.`
+                description: `Interest rates for FD tenures have been updated.`
             });
-            setInterestRate('');
         } catch (error: any) {
             toast({
                 title: "Error",
@@ -278,44 +296,37 @@ export default function ManageFdPage() {
                                     <DialogTrigger asChild>
                                         <Button>
                                             <Percent className="mr-2 h-4 w-4" />
-                                            Set Bulk Interest Rate
+                                            Set Tenure Rates
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Set FD Interest Rate</DialogTitle>
+                                            <DialogTitle>Set FD Interest Rates by Tenure</DialogTitle>
                                             <DialogDescription>
-                                                Set the interest rate for all FDs created in a specific year. This will update existing FDs.
+                                                Set the interest rate for FDs based on their duration in years.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
-                                             <div className="grid gap-4">
-                                                <div className="flex items-center justify-between">
-                                                    <Label htmlFor="year">Year</Label>
-                                                    <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                                                        {year}
-                                                    </span>
+                                            {Object.keys(tenureRates).map(year => (
+                                                <div key={year} className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor={`interest-rate-${year}`} className="text-right">{year} Year(s)</Label>
+                                                    <Input
+                                                        id={`interest-rate-${year}`}
+                                                        type="number"
+                                                        placeholder="e.g., 9.5"
+                                                        value={tenureRates[year as any]}
+                                                        onChange={(e) => setTenureRates(prev => ({...prev, [year]: e.target.value}))}
+                                                        className="col-span-3"
+                                                    />
                                                 </div>
-                                                <Slider
-                                                    id="year"
-                                                    value={[year]}
-                                                    onValueChange={(value) => setYear(value[0])}
-                                                    min={2020}
-                                                    max={currentYear}
-                                                    step={1}
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="interest-rate" className="text-right">Interest Rate (%)</Label>
-                                                <Input id="interest-rate" type="number" placeholder="e.g., 9.5" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} className="col-span-3" />
-                                            </div>
+                                            ))}
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
                                                 <Button type="button" variant="secondary">Cancel</Button>
                                             </DialogClose>
                                             <DialogClose asChild>
-                                                <Button onClick={handleSetBulkRate}>Set Rate</Button>
+                                                <Button onClick={handleSetTenureRates}>Set Rates</Button>
                                             </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>

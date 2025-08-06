@@ -19,6 +19,7 @@ import {
     Timestamp,
     getDocs,
     runTransaction,
+    setDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
@@ -119,6 +120,7 @@ interface DataContextType {
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
     profileCompletionRequests: ProfileCompletionRequest[];
+    fdTenureRates: {[key: number]: number};
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addInvestmentRequestFromBalance: (requestData: { userId: string, amount: number, years: number }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -137,7 +139,7 @@ interface DataContextType {
     addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
-    setFdInterestRateForYear: (year: number, interestRate: number) => Promise<void>;
+    setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -165,6 +167,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
     const [profileCompletionRequests, setProfileCompletionRequests] = useState<ProfileCompletionRequest[]>([]);
+    const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
+
+    useEffect(() => {
+        const docRef = doc(db, 'settings', 'fdTenureRates');
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setFdTenureRates(docSnap.data());
+            } else {
+                // Initialize with default values if it doesn't exist
+                const defaultRates = { '1': 0.08, '2': 0.08, '3': 0.085, '4': 0.085, '5': 0.09 };
+                setDoc(docRef, defaultRates);
+                setFdTenureRates(defaultRates);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (authUser?.uid) {
@@ -241,6 +259,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         if (!authUser) return;
         const { userId, amount, years } = requestData;
         const userBalanceDocRef = doc(db, 'userBalances', userId);
+        
+        const interestRate = fdTenureRates[years] || 0.09; // Fallback to 9% if not set
 
         try {
             await runTransaction(db, async (transaction) => {
@@ -273,7 +293,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     userId: userId,
                     name: `FD for ${years} years`,
                     amount: amount,
-                    interestRate: 0.09,
+                    interestRate: interestRate,
                     startDate: Timestamp.now(),
                     maturityDate: Timestamp.fromDate(addYears(new Date(), years)),
                     status: 'Active' as const,
@@ -309,11 +329,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         if (!requestSnap.exists()) return;
         const requestData = requestSnap.data() as InvestmentRequest;
 
+        const interestRate = fdTenureRates[requestData.years] || 0.09; // Fallback to 9% if not set
+
         const newInvestment = {
             userId: requestData.userId,
             name: `FD for ${requestData.years} years`,
             amount: requestData.amount,
-            interestRate: 0.09,
+            interestRate: interestRate,
             startDate: Timestamp.now(),
             maturityDate: Timestamp.fromDate(addYears(new Date(), requestData.years)),
             status: 'Active' as const,
@@ -569,28 +591,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Request Rejected", variant: "destructive" });
     };
 
-    const setFdInterestRateForYear = async (year: number, interestRate: number) => {
-        const startDate = startOfYear(new Date(year, 0, 1));
-        const endDate = endOfYear(new Date(year, 11, 31));
-        const rate = interestRate / 100;
-
-        const investmentsRef = collection(db, 'investments');
-        const q = query(investmentsRef, 
-            where('startDate', '>=', Timestamp.fromDate(startDate)),
-            where('startDate', '<=', Timestamp.fromDate(endDate))
-        );
-
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-            throw new Error(`No FDs found for the year ${year}.`);
-        }
-
-        const batch = writeBatch(db);
-        querySnapshot.forEach((doc) => {
-            batch.update(doc.ref, { interestRate: rate });
-        });
-
-        await batch.commit();
+    const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {
+        const docRef = doc(db, 'settings', 'fdTenureRates');
+        await setDoc(docRef, rates, { merge: true });
     };
 
 
@@ -604,6 +607,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         userBalances,
         balanceHistory,
         profileCompletionRequests,
+        fdTenureRates,
         addInvestmentRequest,
         addInvestmentRequestFromBalance,
         addFdWithdrawalRequest,
@@ -622,7 +626,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addProfileCompletionRequest,
         approveProfileCompletionRequest,
         rejectProfileCompletionRequest,
-        setFdInterestRateForYear,
+        setFdInterestRatesForTenures,
     };
 
     return (
