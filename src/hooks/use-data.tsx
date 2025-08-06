@@ -24,7 +24,6 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
 import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear } from 'date-fns';
 import { useToast } from './use-toast';
-import { sendWithdrawalApprovedMessage } from '@/services/whatsapp';
 
 // Base Types
 interface BaseRequest {
@@ -332,54 +331,52 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
      const approveFdWithdrawalRequest = async (requestId: string) => {
         const requestDocRef = doc(db, 'fdWithdrawalRequests', requestId);
-        const requestSnap = await getDoc(requestDocRef);
-        if (!requestSnap.exists()) return;
-        const request = requestSnap.data() as FdWithdrawalRequest;
-
-        const investmentDocRef = doc(db, 'investments', request.investmentIdToWithdraw);
-        const investmentSnap = await getDoc(investmentDocRef);
-        if (!investmentSnap.exists()) return;
-        const investment = investmentSnap.data() as Investment;
-
-        const penalizedRate = 0.065;
-        const years = Math.max(differenceInYears(new Date(), investment.startDate.toDate()), 1);
-        const penalizedInterest = investment.amount * penalizedRate * years;
-        const totalValue = investment.amount + penalizedInterest;
         
-        const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+        try {
+            await runTransaction(db, async (transaction) => {
+                const requestSnap = await transaction.get(requestDocRef);
+                if (!requestSnap.exists()) {
+                    throw new Error("Withdrawal request not found.");
+                }
+                const request = requestSnap.data() as FdWithdrawalRequest;
 
-        const batch = writeBatch(db);
-        
-        const userBalanceSnap = await getDoc(userBalanceDocRef);
-        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
-        
-        batch.update(userBalanceDocRef, { balance: currentBalance + totalValue });
-        batch.update(investmentDocRef, { status: 'Withdrawn' });
+                const investmentDocRef = doc(db, 'investments', request.investmentIdToWithdraw);
+                const investmentSnap = await transaction.get(investmentDocRef);
+                if (!investmentSnap.exists()) {
+                    throw new Error("Investment not found.");
+                }
+                const investment = investmentSnap.data() as Investment;
 
-        batch.set(doc(collection(db, 'balanceHistory')), { 
-            userId: request.userId, 
-            date: Timestamp.now(), 
-            description: `Withdrawal from ${investment.name}`, 
-            amount: totalValue, 
-            type: "Credit" 
-        });
-        batch.delete(requestDocRef);
-        await batch.commit();
+                const penalizedRate = 0.065;
+                const years = Math.max(differenceInYears(new Date(), investment.startDate.toDate()), 1);
+                const penalizedInterest = investment.amount * penalizedRate * years;
+                const totalValue = investment.amount + penalizedInterest;
 
-        const userInfo = getUserInfo(request.userId);
-        if (userInfo.phoneNumber) {
-             try {
-                await sendWithdrawalApprovedMessage({
-                    customerName: userInfo.userName,
-                    amount: totalValue.toFixed(2),
-                    date: format(new Date(), 'dd MMM yyyy'),
-                    phone: userInfo.phoneNumber,
+                const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+                const userBalanceSnap = await transaction.get(userBalanceDocRef);
+                const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
+                
+                transaction.update(userBalanceDocRef, { balance: currentBalance + totalValue });
+                transaction.update(investmentDocRef, { status: 'Withdrawn' });
+                
+                const historyRef = doc(collection(db, 'balanceHistory'));
+                transaction.set(historyRef, { 
+                    userId: request.userId, 
+                    date: Timestamp.now(), 
+                    description: `Withdrawal from ${investment.name}`, 
+                    amount: totalValue, 
+                    type: "Credit" 
                 });
-                toast({ title: "Success", description: "Withdrawal approved and notification sent." });
-            } catch (error) {
-                console.error("Failed to send WhatsApp message:", error);
-                toast({ title: "Approval successful, but failed to send notification", variant: 'destructive' });
-            }
+
+                transaction.delete(requestDocRef);
+            });
+            
+            toast({ title: "Success", description: "Withdrawal approved." });
+
+        } catch (error) {
+             console.error("FD Withdrawal approval failed:", error);
+             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+             toast({ title: "FD Withdrawal Failed", description: errorMessage, variant: "destructive" });
         }
     };
 
@@ -442,45 +439,46 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const approveBalanceWithdrawalRequest = async (requestId: string) => {
         const requestDocRef = doc(db, 'balanceWithdrawalRequests', requestId);
-        const requestSnap = await getDoc(requestDocRef);
-        if (!requestSnap.exists()) return;
-        const request = requestSnap.data() as BalanceWithdrawalRequest;
+        try {
+             await runTransaction(db, async (transaction) => {
+                const requestSnap = await transaction.get(requestDocRef);
+                if (!requestSnap.exists()) {
+                    throw new Error("Withdrawal request not found.");
+                }
+                const request = requestSnap.data() as BalanceWithdrawalRequest;
 
-        const userBalanceDocRef = doc(db, 'userBalances', request.userId);
-        const userBalanceSnap = await getDoc(userBalanceDocRef);
-        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
+                const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+                const userBalanceSnap = await transaction.get(userBalanceDocRef);
+                if (!userBalanceSnap.exists()) {
+                    throw new Error("User balance not found.");
+                }
+                
+                const currentBalance = userBalanceSnap.data()?.balance || 0;
 
-        if (currentBalance < request.amount) {
-            toast({ title: "Action Failed", description: "User has insufficient balance.", variant: "destructive" });
-            return;
-        }
+                if (currentBalance < request.amount) {
+                    throw new Error("User has insufficient balance.");
+                }
 
-        const batch = writeBatch(db);
-        batch.update(userBalanceDocRef, { balance: currentBalance - request.amount });
-        batch.set(doc(collection(db, 'balanceHistory')), {
-            userId: request.userId,
-            date: Timestamp.now(),
-            description: 'Withdrawn from wallet',
-            amount: request.amount,
-            type: 'Debit'
-        });
-        batch.delete(requestDocRef);
-        await batch.commit();
-        
-        const userInfo = getUserInfo(request.userId);
-        if (userInfo.phoneNumber) {
-            try {
-                await sendWithdrawalApprovedMessage({
-                    customerName: userInfo.userName,
-                    amount: request.amount.toFixed(2),
-                    date: format(new Date(), 'dd MMM yyyy'),
-                    phone: userInfo.phoneNumber,
+                transaction.update(userBalanceDocRef, { balance: currentBalance - request.amount });
+                
+                const historyRef = doc(collection(db, 'balanceHistory'));
+                transaction.set(historyRef, {
+                    userId: request.userId,
+                    date: Timestamp.now(),
+                    description: 'Withdrawn from wallet',
+                    amount: request.amount,
+                    type: 'Debit'
                 });
-                toast({ title: "Success", description: "Withdrawal approved and notification sent." });
-            } catch (error) {
-                console.error("Failed to send WhatsApp message:", error);
-                toast({ title: "Approval successful, but failed to send notification", variant: 'destructive' });
-            }
+
+                transaction.delete(requestDocRef);
+            });
+
+            toast({ title: "Success", description: "Withdrawal approved." });
+
+        } catch (error) {
+            console.error("Balance Withdrawal approval failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+            toast({ title: "Balance Withdrawal Failed", description: errorMessage, variant: "destructive" });
         }
     };
 
