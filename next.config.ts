@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    GUPSHUP_API_KEY: process.env.GUPSHUP_API_KEY,
+    GUPSHUP_APP_NAME: process.env.GUPSHUP_APP_NAME,
+  },
 };
 
 export default nextConfig;

@@ -22,8 +22,9 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
-import { addYears, parseISO, differenceInYears, differenceInDays } from 'date-fns';
+import { addYears, parseISO, differenceInYears, differenceInDays, format } from 'date-fns';
 import { useToast } from './use-toast';
+import { sendWithdrawalApprovedMessage } from '@/services/whatsapp';
 
 // Base Types
 interface BaseRequest {
@@ -213,11 +214,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             return {
                 userName: user.name,
                 userAvatar: user.avatar,
+                phoneNumber: user.phoneNumber,
             }
         }
         return {
             userName: authUser?.displayName || 'Unknown User',
-            userAvatar: authUser?.photoURL || `https://placehold.co/100x100.png`
+            userAvatar: authUser?.photoURL || `https://placehold.co/100x100.png`,
+            phoneNumber: undefined
         };
     };
 
@@ -361,6 +364,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         });
         batch.delete(requestDocRef);
         await batch.commit();
+
+        const userInfo = getUserInfo(request.userId);
+        if (userInfo.phoneNumber) {
+             try {
+                await sendWithdrawalApprovedMessage({
+                    customerName: userInfo.userName,
+                    amount: totalValue.toFixed(2),
+                    date: format(new Date(), 'dd MMM yyyy'),
+                    phone: userInfo.phoneNumber,
+                });
+                toast({ title: "Success", description: "Withdrawal approved and notification sent." });
+            } catch (error) {
+                console.error("Failed to send WhatsApp message:", error);
+                toast({ title: "Approval successful, but failed to send notification", variant: 'destructive' });
+            }
+        }
     };
 
     const rejectFdWithdrawalRequest = async (requestId: string) => {
@@ -446,6 +465,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         });
         batch.delete(requestDocRef);
         await batch.commit();
+        
+        const userInfo = getUserInfo(request.userId);
+        if (userInfo.phoneNumber) {
+            try {
+                await sendWithdrawalApprovedMessage({
+                    customerName: userInfo.userName,
+                    amount: request.amount.toFixed(2),
+                    date: format(new Date(), 'dd MMM yyyy'),
+                    phone: userInfo.phoneNumber,
+                });
+                toast({ title: "Success", description: "Withdrawal approved and notification sent." });
+            } catch (error) {
+                console.error("Failed to send WhatsApp message:", error);
+                toast({ title: "Approval successful, but failed to send notification", variant: 'destructive' });
+            }
+        }
     };
 
     const rejectBalanceWithdrawalRequest = async (requestId: string) => {
