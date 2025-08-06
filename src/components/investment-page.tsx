@@ -12,7 +12,7 @@ export default function InvestmentPage() {
             <div className="space-y-8">
                 <section className="text-center">
                     <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                        Secure Your Future with <span className="text-primary">High-Yield Returns</span>
+                        <span className="text-primary">Secure Your Future</span> with High-Yield Returns
                     </h2>
                     <p className="mt-4 text-lg text-muted-foreground">
                         Unlock the potential of up to <span className="text-green-600 font-bold">9%</span> guaranteed returns and build strong wealth.
