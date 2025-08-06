@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Plus, MessageSquare, Info, Trash2 } from "lucide-react";
+import { Plus, MessageSquare, Info, Trash2, Code } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -35,6 +35,7 @@ type CombinedRequest = {
 
 const ITEMS_PER_PAGE = 15;
 const REQUEST_TYPES: (RequestType | 'General')[] = ['General', 'FD Investment', 'FD Withdrawal', 'Balance Top-up', 'Balance Withdrawal'];
+const PLACEHOLDERS = ['{userName}', '{requestType}', '{amount}', '{date}'];
 
 
 const HighlightedMessage = ({ text, request }: { text: string, request?: CombinedRequest | null }) => {
@@ -91,6 +92,7 @@ export default function SendAlertPage() {
     const [isEditAlertOpen, setIsEditAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [currentTarget, setCurrentTarget] = useState<CombinedRequest | null>(null);
+    const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
 
 
     const combinedRequests: CombinedRequest[] = [
@@ -174,6 +176,23 @@ export default function SendAlertPage() {
         setAlertMessage(template.message);
         setCurrentTarget(req);
         setIsEditAlertOpen(true);
+    };
+
+    const handleInsertPlaceholder = (placeholder: string) => {
+        const textarea = messageTextareaRef.current;
+        if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const newText = text.substring(0, start) + placeholder + text.substring(end);
+            setAlertMessage(newText);
+            
+            // Focus and set cursor position after placeholder insertion
+            setTimeout(() => {
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
+            }, 0);
+        }
     };
     
     const getFilteredTemplates = (requestType: RequestType) => {
@@ -384,21 +403,27 @@ export default function SendAlertPage() {
                         </DialogHeader>
                         <div className="py-4 space-y-4">
                              <div className="grid gap-2">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-between gap-2 mb-2">
                                     <Label htmlFor="edit-message">Message</Label>
-                                     <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                {placeholdersTooltip}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                                <Code className="mr-2 h-4 w-4" />
+                                                Dynamic Text
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {PLACEHOLDERS.map(placeholder => (
+                                                <DropdownMenuItem key={placeholder} onSelect={() => handleInsertPlaceholder(placeholder)}>
+                                                    {placeholder}
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                                 <Textarea 
                                     id="edit-message"
+                                    ref={messageTextareaRef}
                                     value={alertMessage} 
                                     onChange={(e) => setAlertMessage(e.target.value)} 
                                     className="min-h-[120px]"
@@ -420,7 +445,5 @@ export default function SendAlertPage() {
         </div>
     );
 }
-
-    
 
     
