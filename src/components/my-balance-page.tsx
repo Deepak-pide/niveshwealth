@@ -234,8 +234,8 @@ export default function MyBalancePage() {
                         <CardDescription>A record of your recent transactions.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-72">
-                             <div className="overflow-x-auto">
+                        <ScrollArea className="h-72 w-full whitespace-nowrap">
+                             <div className="overflow-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -247,9 +247,9 @@ export default function MyBalancePage() {
                                     <TableBody>
                                         {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
                                             <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                                <TableCell className="font-medium whitespace-nowrap">{item.date.toDate().toLocaleDateString()}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{item.description}</TableCell>
-                                                <TableCell className={cn("text-right font-semibold whitespace-nowrap", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
+                                                <TableCell className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
+                                                <TableCell>{item.description}</TableCell>
+                                                <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                     {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                                 </TableCell>
                                             </TableRow>
