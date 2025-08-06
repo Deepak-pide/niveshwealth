@@ -68,7 +68,7 @@ const HighlightedMessage = ({ text, request }: { text: string, request?: Combine
         return part;
     });
 
-    return <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md leading-relaxed">{parts}</p>;
+    return <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md leading-relaxed whitespace-pre-wrap">{parts}</p>;
 };
 
 
