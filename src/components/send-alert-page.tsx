@@ -18,6 +18,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { format } from "date-fns";
 
 
 type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal';
@@ -51,6 +52,9 @@ const HighlightedMessage = ({ text, request }: { text: string, request?: Combine
                         break;
                     case 'amount':
                         value = `₹${request.amount.toLocaleString('en-IN')}`;
+                        break;
+                    case 'date':
+                        value = format(request.date, 'PPP');
                         break;
                 }
             }
@@ -140,9 +144,10 @@ export default function SendAlertPage() {
         let finalMessage = message;
         if (currentTarget) {
              finalMessage = message
-                .replace('{userName}', currentTarget.userName)
-                .replace('{requestType}', currentTarget.type)
-                .replace('{amount}', currentTarget.amount.toLocaleString('en-IN'));
+                .replace(/{userName}/g, currentTarget.userName)
+                .replace(/{requestType}/g, currentTarget.type)
+                .replace(/{amount}/g, `₹${currentTarget.amount.toLocaleString('en-IN')}`)
+                .replace(/{date}/g, format(currentTarget.date, 'PPP'));
         }
 
         const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(finalMessage)}`;
@@ -177,6 +182,13 @@ export default function SendAlertPage() {
 
     const visibleRequests = combinedRequests.slice(0, visibleItems);
     const hasMore = combinedRequests.length > visibleItems;
+    
+    const placeholdersTooltip = (
+        <p className="text-sm">
+            Available placeholders:<br />
+            {"{userName}"}, {"{requestType}"}, {"{amount}"}, {"{date}"}
+        </p>
+    );
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -237,10 +249,7 @@ export default function SendAlertPage() {
                                                                         <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                                                                     </TooltipTrigger>
                                                                     <TooltipContent>
-                                                                        <p className="text-sm">
-                                                                            Available placeholders:<br />
-                                                                            {"{userName}"}, {"{requestType}"}, {"{amount}"}
-                                                                        </p>
+                                                                        {placeholdersTooltip}
                                                                     </TooltipContent>
                                                                 </Tooltip>
                                                             </TooltipProvider>
@@ -382,10 +391,7 @@ export default function SendAlertPage() {
                                                 <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p className="text-sm">
-                                                    Available placeholders:<br />
-                                                    {"{userName}"}, {"{requestType}"}, {"{amount}"}
-                                                </p>
+                                                {placeholdersTooltip}
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
