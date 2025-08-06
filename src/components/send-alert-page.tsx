@@ -15,6 +15,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Plus, MessageSquare } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
+import React from "react";
 
 
 type CombinedRequest = {
@@ -48,6 +49,37 @@ const initialTemplates: Template[] = [
         message: 'Hello {userName}, we have received your payment for the {requestType} of ₹{amount}. Your request is now being processed.'
     }
 ];
+
+const HighlightedMessage = ({ text, request }: { text: string, request?: CombinedRequest | null }) => {
+    const parts = text.split(/({[a-zA-Z]+})/).map((part, index) => {
+        if (part.match(/({[a-zA-Z]+})/)) {
+            const key = part.replace(/[{}]/g, '');
+            let value = part; // Default to showing the placeholder
+            if (request) {
+                switch (key) {
+                    case 'userName':
+                        value = request.userName;
+                        break;
+                    case 'requestType':
+                        value = request.type;
+                        break;
+                    case 'amount':
+                        value = `₹${request.amount.toLocaleString('en-IN')}`;
+                        break;
+                }
+            }
+            return (
+                <span key={index} className="bg-primary/20 text-primary font-medium rounded-sm px-1">
+                    {value}
+                </span>
+            );
+        }
+        return part;
+    });
+
+    return <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md leading-relaxed">{parts}</p>;
+};
+
 
 export default function SendAlertPage() {
     const {
@@ -116,7 +148,15 @@ export default function SendAlertPage() {
             alert("Phone number is not available for this user.");
             return;
         }
-        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        let finalMessage = message;
+        if (currentTarget) {
+             finalMessage = message
+                .replace('{userName}', currentTarget.userName)
+                .replace('{requestType}', currentTarget.type)
+                .replace('{amount}', currentTarget.amount.toLocaleString('en-IN'));
+        }
+
+        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(finalMessage)}`;
         window.open(whatsappUrl, '_blank');
         setIsEditAlertOpen(false);
         setAlertMessage('');
@@ -137,12 +177,7 @@ export default function SendAlertPage() {
     };
 
     const handleTemplateClick = (req: CombinedRequest, template: Template) => {
-        const message = template.message
-            .replace('{userName}', req.userName)
-            .replace('{requestType}', req.type)
-            .replace('{amount}', req.amount.toLocaleString('en-IN'));
-        
-        setAlertMessage(message);
+        setAlertMessage(template.message);
         setCurrentTarget(req);
         setIsEditAlertOpen(true);
     };
@@ -194,6 +229,10 @@ export default function SendAlertPage() {
                                                             Use placeholders: {"{userName}"}, {"{requestType}"}, {"{amount}"}
                                                         </p>
                                                     </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Preview</Label>
+                                                        <HighlightedMessage text={newTemplateMessage} />
+                                                    </div>
                                                 </div>
                                                 <DialogFooter>
                                                     <Button variant="outline" onClick={() => setIsAddTemplateOpen(false)}>Cancel</Button>
@@ -214,9 +253,7 @@ export default function SendAlertPage() {
                                                     <CardTitle className="text-base">{template.title}</CardTitle>
                                                 </CardHeader>
                                                 <CardContent>
-                                                    <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md">
-                                                        {template.message}
-                                                    </p>
+                                                    <HighlightedMessage text={template.message} />
                                                 </CardContent>
                                             </Card>
                                         ))}
@@ -302,12 +339,20 @@ export default function SendAlertPage() {
                                 To: {currentTarget?.userName} ({currentTarget?.phoneNumber})
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="py-4">
-                            <Textarea 
-                                value={alertMessage} 
-                                onChange={(e) => setAlertMessage(e.target.value)} 
-                                className="min-h-[120px]"
-                            />
+                        <div className="py-4 space-y-4">
+                             <div className="grid gap-2">
+                                <Label htmlFor="edit-message">Message</Label>
+                                <Textarea 
+                                    id="edit-message"
+                                    value={alertMessage} 
+                                    onChange={(e) => setAlertMessage(e.target.value)} 
+                                    className="min-h-[120px]"
+                                />
+                            </div>
+                             <div className="grid gap-2">
+                                <Label>Preview</Label>
+                                <HighlightedMessage text={alertMessage} request={currentTarget} />
+                            </div>
                         </div>
                         <DialogFooter>
                              <Button variant="outline" onClick={() => setIsEditAlertOpen(false)}>Cancel</Button>
