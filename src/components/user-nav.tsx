@@ -104,7 +104,9 @@ export default function UserNav() {
         XLSX.utils.sheet_add_json(wsBalance, userBalanceHistory, { origin: "A3", skipHeader: false });
         XLSX.utils.book_append_sheet(wb, wsBalance, "Balance History");
 
-        XLSX.writeFile(wb, "Nivesh_Statement.xlsx");
+        const currentDate = format(new Date(), "dd_MM_yyyy");
+        const fileName = `Nivesh_Statement_${currentDate}.xlsx`;
+        XLSX.writeFile(wb, fileName);
     };
 
     const handleInstallClick = async () => {
