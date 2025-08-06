@@ -80,11 +80,16 @@ export default function UserNav() {
                 }
             });
 
-        const wsInvestments = XLSX.utils.json_to_sheet(userInvestments);
-        XLSX.utils.book_append_sheet(wb, wsInvestments, "Investments");
+        if (userInvestments.length > 0) {
+            const wsInvestments = XLSX.utils.json_to_sheet(userInvestments);
+            XLSX.utils.book_append_sheet(wb, wsInvestments, "Investments");
+        }
+
 
         // Balance Sheet
-        const currentUserBalance = userBalances.find(b => b.userId === user.id)?.balance || 0;
+        const currentUserBalanceData = userBalances.find(b => b.userId === user.id);
+        const currentUserBalance = currentUserBalanceData?.balance ?? 0;
+        
         const oneYearAgo = subYears(new Date(), 1);
         const userBalanceHistory = balanceHistory
             .filter(bh => bh.userId === user.id && isAfter(bh.date.toDate(), oneYearAgo))
@@ -101,10 +106,13 @@ export default function UserNav() {
             ["Total Balance", `₹${currentUserBalance.toLocaleString('en-IN')}`],
             [] // Empty row for spacing
         ], { origin: "A1" });
-        XLSX.utils.sheet_add_json(wsBalance, userBalanceHistory, { origin: "A4", skipHeader: false });
-        XLSX.utils.sheet_add_aoa(wsBalance, [
-            ["Date", "Description", "Amount", "Type"]
-        ], { origin: "A3" });
+
+        if (userBalanceHistory.length > 0) {
+            XLSX.utils.sheet_add_json(wsBalance, userBalanceHistory, { origin: "A4", skipHeader: false });
+            XLSX.utils.sheet_add_aoa(wsBalance, [
+                ["Date", "Description", "Amount", "Type"]
+            ], { origin: "A3" });
+        }
         XLSX.utils.book_append_sheet(wb, wsBalance, "Balance History");
 
         const currentDate = format(new Date(), "dd_MM_yyyy");

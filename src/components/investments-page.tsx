@@ -42,7 +42,7 @@ export default function InvestmentsPage() {
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
-    const [openDialogId, setOpenDialogId] = useState<string | null>(null);
+    const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
     
     if (!user) {
         return (
@@ -92,7 +92,7 @@ export default function InvestmentsPage() {
             title: "Withdrawal Request Submitted",
             description: "Your withdrawal request has been submitted for approval.",
         });
-        setOpenDialogId(null);
+        setIsWithdrawalDialogOpen(false);
     };
     
     const visibleActiveInvestments = combinedActiveInvestments.slice(0, visibleActive);
@@ -183,7 +183,7 @@ export default function InvestmentsPage() {
 
 
                     return (
-                        <Dialog key={investment.id} open={openDialogId === investment.id} onOpenChange={(isOpen) => setOpenDialogId(isOpen ? investment.id : null)}>
+                        <Dialog key={investment.id}>
                             <DialogTrigger asChild disabled={isPending}>
                                  <Card className={`transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                     <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -258,11 +258,11 @@ export default function InvestmentsPage() {
                                         </div>
                                     )}
 
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="destructive" className="w-full">Withdraw</Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
+                                    <Dialog open={isWithdrawalDialogOpen} onOpenChange={setIsWithdrawalDialogOpen}>
+                                        <DialogTrigger asChild>
+                                             <Button variant="destructive" className="w-full">Withdraw</Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Early Withdrawal Confirmation</AlertDialogTitle>
                                                 <AlertDialogDescription>
@@ -287,8 +287,8 @@ export default function InvestmentsPage() {
                                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                 <AlertDialogAction onClick={() => handleWithdraw(investment.id)}>Confirm Withdrawal</AlertDialogAction>
                                             </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             </DialogContent>
                         </Dialog>
