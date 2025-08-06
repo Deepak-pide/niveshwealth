@@ -135,7 +135,7 @@ interface DataContextType {
     approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
-    addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
+    addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
@@ -557,22 +557,23 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
-    const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => {
+    const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => {
         if (!authUser) return;
         
+        const { document, ...profileData } = requestData;
         let documentUrl: string | undefined = undefined;
-        if (requestData.document) {
-            const file = requestData.document;
-            const storageRef = ref(storage, `documents/${authUser.uid}/${file.name}`);
-            await uploadBytes(storageRef, file);
+
+        if (document) {
+            const storageRef = ref(storage, `documents/${authUser.uid}/${document.name}`);
+            await uploadBytes(storageRef, document);
             documentUrl = await getDownloadURL(storageRef);
         }
 
         const { userName, userAvatar } = getUserInfo(authUser.uid);
-        const { document, ...restOfRequestData } = requestData;
 
         const newRequest = { 
-            ...restOfRequestData,
+            ...profileData,
+            userId: authUser.uid,
             documentUrl, 
             status: 'Pending' as const, 
             userName, 

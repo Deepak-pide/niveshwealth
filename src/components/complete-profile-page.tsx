@@ -21,7 +21,7 @@ const profileSchema = z.object({
     occupation: z.string().min(2, "Occupation is too short"),
     panCard: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN card format"),
     aadharCard: z.string().regex(/^[0-9]{12}$/, "Invalid Aadhar card format (12 digits)"),
-    document: z.any().optional(),
+    document: z.instanceof(File).optional(),
 });
 
 export default function CompleteProfilePage() {
@@ -51,13 +51,7 @@ export default function CompleteProfilePage() {
         setIsLoading(true);
 
         try {
-            const documentFile = values.document instanceof File ? values.document : undefined;
-
-            await addProfileCompletionRequest({
-                userId: user.uid,
-                ...values,
-                document: documentFile,
-            });
+            await addProfileCompletionRequest(values);
             toast({ title: "Profile Submitted", description: "Your profile details have been submitted for verification." });
             router.push("/");
         } catch (error) {
@@ -151,7 +145,7 @@ export default function CompleteProfilePage() {
                                         <FormControl>
                                             <Input 
                                                 type="file" 
-                                                onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)} 
+                                                onChange={(e) => onChange(e.target.files ? e.target.files[0] : undefined)} 
                                                 {...rest}
                                              />
                                         </FormControl>
