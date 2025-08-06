@@ -13,10 +13,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Plus, MessageSquare, MoreVertical } from "lucide-react";
+import { Plus, MessageSquare } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
+
 
 type CombinedRequest = {
     id: string;
+    userId: string;
     userName: string;
     userAvatar: string;
     phoneNumber?: string;
@@ -64,6 +67,7 @@ export default function SendAlertPage() {
     const combinedRequests: CombinedRequest[] = [
         ...investmentRequests.map(req => ({
             id: req.id,
+            userId: req.userId,
             userName: req.userName,
             userAvatar: req.userAvatar,
             phoneNumber: getUserPhoneNumber(req.userId),
@@ -73,6 +77,7 @@ export default function SendAlertPage() {
         })),
         ...fdWithdrawalRequests.map(req => ({
             id: req.id,
+            userId: req.userId,
             userName: req.userName,
             userAvatar: req.userAvatar,
             phoneNumber: getUserPhoneNumber(req.userId),
@@ -82,6 +87,7 @@ export default function SendAlertPage() {
         })),
         ...topupRequests.map(req => ({
             id: req.id,
+            userId: req.userId,
             userName: req.userName,
             userAvatar: req.userAvatar,
             phoneNumber: getUserPhoneNumber(req.userId),
@@ -91,6 +97,7 @@ export default function SendAlertPage() {
         })),
         ...balanceWithdrawalRequests.map(req => ({
             id: req.id,
+            userId: req.userId,
             userName: req.userName,
             userAvatar: req.userAvatar,
             phoneNumber: getUserPhoneNumber(req.userId),
@@ -131,9 +138,9 @@ export default function SendAlertPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Pending Requests</CardTitle>
+                            <CardTitle>Send Alert</CardTitle>
                             <CardDescription>
-                                A list of all pending user requests. Click "Send Alert" to notify the user on WhatsApp.
+                                View pending requests and send alerts to users via WhatsApp.
                             </CardDescription>
                         </div>
                         <Dialog>
@@ -159,12 +166,12 @@ export default function SendAlertPage() {
                                                 </DialogHeader>
                                                 <div className="grid gap-4 py-4">
                                                     <div className="grid gap-2">
-                                                        <Label htmlFor="template-title">Title</Label>
+                                                        <Label htmlFor="template-title">Template Title</Label>
                                                         <Input id="template-title" value={newTemplateTitle} onChange={(e) => setNewTemplateTitle(e.target.value)} placeholder="e.g., Request Reminder" />
                                                     </div>
                                                     <div className="grid gap-2">
                                                         <Label htmlFor="template-message">Message</Label>
-                                                        <Textarea id="template-message" value={newTemplateMessage} onChange={(e) => setNewTemplateMessage(e.target.value)} placeholder="Use {userName}, {requestType}, {amount}" />
+                                                        <Textarea id="template-message" value={newTemplateMessage} onChange={(e) => setNewTemplateMessage(e.target.value)} placeholder="Compose your message here..." />
                                                         <p className="text-xs text-muted-foreground">
                                                             Use placeholders: {"{userName}"}, {"{requestType}"}, {"{amount}"}
                                                         </p>
@@ -172,29 +179,31 @@ export default function SendAlertPage() {
                                                 </div>
                                                 <DialogFooter>
                                                     <Button variant="outline" onClick={() => setIsAddTemplateOpen(false)}>Cancel</Button>
-                                                    <Button onClick={handleAddTemplate}>Save</Button>
+                                                    <Button onClick={handleAddTemplate}>Save Template</Button>
                                                 </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
                                     </DialogTitle>
                                     <DialogDescription>
-                                        Select a template to send a pre-filled message.
+                                        Manage your message templates.
                                     </DialogDescription>
                                 </DialogHeader>
-                                <div className="space-y-4 max-h-96 overflow-y-auto p-1">
-                                    {templates.map(template => (
-                                        <Card key={template.id}>
-                                            <CardHeader>
-                                                <CardTitle className="text-base">{template.title}</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md">
-                                                    {template.message}
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
+                                <ScrollArea className="max-h-96 pr-4">
+                                    <div className="space-y-4">
+                                        {templates.map(template => (
+                                            <Card key={template.id}>
+                                                <CardHeader>
+                                                    <CardTitle className="text-base">{template.title}</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md">
+                                                        {template.message}
+                                                    </p>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
                             </DialogContent>
                         </Dialog>
                     </CardHeader>
@@ -211,7 +220,7 @@ export default function SendAlertPage() {
                             </TableHeader>
                             <TableBody>
                                 {visibleRequests.length > 0 ? visibleRequests.map((req) => (
-                                    <TableRow key={req.id}>
+                                    <TableRow key={`${req.type}-${req.id}`}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Avatar>
