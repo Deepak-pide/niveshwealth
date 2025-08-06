@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef }from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -138,7 +138,7 @@ export default function SendAlertPage() {
         })),
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    const handleSendAlert = (phoneNumber: string | undefined, message: string) => {
+    const handleSendFinalAlert = (phoneNumber: string | undefined, message: string) => {
         let finalMessage = message;
         if (currentTarget) {
              finalMessage = message
@@ -172,8 +172,20 @@ export default function SendAlertPage() {
         setIsAddTemplateOpen(false);
     };
 
-    const handleTemplateClick = (req: CombinedRequest, template: Template) => {
-        setAlertMessage(template.message);
+    const handleSendAlertClick = (req: CombinedRequest) => {
+        const filteredTemplates = templates.filter(t => !t.type || t.type === req.type);
+        const template = filteredTemplates.length > 0 ? filteredTemplates[0] : null;
+        
+        let message = '';
+        if (template) {
+            message = template.message
+                .replace(/{userName}/g, req.userName)
+                .replace(/{requestType}/g, req.type)
+                .replace(/{amount}/g, `₹${req.amount.toLocaleString('en-IN')}`)
+                .replace(/{date}/g, format(req.date, 'PPP'));
+        }
+
+        setAlertMessage(message);
         setCurrentTarget(req);
         setIsEditAlertOpen(true);
     };
@@ -333,9 +345,7 @@ export default function SendAlertPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {visibleRequests.length > 0 ? visibleRequests.map((req) => {
-                                    const filteredTemplates = getFilteredTemplates(req.type);
-                                    return (
+                                {visibleRequests.length > 0 ? visibleRequests.map((req) => (
                                     <TableRow key={`${req.type}-${req.id}`}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -352,31 +362,16 @@ export default function SendAlertPage() {
                                         </TableCell>
                                         <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                         <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                    >
-                                                        Send Alert
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    {filteredTemplates.length > 0 ? filteredTemplates.map(template => (
-                                                        <DropdownMenuItem 
-                                                            key={template.id}
-                                                            onClick={() => handleTemplateClick(req, template)}
-                                                        >
-                                                            {template.title}
-                                                        </DropdownMenuItem>
-                                                    )) : (
-                                                        <DropdownMenuItem disabled>No templates for this type</DropdownMenuItem>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleSendAlertClick(req)}
+                                            >
+                                                Send Alert
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
-                                )}) : (
+                                )) : (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center">No pending requests.</TableCell>
                                     </TableRow>
@@ -396,7 +391,7 @@ export default function SendAlertPage() {
                 <Dialog open={isEditAlertOpen} onOpenChange={setIsEditAlertOpen}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Edit and Send Message</DialogTitle>
+                            <DialogTitle>Compose and Send Message</DialogTitle>
                             <DialogDescription>
                                 To: {currentTarget?.userName} ({currentTarget?.phoneNumber || 'No number'})
                             </DialogDescription>
@@ -436,7 +431,7 @@ export default function SendAlertPage() {
                         </div>
                         <DialogFooter>
                              <Button variant="outline" onClick={() => setIsEditAlertOpen(false)}>Cancel</Button>
-                             <Button onClick={() => handleSendAlert(currentTarget?.phoneNumber, alertMessage)}>Send Message</Button>
+                             <Button onClick={() => handleSendFinalAlert(currentTarget?.phoneNumber, alertMessage)}>Send Message</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -445,5 +440,3 @@ export default function SendAlertPage() {
         </div>
     );
 }
-
-    
