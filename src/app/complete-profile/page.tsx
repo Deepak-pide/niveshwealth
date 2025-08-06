@@ -5,9 +5,9 @@ import AppFooter from "@/components/app-footer";
 
 export default function CompleteProfile() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       <AppHeader />
-      <main className="flex-1">
+      <main className="flex-1 overflow-y-auto">
         <CompleteProfilePage />
       </main>
       <AppFooter />
