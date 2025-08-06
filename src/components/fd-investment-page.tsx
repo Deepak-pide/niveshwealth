@@ -141,7 +141,7 @@ export default function FdInvestmentPage() {
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
                                             </div>
                                              <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Your Balance:</span>
+                                                <span className="text-muted-foreground">Your Nivesh Balance:</span>
                                                 <span className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>₹{currentUserBalance.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">
@@ -181,7 +181,7 @@ export default function FdInvestmentPage() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    {hasSufficientBalance && <AlertDialogAction onClick={handleBalanceInvestment}>Pay from Balance</AlertDialogAction>}
+                                    <Button onClick={handleBalanceInvestment} disabled={!hasSufficientBalance}>Pay from Balance</Button>
                                     {isMobile ? (
                                         <AlertDialogAction onClick={handleUpiInvestment}>Pay using UPI</AlertDialogAction>
                                     ) : (
