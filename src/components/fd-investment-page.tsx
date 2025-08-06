@@ -59,6 +59,7 @@ export default function FdInvestmentPage() {
         toast({
             title: "Investment Request Submitted",
             description: "Your FD investment request has been submitted for approval.",
+            variant: "success",
         });
 
         router.push('/investments');
@@ -92,6 +93,7 @@ export default function FdInvestmentPage() {
         toast({
             title: "Investment Successful",
             description: "Your FD has been created and the amount deducted from your balance.",
+            variant: "success",
         });
 
         router.push('/investments');

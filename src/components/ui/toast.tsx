@@ -18,6 +18,7 @@ const ToastViewport = React.forwardRef<
     ref={ref}
     className={cn(
       "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+      "group-[.success-viewport]:inset-0 group-[.success-viewport]:flex-col group-[.success-viewport]:items-center group-[.success-viewport]:justify-center",
       className
     )}
     {...props}
@@ -34,7 +35,7 @@ const toastVariants = cva(
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
         success: 
-          "success group border-success bg-success text-success-foreground",
+          "success group border-none bg-transparent shadow-none p-0 w-auto data-[state=open]:sm:slide-in-from-bottom-0",
       },
     },
     defaultVariants: {
@@ -81,7 +82,7 @@ const ToastClose = React.forwardRef<
     ref={ref}
     className={cn(
       "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
-      "group-[.success]:text-green-300 group-[.success]:hover:text-green-50 group-[.success]:focus:ring-green-400 group-[.success]:focus:ring-offset-green-600",
+      "group-[.success]:hidden",
       className
     )}
     toast-close=""
@@ -98,7 +99,7 @@ const ToastTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn("text-sm font-semibold", className)}
+    className={cn("text-sm font-semibold group-[.success]:text-center group-[.success]:text-foreground", className)}
     {...props}
   />
 ))
@@ -110,7 +111,7 @@ const ToastDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
-    className={cn("text-sm opacity-90", className)}
+    className={cn("text-sm opacity-90 group-[.success]:text-center group-[.success]:text-muted-foreground", className)}
     {...props}
   />
 ))

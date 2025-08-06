@@ -25,23 +25,31 @@ export function Toaster() {
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, variant, ...props }) {
+        if (variant === 'success') {
+          return (
+            <Toast key={id} variant={variant} {...props}>
+                <div className="flex flex-col items-center gap-2">
+                    <CheckmarkIcon />
+                    {title && <ToastTitle>{title}</ToastTitle>}
+                    {description && <ToastDescription>{description}</ToastDescription>}
+                </div>
+            </Toast>
+          );
+        }
         return (
           <Toast key={id} variant={variant} {...props}>
-            <div className="flex items-center gap-4">
-              {variant === 'success' && <CheckmarkIcon />}
-              <div className="grid gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
-              </div>
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
             </div>
             {action}
             <ToastClose />
           </Toast>
         )
       })}
-      <ToastViewport />
+      <ToastViewport className={toasts.some(t => t.variant === 'success') ? 'group/success-viewport' : ''} />
     </ToastProvider>
   )
 }
