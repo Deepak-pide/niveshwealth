@@ -13,9 +13,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Plus, MessageSquare } from "lucide-react";
+import { Plus, MessageSquare, Info } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import React from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 
 type CombinedRequest = {
@@ -223,11 +224,23 @@ export default function SendAlertPage() {
                                                         <Input id="template-title" value={newTemplateTitle} onChange={(e) => setNewTemplateTitle(e.target.value)} placeholder="e.g., Request Reminder" />
                                                     </div>
                                                     <div className="grid gap-2">
-                                                        <Label htmlFor="template-message">Message</Label>
+                                                        <div className="flex items-center gap-2">
+                                                            <Label htmlFor="template-message">Message</Label>
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p className="text-sm">
+                                                                            Available placeholders:<br />
+                                                                            {"{userName}"}, {"{requestType}"}, {"{amount}"}
+                                                                        </p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                        </div>
                                                         <Textarea id="template-message" value={newTemplateMessage} onChange={(e) => setNewTemplateMessage(e.target.value)} placeholder="Compose your message here..." />
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Use placeholders: {"{userName}"}, {"{requestType}"}, {"{amount}"}
-                                                        </p>
                                                     </div>
                                                     <div className="grid gap-2">
                                                         <Label>Preview</Label>
@@ -341,7 +354,22 @@ export default function SendAlertPage() {
                         </DialogHeader>
                         <div className="py-4 space-y-4">
                              <div className="grid gap-2">
-                                <Label htmlFor="edit-message">Message</Label>
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="edit-message">Message</Label>
+                                     <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="text-sm">
+                                                    Available placeholders:<br />
+                                                    {"{userName}"}, {"{requestType}"}, {"{amount}"}
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
                                 <Textarea 
                                     id="edit-message"
                                     value={alertMessage} 
@@ -365,5 +393,3 @@ export default function SendAlertPage() {
         </div>
     );
 }
-
-    
