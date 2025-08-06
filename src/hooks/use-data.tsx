@@ -569,13 +569,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const { document, ...restOfRequestData } = requestData;
+
         const newRequest = { 
-            phoneNumber: requestData.phoneNumber,
-            address: requestData.address,
-            occupation: requestData.occupation,
-            panCard: requestData.panCard,
-            aadharCard: requestData.aadharCard,
-            userId: requestData.userId,
+            ...restOfRequestData,
             documentUrl, 
             status: 'Pending' as const, 
             userName, 
