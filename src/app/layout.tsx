@@ -9,6 +9,26 @@ export const metadata: Metadata = {
   title: 'Nivesh',
   description: 'Grow Steady. Earn Smart. Up to 9% Returns with Confidence',
   manifest: '/manifest.json',
+  openGraph: {
+    title: 'Nivesh',
+    description: 'Grow Steady. Earn Smart. Up to 9% Returns with Confidence',
+    images: [
+      {
+        url: '/logo.svg',
+        width: 800,
+        height: 600,
+        alt: 'Nivesh Logo',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nivesh',
+    description: 'Grow Steady. Earn Smart. Up to 9% Returns with Confidence',
+    images: ['/logo.svg'],
+  },
 };
 
 export default function RootLayout({
