@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useData } from "@/hooks/use-data";
+import { useData, Template } from "@/hooks/use-data";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Plus, MessageSquare, Info } from "lucide-react";
+import { Plus, MessageSquare, Info, Trash2 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -30,26 +30,7 @@ type CombinedRequest = {
     date: Date;
 };
 
-type Template = {
-    id: string;
-    title: string;
-    message: string;
-};
-
 const ITEMS_PER_PAGE = 15;
-
-const initialTemplates: Template[] = [
-    {
-        id: '1',
-        title: 'Pending Request Reminder',
-        message: 'Hello {userName}, this is a reminder regarding your {requestType} request for ₹{amount}. Please respond if you have any questions.'
-    },
-    {
-        id: '2',
-        title: 'Payment Confirmation',
-        message: 'Hello {userName}, we have received your payment for the {requestType} of ₹{amount}. Your request is now being processed.'
-    }
-];
 
 const HighlightedMessage = ({ text, request }: { text: string, request?: CombinedRequest | null }) => {
     const parts = text.split(/({[a-zA-Z]+})/).map((part, index) => {
@@ -89,9 +70,11 @@ export default function SendAlertPage() {
         topupRequests,
         balanceWithdrawalRequests,
         getUserPhoneNumber,
+        templates,
+        addTemplate,
+        deleteTemplate,
     } = useData();
     const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
-    const [templates, setTemplates] = useState<Template[]>(initialTemplates);
     const [newTemplateTitle, setNewTemplateTitle] = useState('');
     const [newTemplateMessage, setNewTemplateMessage] = useState('');
     const [isAddTemplateOpen, setIsAddTemplateOpen] = useState(false);
@@ -166,12 +149,10 @@ export default function SendAlertPage() {
 
     const handleAddTemplate = () => {
         if (!newTemplateTitle || !newTemplateMessage) return;
-        const newTemplate: Template = {
-            id: Date.now().toString(),
+        addTemplate({
             title: newTemplateTitle,
             message: newTemplateMessage
-        };
-        setTemplates(prev => [...prev, newTemplate]);
+        });
         setNewTemplateTitle('');
         setNewTemplateMessage('');
         setIsAddTemplateOpen(false);
@@ -208,7 +189,7 @@ export default function SendAlertPage() {
                                 <DialogHeader>
                                     <DialogTitle className="flex items-center justify-between">
                                         <span>Message Templates</span>
-                                         <Dialog open={isAddTemplateOpen} onOpenChange={setIsAddTemplateOpen}>
+                                        <Dialog open={isAddTemplateOpen} onOpenChange={setIsAddTemplateOpen}>
                                             <DialogTrigger asChild>
                                                 <Button variant="ghost" size="icon">
                                                     <Plus className="h-4 w-4" />
@@ -255,21 +236,31 @@ export default function SendAlertPage() {
                                         </Dialog>
                                     </DialogTitle>
                                     <DialogDescription>
-                                        Manage your message templates.
+                                        Manage your message templates. Click the '+' to add a new one.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <ScrollArea className="max-h-96 pr-4">
                                     <div className="space-y-4">
-                                        {templates.map(template => (
-                                            <Card key={template.id}>
+                                        {templates.length > 0 ? templates.map(template => (
+                                            <Card key={template.id} className="relative group">
                                                 <CardHeader>
                                                     <CardTitle className="text-base">{template.title}</CardTitle>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <HighlightedMessage text={template.message} />
                                                 </CardContent>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100"
+                                                    onClick={() => deleteTemplate(template.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
                                             </Card>
-                                        ))}
+                                        )) : (
+                                            <p className="text-center text-muted-foreground py-8">No templates found. Click the '+' icon to create one.</p>
+                                        )}
                                     </div>
                                 </ScrollArea>
                             </DialogContent>
@@ -309,7 +300,7 @@ export default function SendAlertPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        disabled={!req.phoneNumber}
+                                                        disabled={!req.phoneNumber || templates.length === 0}
                                                     >
                                                         Send Alert
                                                     </Button>

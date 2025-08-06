@@ -38,6 +38,12 @@ interface BaseRequest {
     status: 'Pending';
 }
 
+export interface Template {
+    id: string;
+    title: string;
+    message: string;
+}
+
 // Specific Types
 export interface Investment {
     id: string;
@@ -120,6 +126,7 @@ interface DataContextType {
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
     profileCompletionRequests: ProfileCompletionRequest[];
+    templates: Template[];
     fdTenureRates: {[key: number]: number};
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addInvestmentRequestFromBalance: (requestData: { userId: string, amount: number, years: number }) => Promise<void>;
@@ -140,6 +147,8 @@ interface DataContextType {
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
     getUserPhoneNumber: (userId: string) => string | undefined;
+    addTemplate: (templateData: Omit<Template, 'id'>) => Promise<void>;
+    deleteTemplate: (templateId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -167,6 +176,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
     const [profileCompletionRequests, setProfileCompletionRequests] = useState<ProfileCompletionRequest[]>([]);
+    const [templates, setTemplates] = useState<Template[]>([]);
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
 
     useEffect(() => {
@@ -224,6 +234,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('userBalances', setUserBalances);
     useDataFetching('balanceHistory', setBalanceHistory);
     useDataFetching('profileCompletionRequests', setProfileCompletionRequests);
+    useDataFetching('templates', setTemplates);
 
     const getUserInfo = (userId: string) => {
         const user = users.find(u => u.id === userId);
@@ -621,6 +632,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await setDoc(docRef, rates, { merge: true });
     };
 
+    const addTemplate = async (templateData: Omit<Template, 'id'>) => {
+        await addDoc(collection(db, 'templates'), templateData);
+        toast({ title: "Template Saved", description: "Your new message template has been saved." });
+    };
+    
+    const deleteTemplate = async (templateId: string) => {
+        await deleteDoc(doc(db, 'templates', templateId));
+        toast({ title: "Template Deleted", description: "The message template has been deleted." });
+    };
 
     const value = {
         users,
@@ -632,6 +652,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         userBalances,
         balanceHistory,
         profileCompletionRequests,
+        templates,
         fdTenureRates,
         addInvestmentRequest,
         addInvestmentRequestFromBalance,
@@ -652,6 +673,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         rejectProfileCompletionRequest,
         setFdInterestRatesForTenures,
         getUserPhoneNumber,
+        addTemplate,
+        deleteTemplate,
     };
 
     return (
@@ -670,4 +693,5 @@ export const useData = () => {
 };
 
     
+
 
