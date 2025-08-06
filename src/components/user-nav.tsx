@@ -52,6 +52,7 @@ export default function UserNav() {
     }
     
     const currentUser = users.find(u => u.id === user.id);
+    const isProfileComplete = currentUser?.isProfileComplete ?? false;
 
 
     const handleDownload = () => {
@@ -153,16 +154,22 @@ export default function UserNav() {
                             </DropdownMenuItem>
                         </Link>
                     ) : (
-                        
-                            <Link href="/">
-                                <DropdownMenuItem>
-                                    <UserIcon className="mr-2 h-4 w-4" />
-                                    <span>Home</span>
-                                </DropdownMenuItem>
-                            </Link>
-                        
+                        <Link href="/">
+                            <DropdownMenuItem>
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span>Home</span>
+                            </DropdownMenuItem>
+                        </Link>
                     )}
-
+                    
+                    {!isAdmin && !isProfileComplete && (
+                        <Link href="/complete-profile">
+                            <DropdownMenuItem>
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span>Complete Profile</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    )}
                     
                     <DropdownMenuItem onClick={handleDownload}>
                         <Download className="mr-2 h-4 w-4" />

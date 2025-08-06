@@ -1,15 +1,38 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useData } from "@/hooks/use-data";
+import { useData, UserDetails } from "@/hooks/use-data";
 
 const ITEMS_PER_PAGE = 10;
+
+const UserDetailsView = ({ userId }: { userId: string }) => {
+    const { userDetails } = useData();
+    const [details, setDetails] = useState<UserDetails | null>(null);
+
+    useEffect(() => {
+        const foundDetails = userDetails.find(ud => ud.userId === userId);
+        setDetails(foundDetails || null);
+    }, [userDetails, userId]);
+
+    return (
+        <div className="grid gap-4 py-4 text-sm">
+            <div className="flex justify-between">
+                <span className="text-muted-foreground">Phone:</span>
+                <span className="font-semibold">{details?.phoneNumber || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+                <span className="text-muted-foreground">Occupation:</span>
+                <span className="font-semibold">{details?.occupation || 'N/A'}</span>
+            </div>
+        </div>
+    );
+};
 
 export default function UsersPage() {
     const { users } = useData();
@@ -63,12 +86,7 @@ export default function UsersPage() {
                                                     <DialogTitle>{user.name}'s Profile</DialogTitle>
                                                     <DialogDescription>{user.email}</DialogDescription>
                                                 </DialogHeader>
-                                                <div className="grid gap-4 py-4 text-sm">
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">Phone:</span>
-                                                        <span className="font-semibold">{user.phoneNumber || 'N/A'}</span>
-                                                    </div>
-                                                </div>
+                                                <UserDetailsView userId={user.id} />
                                             </DialogContent>
                                         </Dialog>
                                     </TableCell>

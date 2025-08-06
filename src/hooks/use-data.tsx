@@ -95,13 +95,26 @@ export interface AppUser {
     email: string;
     avatar: string;
     joinDate: Timestamp;
-    phoneNumber?: string;
+    isProfileComplete: boolean;
+}
+
+export interface UserDetails {
+    id: string;
+    userId: string;
+    phoneNumber: string;
+    occupation: string;
+}
+
+export interface UserProfileData {
+    phoneNumber: string;
+    occupation: string;
 }
 
 
 // Context
 interface DataContextType {
     users: AppUser[];
+    userDetails: UserDetails[];
     investments: Investment[];
     investmentRequests: InvestmentRequest[];
     fdWithdrawalRequests: FdWithdrawalRequest[];
@@ -111,6 +124,7 @@ interface DataContextType {
     balanceHistory: BalanceHistory[];
     templates: Template[];
     fdTenureRates: {[key: number]: number};
+    updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addInvestmentRequestFromBalance: (requestData: { userId: string, amount: number, years: number }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -148,6 +162,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const { user: authUser } = useAuth();
     const { toast } = useToast();
     const [users, setUsers] = useState<AppUser[]>([]);
+    const [userDetails, setUserDetails] = useState<UserDetails[]>([]);
     const [investments, setInvestments] = useState<Investment[]>([]);
     const [investmentRequests, setInvestmentRequests] = useState<InvestmentRequest[]>([]);
     const [fdWithdrawalRequests, setFdWithdrawalRequests] = useState<FdWithdrawalRequest[]>([]);
@@ -187,6 +202,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         email: authUser.email || "",
                         avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
                         joinDate: Timestamp.now(),
+                        isProfileComplete: false,
                     };
                     batch.set(userDocRef, newUser);
     
@@ -205,6 +221,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }, [authUser]);
 
     useDataFetching('users', setUsers);
+    useDataFetching('userDetails', setUserDetails);
     useDataFetching('investments', setInvestments);
     useDataFetching('investmentRequests', setInvestmentRequests);
     useDataFetching('fdWithdrawalRequests', setFdWithdrawalRequests);
@@ -228,9 +245,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const getUserPhoneNumber = (userId: string): string | undefined => {
-        const user = users.find(u => u.id === userId);
-        return user?.phoneNumber;
+        const details = userDetails.find(d => d.userId === userId);
+        return details?.phoneNumber;
     };
+    
+    const updateUserProfile = async (userId: string, data: UserProfileData) => {
+        const batch = writeBatch(db);
+        const userDetailsDocRef = doc(db, 'userDetails', userId);
+        const userDocRef = doc(db, 'users', userId);
+
+        batch.set(userDetailsDocRef, { ...data, userId }, { merge: true });
+        batch.update(userDocRef, { isProfileComplete: true });
+
+        await batch.commit();
+    };
+
 
     const addInvestmentRequest = async (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
         if (!authUser) return;
@@ -566,6 +595,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const value = {
         users,
+        userDetails,
         investments,
         investmentRequests,
         fdWithdrawalRequests,
@@ -575,6 +605,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         balanceHistory,
         templates,
         fdTenureRates,
+        updateUserProfile,
         addInvestmentRequest,
         addInvestmentRequestFromBalance,
         addFdWithdrawalRequest,
