@@ -23,8 +23,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></link>
-        <link rel="apple-touch-icon" href="/Logo.png" />
-        <link rel="icon" href="/Logo.png" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className="font-body antialiased h-full">
