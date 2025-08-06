@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { 
     collection, 
     onSnapshot, 
@@ -20,6 +20,7 @@ import {
     getDocs,
     runTransaction,
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
 import { addYears, parseISO, differenceInYears, differenceInDays } from 'date-fns';
 import { useToast } from './use-toast';
@@ -59,6 +60,21 @@ export interface FdWithdrawalRequest extends BaseRequest {
 export type TopupRequest = BaseRequest;
 export type BalanceWithdrawalRequest = BaseRequest;
 
+export interface ProfileCompletionRequest {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    phoneNumber: string;
+    address: string;
+    occupation: string;
+    panCard: string;
+    aadharCard: string;
+    documentUrl?: string;
+    status: 'Pending';
+}
+
+
 export interface UserBalance {
     id: string;
     userId: string;
@@ -83,6 +99,12 @@ export interface AppUser {
     email: string;
     avatar: string;
     joinDate: Timestamp;
+    phoneNumber?: string;
+    address?: string;
+    occupation?: string;
+    panCard?: string;
+    aadharCard?: string;
+    documentUrl?: string;
 }
 
 
@@ -96,6 +118,7 @@ interface DataContextType {
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
+    profileCompletionRequests: ProfileCompletionRequest[];
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addInvestmentRequestFromBalance: (requestData: { userId: string, amount: number, years: number }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -111,6 +134,9 @@ interface DataContextType {
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
     setLiveGrowthRate: (annualRate: number) => Promise<void>;
+    addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
+    approveProfileCompletionRequest: (requestId: string) => Promise<void>;
+    rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -137,6 +163,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [balanceWithdrawalRequests, setBalanceWithdrawalRequests] = useState<BalanceWithdrawalRequest[]>([]);
     const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
+    const [profileCompletionRequests, setProfileCompletionRequests] = useState<ProfileCompletionRequest[]>([]);
 
     useEffect(() => {
         if (authUser?.uid) {
@@ -178,6 +205,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
     useDataFetching('userBalances', setUserBalances);
     useDataFetching('balanceHistory', setBalanceHistory);
+    useDataFetching('profileCompletionRequests', setProfileCompletionRequests);
 
     const getUserInfo = (userId: string) => {
         const user = users.find(u => u.id === userId);
@@ -456,6 +484,57 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
+    const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => {
+        if (!authUser) return;
+        
+        let documentUrl: string | undefined = undefined;
+        if (requestData.document) {
+            const file = requestData.document;
+            const storageRef = ref(storage, `documents/${authUser.uid}/${file.name}`);
+            await uploadBytes(storageRef, file);
+            documentUrl = await getDownloadURL(storageRef);
+        }
+
+        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const newRequest = { 
+            ...requestData,
+            documentUrl, 
+            status: 'Pending' as const, 
+            userName, 
+            userAvatar,
+        };
+        delete (newRequest as any).document;
+
+        await addDoc(collection(db, 'profileCompletionRequests'), newRequest);
+    };
+
+    const approveProfileCompletionRequest = async (requestId: string) => {
+        const requestDocRef = doc(db, 'profileCompletionRequests', requestId);
+        const requestSnap = await getDoc(requestDocRef);
+        if (!requestSnap.exists()) return;
+        const requestData = requestSnap.data() as ProfileCompletionRequest;
+
+        const userDocRef = doc(db, 'users', requestData.userId);
+        
+        const batch = writeBatch(db);
+        batch.update(userDocRef, {
+            phoneNumber: requestData.phoneNumber,
+            address: requestData.address,
+            occupation: requestData.occupation,
+            panCard: requestData.panCard,
+            aadharCard: requestData.aadharCard,
+            documentUrl: requestData.documentUrl || null,
+        });
+        batch.delete(requestDocRef);
+        await batch.commit();
+        toast({ title: "Profile Approved", description: `Details for ${requestData.userName} have been updated.` });
+    };
+
+    const rejectProfileCompletionRequest = async (requestId: string) => {
+        await deleteDoc(doc(db, 'profileCompletionRequests', requestId));
+        toast({ title: "Request Rejected", variant: "destructive" });
+    };
+
 
     const value = {
         users,
@@ -466,6 +545,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         balanceWithdrawalRequests,
         userBalances,
         balanceHistory,
+        profileCompletionRequests,
         addInvestmentRequest,
         addInvestmentRequestFromBalance,
         addFdWithdrawalRequest,
@@ -481,6 +561,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
         setLiveGrowthRate,
+        addProfileCompletionRequest,
+        approveProfileCompletionRequest,
+        rejectProfileCompletionRequest,
     };
 
     return (
