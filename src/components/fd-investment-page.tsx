@@ -165,11 +165,10 @@ export default function FdInvestmentPage() {
                                                     <p className="font-semibold text-muted-foreground">Pay using UPI</p>
                                                     <div className="flex justify-center">
                                                         <Image
-                                                            src="https://placehold.co/200x200.png"
+                                                            src="/QR Code.jpeg"
                                                             alt="UPI QR Code"
                                                             width={150}
                                                             height={150}
-                                                            data-ai-hint="upi qr code"
                                                         />
                                                     </div>
                                                     <p className="text-muted-foreground">Scan the QR code with your UPI app</p>

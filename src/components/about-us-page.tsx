@@ -63,11 +63,10 @@ export default function AboutUsPage() {
                              <div className="md:w-1/3 p-6 flex justify-center">
                                 <div className="relative h-48 w-48 rounded-full overflow-hidden shadow-lg">
                                     <Image
-                                        src="https://placehold.co/400x400.png"
+                                        src="/MyImage.jpg"
                                         alt="Founder's Photo"
                                         layout="fill"
                                         objectFit="cover"
-                                        data-ai-hint="professional portrait"
                                     />
                                 </div>
                             </div>
@@ -93,7 +92,7 @@ export default function AboutUsPage() {
                             <p className="text-muted-foreground">
                                 Nivesh is a leading financial services company dedicated to helping individuals achieve their financial goals. We offer a range of investment products designed for security and growth. Our team of experts is committed to providing personalized advice and transparent services to empower our clients on their investment journey.
                             </p>
-                            <a href="/company-document.pdf" download>
+                            <a href="/Brochure.pdf" download>
                                 <Button variant="outline">
                                     <FileText className="mr-2 h-4 w-4" />
                                     View Document

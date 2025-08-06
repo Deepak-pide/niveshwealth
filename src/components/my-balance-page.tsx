@@ -133,11 +133,10 @@ export default function MyBalancePage() {
                                         <div className="space-y-4 pt-4 text-center">
                                             <div className="flex justify-center">
                                                 <Image
-                                                    src="https://placehold.co/200x200.png"
+                                                    src="/QR Code.jpeg"
                                                     alt="UPI QR Code"
                                                     width={150}
                                                     height={150}
-                                                    data-ai-hint="upi qr code"
                                                 />
                                             </div>
                                             <p className="text-muted-foreground">Scan the QR code with your UPI app</p>
