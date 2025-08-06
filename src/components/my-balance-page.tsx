@@ -253,9 +253,9 @@ export default function MyBalancePage() {
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="whitespace-nowrap">Date</TableHead>
-                                        <TableHead className="whitespace-nowrap">Description</TableHead>
-                                        <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead className="text-right">Amount</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
