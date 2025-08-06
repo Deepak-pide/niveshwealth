@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -10,12 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import { Download } from "lucide-react";
+import { Download, Percent } from "lucide-react";
 import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { Timestamp } from "firebase/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -28,13 +30,19 @@ export default function ManageFdPage() {
         approveInvestmentRequest, 
         rejectInvestmentRequest,
         approveFdWithdrawalRequest,
-        rejectFdWithdrawalRequest
+        rejectFdWithdrawalRequest,
+        setFdInterestRateForDateRange
     } = useData();
     const { user: adminUser } = useAuth();
+    const { toast } = useToast();
 
     const [visibleInvestmentReqs, setVisibleInvestmentReqs] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawalReqs, setVisibleWithdrawalReqs] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
+
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [interestRate, setInterestRate] = useState('');
 
     const userInvestments = users.map(user => {
         const userFDs = investments.filter(inv => inv.userId === user.id);
@@ -75,6 +83,36 @@ export default function ManageFdPage() {
         XLSX.utils.book_append_sheet(workbook, worksheet, "User Investments");
         XLSX.writeFile(workbook, "user_investments.xlsx");
     };
+
+    const handleSetBulkRate = async () => {
+        const rate = parseFloat(interestRate);
+        if (!startDate || !endDate || isNaN(rate)) {
+            toast({
+                title: "Invalid Input",
+                description: "Please provide a valid start date, end date, and interest rate.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            await setFdInterestRateForDateRange(startDate, endDate, rate);
+            toast({
+                title: "Success",
+                description: `Interest rate for FDs created between ${startDate} and ${endDate} has been updated to ${rate}%.`
+            });
+            setStartDate('');
+            setEndDate('');
+            setInterestRate('');
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    };
+
 
     const visibleInvestmentRequests = investmentRequests.slice(0, visibleInvestmentReqs);
     const hasMoreInvestmentReqs = investmentRequests.length > visibleInvestmentReqs;
@@ -235,10 +273,50 @@ export default function ManageFdPage() {
                                 <CardTitle>User Investments</CardTitle>
                                 <CardDescription>View total FD investments by user and their active FDs.</CardDescription>
                             </div>
-                             <Button onClick={handleDownload} variant="outline">
-                                <Download className="mr-2 h-4 w-4" />
-                                Download Excel
-                            </Button>
+                            <div className="flex gap-2">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button>
+                                            <Percent className="mr-2 h-4 w-4" />
+                                            Set Bulk Interest Rate
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Set FD Interest Rate</DialogTitle>
+                                            <DialogDescription>
+                                                Set the interest rate for all FDs created within a specific date range. This will update existing FDs.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="start-date" className="text-right">Start Date</Label>
+                                                <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="end-date" className="text-right">End Date</Label>
+                                                <Input id="end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="interest-rate" className="text-right">Interest Rate (%)</Label>
+                                                <Input id="interest-rate" type="number" placeholder="e.g., 9.5" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} className="col-span-3" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" variant="secondary">Cancel</Button>
+                                            </DialogClose>
+                                            <DialogClose asChild>
+                                                <Button onClick={handleSetBulkRate}>Set Rate</Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button onClick={handleDownload} variant="outline">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Excel
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <Table>

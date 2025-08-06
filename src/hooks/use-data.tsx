@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
-import { addYears, parseISO, differenceInYears, differenceInDays, format } from 'date-fns';
+import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfDay, endOfDay } from 'date-fns';
 import { useToast } from './use-toast';
 import { sendWithdrawalApprovedMessage } from '@/services/whatsapp';
 
@@ -138,6 +138,7 @@ interface DataContextType {
     addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
+    setFdInterestRateForDateRange: (startDate: string, endDate: string, interestRate: number) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -570,6 +571,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Request Rejected", variant: "destructive" });
     };
 
+    const setFdInterestRateForDateRange = async (startDateStr: string, endDateStr: string, interestRate: number) => {
+        const start = startOfDay(new Date(startDateStr));
+        const end = endOfDay(new Date(endDateStr));
+        const rate = interestRate / 100;
+
+        const investmentsRef = collection(db, 'investments');
+        const q = query(investmentsRef, 
+            where('startDate', '>=', Timestamp.fromDate(start)),
+            where('startDate', '<=', Timestamp.fromDate(end))
+        );
+
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            throw new Error("No FDs found in the specified date range.");
+        }
+
+        const batch = writeBatch(db);
+        querySnapshot.forEach((doc) => {
+            batch.update(doc.ref, { interestRate: rate });
+        });
+
+        await batch.commit();
+    };
+
 
     const value = {
         users,
@@ -599,6 +624,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addProfileCompletionRequest,
         approveProfileCompletionRequest,
         rejectProfileCompletionRequest,
+        setFdInterestRateForDateRange,
     };
 
     return (
