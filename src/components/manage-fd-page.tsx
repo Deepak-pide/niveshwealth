@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { SendAlertDialog, type CombinedRequest } from "./send-alert-dialog";
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -49,6 +51,31 @@ export default function ManageFdPage() {
         4: (fdTenureRates['4'] * 100).toString(),
         5: (fdTenureRates['5'] * 100).toString(),
     });
+
+    const [alertRequest, setAlertRequest] = useState<CombinedRequest | null>(null);
+
+    const handleApproveInvestment = async (requestId: string) => {
+        const approvedRequest = await approveInvestmentRequest(requestId);
+        if (approvedRequest) {
+            setAlertRequest({
+                ...approvedRequest,
+                type: 'FD Investment',
+                date: approvedRequest.date.toDate()
+            });
+        }
+    };
+    
+    const handleApproveWithdrawal = async (requestId: string) => {
+        const approvedRequest = await approveFdWithdrawalRequest(requestId);
+        if (approvedRequest) {
+            setAlertRequest({
+                ...approvedRequest,
+                type: 'FD Withdrawal',
+                date: approvedRequest.date.toDate()
+            });
+        }
+    };
+
 
     React.useEffect(() => {
         setTenureRates({
@@ -217,7 +244,7 @@ export default function ManageFdPage() {
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-                                                <Button size="sm" onClick={() => approveInvestmentRequest(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => handleApproveInvestment(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow><TableCell colSpan={6} className="text-center">No pending investment requests.</TableCell></TableRow>}
@@ -281,7 +308,7 @@ export default function ManageFdPage() {
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-                                                <Button size="sm" onClick={() => approveFdWithdrawalRequest(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => handleApproveWithdrawal(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow><TableCell colSpan={4} className="text-center">No pending withdrawal requests.</TableCell></TableRow>}
@@ -424,6 +451,14 @@ export default function ManageFdPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+            
+            {alertRequest && (
+                <SendAlertDialog 
+                    request={alertRequest}
+                    isOpen={!!alertRequest}
+                    onClose={() => setAlertRequest(null)}
+                />
+            )}
         </div>
     );
 }
