@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Timestamp } from "firebase/firestore";
 import { Separator } from "./ui/separator";
+import AppHeader from "./app-header";
+import AppFooter from "./app-footer";
 
 
 const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: Timestamp, maturityDate: Timestamp }) => {
@@ -103,6 +105,7 @@ export default function InvestmentsPage() {
 
     return (
         <div className="flex flex-col h-screen bg-background">
+          <AppHeader />
           <header className="shrink-0 border-b bg-card shadow-sm px-4 h-16 flex items-center justify-between">
               <div>
                   <h1 className="text-xl font-bold tracking-tight">Active Investments</h1>
@@ -310,6 +313,7 @@ export default function InvestmentsPage() {
                 )}
             </div>
           </main>
+          <AppFooter />
         </div>
     );
 }
