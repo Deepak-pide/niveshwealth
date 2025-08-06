@@ -244,22 +244,22 @@ export default function InvestmentsPage() {
                                             <span className="text-muted-foreground">Maturity Date:</span>
                                             <span className="font-semibold text-foreground">{format(investment.maturityDate.toDate(), 'dd MMM yyyy')}</span>
                                         </div>
-                                    </div>
 
-                                    {isActive && (
-                                        <div className="space-y-2 text-sm rounded-lg bg-secondary/50 p-3">
-                                            <h4 className="font-medium">Live Growth ({ (liveGrowthRate * 100).toFixed(2)}% p.a.)</h4>
-                                             <Separator className="my-2" />
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Live Interest Accrued:</span>
-                                                <span className="font-semibold text-green-600">₹{liveInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Live Total Value:</span>
-                                                <span className="font-semibold text-foreground">₹{liveTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                            </div>
-                                        </div>
-                                    )}
+                                        {isActive && (
+                                            <>
+                                                <Separator className="my-2" />
+                                                <p className="font-medium">Live Growth ({ (liveGrowthRate * 100).toFixed(2)}% p.a.)</p>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Live Interest Accrued:</span>
+                                                    <span className="font-semibold text-green-600">₹{liveInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Live Total Value:</span>
+                                                    <span className="font-semibold text-foreground">₹{liveTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
 
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
