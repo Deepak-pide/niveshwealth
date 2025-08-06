@@ -358,21 +358,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             await runTransaction(db, async (transaction) => {
                 const requestSnap = await transaction.get(requestDocRef);
                 if (!requestSnap.exists()) {
-                    throw new Error("Withdrawal request not found.");
+                    throw new Error("Withdrawal request not found or already processed.");
                 }
                 const request = requestSnap.data() as FdWithdrawalRequest;
 
                 const investmentDocRef = doc(db, 'investments', request.investmentIdToWithdraw);
                 const investmentSnap = await transaction.get(investmentDocRef);
                 if (!investmentSnap.exists()) {
-                    throw new Error("Investment not found.");
+                    throw new Error("Investment record not found. It may have been deleted.");
                 }
                 const investment = investmentSnap.data() as Investment;
 
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
                 if (!userBalanceSnap.exists()) {
-                    throw new Error("User balance document does not exist!");
+                    throw new Error("User balance record not found.");
                 }
 
                 // Calculate interest accrued to date with penalty
