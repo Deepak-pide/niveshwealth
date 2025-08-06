@@ -100,7 +100,10 @@ export default function SendAlertPage() {
     const [isEditAlertOpen, setIsEditAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [currentTarget, setCurrentTarget] = useState<CombinedRequest | null>(null);
-    const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
+    
+    const addTemplateTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const editTemplateTextareaRef = useRef<HTMLTextAreaElement>(null);
+
 
     useEffect(() => {
         if (editingTemplate) {
@@ -205,11 +208,7 @@ export default function SendAlertPage() {
         
         let message = '';
         if (template) {
-            message = template.message
-                .replace(/{userName}/g, req.userName)
-                .replace(/{requestType}/g, req.type)
-                .replace(/{amount}/g, `₹${req.amount.toLocaleString('en-IN')}`)
-                .replace(/{date}/g, format(req.date, 'PPP'));
+            message = template.message;
         }
 
         setAlertMessage(message);
@@ -217,14 +216,17 @@ export default function SendAlertPage() {
         setIsEditAlertOpen(true);
     };
 
-    const handleInsertPlaceholder = (placeholder: string) => {
-        const textarea = messageTextareaRef.current;
+    const handleInsertPlaceholder = (placeholder: string, target: 'add' | 'edit') => {
+        const textareaRef = target === 'add' ? addTemplateTextareaRef : editTemplateTextareaRef;
+        const setMessage = target === 'add' ? setNewTemplateMessage : setEditTemplateMessage;
+
+        const textarea = textareaRef.current;
         if (textarea) {
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
             const text = textarea.value;
             const newText = text.substring(0, start) + placeholder + text.substring(end);
-            setAlertMessage(newText);
+            setMessage(newText);
             
             setTimeout(() => {
                 textarea.focus();
@@ -294,20 +296,25 @@ export default function SendAlertPage() {
                                                         </Select>
                                                     </div>
                                                     <div className="grid gap-2">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center justify-between gap-2 mb-2">
                                                             <Label htmlFor="template-message">Message</Label>
-                                                            <TooltipProvider>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>
-                                                                        {placeholdersTooltip}
-                                                                    </TooltipContent>
-                                                                </Tooltip>
-                                                            </TooltipProvider>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="outline" size="sm">
+                                                                        <Code className="mr-2 h-4 w-4" />
+                                                                        Dynamic Text
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent>
+                                                                    {PLACEHOLDERS.map(placeholder => (
+                                                                        <DropdownMenuItem key={placeholder} onSelect={() => handleInsertPlaceholder(placeholder, 'add')}>
+                                                                            {placeholder}
+                                                                        </DropdownMenuItem>
+                                                                    ))}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
                                                         </div>
-                                                        <Textarea id="template-message" value={newTemplateMessage} onChange={(e) => setNewTemplateMessage(e.target.value)} placeholder="Compose your message here..." />
+                                                        <Textarea ref={addTemplateTextareaRef} id="template-message" value={newTemplateMessage} onChange={(e) => setNewTemplateMessage(e.target.value)} placeholder="Compose your message here..." />
                                                     </div>
                                                     <div className="grid gap-2">
                                                         <Label>Preview</Label>
@@ -447,8 +454,25 @@ export default function SendAlertPage() {
                                 </Select>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="edit-template-message">Message</Label>
-                                <Textarea id="edit-template-message" value={editTemplateMessage} onChange={(e) => setEditTemplateMessage(e.target.value)} />
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                    <Label htmlFor="edit-template-message">Message</Label>
+                                     <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                                <Code className="mr-2 h-4 w-4" />
+                                                Dynamic Text
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {PLACEHOLDERS.map(placeholder => (
+                                                <DropdownMenuItem key={placeholder} onSelect={() => handleInsertPlaceholder(placeholder, 'edit')}>
+                                                    {placeholder}
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                                <Textarea ref={editTemplateTextareaRef} id="edit-template-message" value={editTemplateMessage} onChange={(e) => setEditTemplateMessage(e.target.value)} />
                             </div>
                         </div>
                         <DialogFooter>
@@ -470,25 +494,9 @@ export default function SendAlertPage() {
                              <div className="grid gap-2">
                                 <div className="flex items-center justify-between gap-2 mb-2">
                                     <Label htmlFor="edit-message">Message</Label>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" size="sm">
-                                                <Code className="mr-2 h-4 w-4" />
-                                                Dynamic Text
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            {PLACEHOLDERS.map(placeholder => (
-                                                <DropdownMenuItem key={placeholder} onSelect={() => handleInsertPlaceholder(placeholder)}>
-                                                    {placeholder}
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
                                 </div>
                                 <Textarea 
                                     id="edit-message"
-                                    ref={messageTextareaRef}
                                     value={alertMessage} 
                                     onChange={(e) => setAlertMessage(e.target.value)} 
                                     className="min-h-[120px]"
