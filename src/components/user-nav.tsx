@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
-import { LogOut, User as UserIcon, LayoutDashboard, Download } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, Download, DownloadCloud } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useData } from "@/hooks/use-data";
 import { format } from "date-fns";
@@ -99,10 +99,16 @@ export default function UserNav() {
                         
                     )}
                     
-                         <DropdownMenuItem onClick={handleDownload}>
+                        <DropdownMenuItem onClick={handleDownload}>
                             <Download className="mr-2 h-4 w-4" />
                             <span>Download Data</span>
                         </DropdownMenuItem>
+                        <a href="/#" target="_blank" download>
+                             <DropdownMenuItem>
+                                <DownloadCloud className="mr-2 h-4 w-4" />
+                                <span>Download App</span>
+                            </DropdownMenuItem>
+                        </a>
                     
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
