@@ -16,6 +16,7 @@ import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "./ui/separator";
+import { format } from "date-fns";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -71,7 +72,9 @@ export default function ManageBalancePage() {
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "User Balances");
-        XLSX.writeFile(workbook, "user_balances.xlsx");
+        const currentDate = format(new Date(), "dd_MM_yyyy");
+        const fileName = `UserBalance_${currentDate}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
     };
 
     const handleConfirmSettings = () => {

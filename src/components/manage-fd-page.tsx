@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +98,9 @@ export default function ManageFdPage() {
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "User Investments");
-        XLSX.writeFile(workbook, "user_investments.xlsx");
+        const currentDate = format(new Date(), "dd_MM_yyyy");
+        const fileName = `UserFD_${currentDate}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
     };
 
     const handleSetTenureRates = async () => {
