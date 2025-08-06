@@ -40,7 +40,7 @@ export default function CompleteProfilePage() {
     }
     try {
       await updateUserProfile(user.uid, values);
-      toast({ title: "Profile Updated", description: "Your profile has been successfully updated.", variant: "success" });
+      toast({ title: "Profile Updated", description: "Your profile has been successfully updated." });
       router.push('/');
     } catch (error) {
       toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
