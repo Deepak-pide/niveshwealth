@@ -89,9 +89,6 @@ export default function AboutUsPage() {
                             <CardTitle>Company Details</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <p className="text-muted-foreground">
-                                Nivesh is a leading financial services company dedicated to helping individuals achieve their financial goals. We offer a range of investment products designed for security and growth. Our team of experts is committed to providing personalized advice and transparent services to empower our clients on their investment journey.
-                            </p>
                             <a href="/Brochure.pdf" download>
                                 <Button variant="outline">
                                     <FileText className="mr-2 h-4 w-4" />
