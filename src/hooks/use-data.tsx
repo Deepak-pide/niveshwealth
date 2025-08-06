@@ -369,14 +369,20 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 }
                 const investment = investmentSnap.data() as Investment;
 
-                const penalizedRate = 0.065;
-                const years = Math.max(differenceInYears(new Date(), investment.startDate.toDate()), 1);
-                const penalizedInterest = investment.amount * penalizedRate * years;
-                const totalValue = investment.amount + penalizedInterest;
-
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
-                const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
+                if (!userBalanceSnap.exists()) {
+                    throw new Error("User balance document does not exist!");
+                }
+
+                // Calculate interest accrued to date
+                const daysSinceStart = differenceInDays(new Date(), investment.startDate.toDate());
+                const liveGrowthRate = userBalanceSnap.data().liveGrowthInterestRate || 0.09;
+                const dailyInterest = investment.amount * (liveGrowthRate / 365);
+                const interestAccrued = daysSinceStart * dailyInterest;
+                const totalValue = investment.amount + interestAccrued;
+                
+                const currentBalance = userBalanceSnap.data()?.balance || 0;
                 
                 transaction.update(userBalanceDocRef, { balance: currentBalance + totalValue });
                 transaction.update(investmentDocRef, { status: 'Withdrawn' });
@@ -385,7 +391,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 transaction.set(historyRef, { 
                     userId: request.userId, 
                     date: Timestamp.now(), 
-                    description: `Withdrawal from ${investment.name}`, 
+                    description: `Early withdrawal from ${investment.name}`, 
                     amount: totalValue, 
                     type: "Credit" 
                 });
@@ -393,7 +399,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 transaction.delete(requestDocRef);
             });
             
-            toast({ title: "Success", description: "Withdrawal approved." });
+            toast({ title: "Success", description: "Withdrawal approved and amount credited to balance." });
 
         } catch (error) {
              console.error("FD Withdrawal approval failed:", error);
