@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -349,7 +350,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 // 4. Delete the original request
                 transaction.delete(requestDocRef);
             });
-            toast({ title: "Success", description: "Investment request approved." });
+            toast({ title: "Success", description: "Investment request approved.", variant: "success" });
             return requestData;
         } catch (error) {
             console.error("Investment approval failed:", error);
@@ -412,7 +413,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 transaction.delete(requestDocRef);
             });
             
-            toast({ title: "Success", description: "Withdrawal approved and amount credited to balance." });
+            toast({ title: "Success", description: "Withdrawal approved and amount credited to balance.", variant: "success" });
             return requestData;
         } catch (error) {
              console.error("FD Withdrawal approval failed:", error);
@@ -491,7 +492,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
                 transaction.delete(requestDocRef);
             });
-            toast({ title: "Success", description: "Top-up request approved." });
+            toast({ title: "Success", description: "Top-up request approved.", variant: "success" });
             return requestData;
         } catch (error) {
             console.error("Top-up approval failed:", error);
@@ -543,7 +544,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 transaction.delete(requestDocRef);
             });
 
-            toast({ title: "Success", description: "Withdrawal approved." });
+            toast({ title: "Success", description: "Withdrawal approved.", variant: "success" });
             return requestData;
         } catch (error) {
             console.error("Balance Withdrawal approval failed:", error);
