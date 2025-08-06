@@ -139,6 +139,7 @@ interface DataContextType {
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
+    getUserPhoneNumber: (userId: string) => string | undefined;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -238,6 +239,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             userAvatar: authUser?.photoURL || `https://placehold.co/100x100.png`,
             phoneNumber: undefined
         };
+    };
+
+    const getUserPhoneNumber = (userId: string): string | undefined => {
+        const user = users.find(u => u.id === userId);
+        return user?.phoneNumber;
     };
 
     const addInvestmentRequest = async (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
@@ -560,12 +566,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => {
         if (!authUser) return;
         
-        const { document, ...profileData } = requestData;
+        const { document: file, ...profileData } = requestData;
         let documentUrl: string | undefined = undefined;
 
-        if (document) {
-            const storageRef = ref(storage, `documents/${authUser.uid}/${document.name}`);
-            await uploadBytes(storageRef, document);
+        if (file) {
+            const storageRef = ref(storage, `documents/${authUser.uid}/${file.name}`);
+            await uploadBytes(storageRef, file);
             documentUrl = await getDownloadURL(storageRef);
         }
 
@@ -645,6 +651,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         approveProfileCompletionRequest,
         rejectProfileCompletionRequest,
         setFdInterestRatesForTenures,
+        getUserPhoneNumber,
     };
 
     return (
@@ -663,3 +670,4 @@ export const useData = () => {
 };
 
     
+
