@@ -97,10 +97,6 @@ export default function UsersPage() {
                                                                 <span className="text-muted-foreground">Aadhar:</span>
                                                                 <span className="font-semibold">{user.aadharCard || 'N/A'}</span>
                                                             </div>
-                                                            <div className="flex justify-between">
-                                                                <span className="text-muted-foreground">Document:</span>
-                                                                {user.documentUrl ? <Link href={user.documentUrl} target="_blank"><Button variant="link" size="sm">View Document</Button></Link> : <span className="font-semibold">N/A</span>}
-                                                            </div>
                                                         </div>
                                                     </DialogContent>
                                                 </Dialog>
@@ -175,10 +171,6 @@ export default function UsersPage() {
                                                             <div className="flex justify-between">
                                                                 <span className="text-muted-foreground">Aadhar:</span>
                                                                 <span className="font-semibold">{req.aadharCard}</span>
-                                                            </div>
-                                                            <div className="flex justify-between">
-                                                                <span className="text-muted-foreground">Document:</span>
-                                                                {req.documentUrl ? <Link href={req.documentUrl} target="_blank"><Button variant="link" size="sm">View Document</Button></Link> : <span className="font-semibold">N/A</span>}
                                                             </div>
                                                         </div>
                                                     </DialogContent>

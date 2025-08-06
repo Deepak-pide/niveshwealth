@@ -81,7 +81,6 @@ export interface ProfileCompletionRequest {
     occupation: string;
     panCard: string;
     aadharCard: string;
-    documentUrl?: string;
     status: 'Pending';
 }
 
@@ -114,7 +113,6 @@ export interface AppUser {
     occupation?: string;
     panCard?: string;
     aadharCard?: string;
-    documentUrl?: string;
 }
 
 
@@ -145,7 +143,7 @@ interface DataContextType {
     approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
-    addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
+    addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar'>) => Promise<void>;
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
@@ -577,24 +575,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
-    const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => {
+    const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'userId' | 'status' | 'userName' | 'userAvatar'>) => {
         if (!authUser) return;
         
-        const { document: file, ...profileData } = requestData;
-        let documentUrl: string | undefined = undefined;
-
-        if (file) {
-            const storageRef = ref(storage, `documents/${authUser.uid}/${file.name}`);
-            await uploadBytes(storageRef, file);
-            documentUrl = await getDownloadURL(storageRef);
-        }
-
         const { userName, userAvatar } = getUserInfo(authUser.uid);
 
         const newRequest = { 
-            ...profileData,
+            ...requestData,
             userId: authUser.uid,
-            documentUrl, 
             status: 'Pending' as const, 
             userName, 
             userAvatar,
@@ -618,7 +606,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             occupation: requestData.occupation,
             panCard: requestData.panCard,
             aadharCard: requestData.aadharCard,
-            documentUrl: requestData.documentUrl || null,
         });
         batch.delete(requestDocRef);
         await batch.commit();
@@ -696,6 +683,7 @@ export const useData = () => {
 };
 
     
+
 
 
 

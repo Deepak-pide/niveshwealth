@@ -21,7 +21,6 @@ const profileSchema = z.object({
     occupation: z.string().min(2, "Occupation is too short"),
     panCard: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN card format"),
     aadharCard: z.string().regex(/^[0-9]{12}$/, "Invalid Aadhar card format (12 digits)"),
-    document: z.instanceof(File).optional(),
 });
 
 export default function CompleteProfilePage() {
@@ -131,23 +130,6 @@ export default function CompleteProfilePage() {
                                         <FormLabel>Aadhar Card Number</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Enter your 12-digit Aadhar number" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="document"
-                                render={({ field: { onChange, value, ...rest } }) => (
-                                    <FormItem>
-                                        <FormLabel>Upload Document (Optional)</FormLabel>
-                                        <FormControl>
-                                            <Input 
-                                                type="file" 
-                                                onChange={(e) => onChange(e.target.files ? e.target.files[0] : undefined)} 
-                                                {...rest}
-                                             />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
