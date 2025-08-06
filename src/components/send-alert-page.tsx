@@ -137,10 +137,6 @@ export default function SendAlertPage() {
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
     const handleSendAlert = (phoneNumber: string | undefined, message: string) => {
-        if (!phoneNumber) {
-            alert("Phone number is not available for this user.");
-            return;
-        }
         let finalMessage = message;
         if (currentTarget) {
              finalMessage = message
@@ -150,7 +146,11 @@ export default function SendAlertPage() {
                 .replace(/{date}/g, format(currentTarget.date, 'PPP'));
         }
 
-        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(finalMessage)}`;
+        const encodedMessage = encodeURIComponent(finalMessage);
+        const whatsappUrl = phoneNumber
+            ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodedMessage}`
+            : `https://wa.me/?text=${encodedMessage}`;
+
         window.open(whatsappUrl, '_blank');
         setIsEditAlertOpen(false);
         setAlertMessage('');
@@ -338,7 +338,7 @@ export default function SendAlertPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        disabled={!req.phoneNumber || filteredTemplates.length === 0}
+                                                        disabled={filteredTemplates.length === 0}
                                                     >
                                                         Send Alert
                                                     </Button>
@@ -378,7 +378,7 @@ export default function SendAlertPage() {
                         <DialogHeader>
                             <DialogTitle>Edit and Send Message</DialogTitle>
                             <DialogDescription>
-                                To: {currentTarget?.userName} ({currentTarget?.phoneNumber})
+                                To: {currentTarget?.userName} ({currentTarget?.phoneNumber || 'No number'})
                             </DialogDescription>
                         </DialogHeader>
                         <div className="py-4 space-y-4">
@@ -419,5 +419,7 @@ export default function SendAlertPage() {
         </div>
     );
 }
+
+    
 
     
