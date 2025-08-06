@@ -7,7 +7,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'Nivesh',
-  description: 'Personalized investment strategies powered by AI.',
+  description: 'Grow Steady. Earn Smart. Up to 9% Returns with Confidence',
   manifest: '/manifest.json',
 };
 
