@@ -83,7 +83,6 @@ export interface UserBalance {
     userName: string;
     userAvatar: string;
     balance: number;
-    liveGrowthInterestRate?: number;
 }
 
 export interface BalanceHistory {
@@ -136,7 +135,6 @@ interface DataContextType {
     approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
-    setLiveGrowthRate: (annualRate: number) => Promise<void>;
     addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
@@ -207,7 +205,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         userName: authUser.displayName || "New User",
                         userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
                         balance: 0,
-                        liveGrowthInterestRate: 0.09,
                     };
                     batch.set(userBalanceDocRef, newUserBalance);
     
@@ -462,7 +459,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         userName: request.userName,
                         userAvatar: request.userAvatar,
                         balance: request.amount,
-                        liveGrowthInterestRate: 0.09, // Default value
                     });
                 }
                 
@@ -561,15 +557,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
-    const setLiveGrowthRate = async (annualRate: number) => {
-        const batch = writeBatch(db);
-        const querySnapshot = await getDocs(collection(db, "userBalances"));
-        querySnapshot.forEach((doc) => {
-            batch.update(doc.ref, { liveGrowthInterestRate: annualRate / 100 });
-        });
-        await batch.commit();
-    };
-
     const addProfileCompletionRequest = async (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => {
         if (!authUser) return;
         
@@ -652,7 +639,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
-        setLiveGrowthRate,
         addProfileCompletionRequest,
         approveProfileCompletionRequest,
         rejectProfileCompletionRequest,
@@ -673,3 +659,5 @@ export const useData = () => {
     }
     return context;
 };
+
+    

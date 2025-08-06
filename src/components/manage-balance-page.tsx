@@ -30,24 +30,16 @@ export default function ManageBalancePage() {
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
-        setLiveGrowthRate
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
     
     const [interestRate, setInterestRate] = useState(6);
-    const [liveGrowthRate, setLiveGrowthRateState] = useState(9);
     
     const [visibleTopups, setVisibleTopups] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawals, setVisibleWithdrawals] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
-    useEffect(() => {
-        const adminBalance = userBalances.find(b => b.userId === adminUser?.uid);
-        if (adminBalance && adminBalance.liveGrowthInterestRate) {
-            setLiveGrowthRateState(adminBalance.liveGrowthInterestRate * 100);
-        }
-    }, [userBalances, adminUser]);
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
@@ -79,10 +71,9 @@ export default function ManageBalancePage() {
 
     const handleConfirmSettings = () => {
         payInterestToAll(interestRate);
-        setLiveGrowthRate(liveGrowthRate);
         toast({
             title: "Settings Updated",
-            description: `Monthly interest paid at ${interestRate}% and live growth rate set to ${liveGrowthRate}%.`,
+            description: `Monthly interest paid at ${interestRate}%.`,
         });
     }
     
@@ -260,21 +251,6 @@ export default function ManageBalancePage() {
                                                     </Table>
                                                 </div>
                                             </div>
-                                            <Separator />
-                                            <div className="space-y-4">
-                                                <h4 className="font-medium">FD Live Growth</h4>
-                                                 <div className="flex items-center gap-4">
-                                                    <Label htmlFor="live-growth-rate" className="w-48">Live Growth Rate (% p.a.)</Label>
-                                                    <Input
-                                                        id="live-growth-rate"
-                                                        type="number"
-                                                        value={liveGrowthRate}
-                                                        onChange={(e) => setLiveGrowthRateState(Number(e.target.value))}
-                                                        className="w-full"
-                                                    />
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">This rate is for displaying live daily growth on FDs to users. It does not affect final maturity value.</p>
-                                            </div>
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
@@ -328,3 +304,5 @@ export default function ManageBalancePage() {
         </div>
     );
 }
+
+    

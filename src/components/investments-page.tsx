@@ -37,13 +37,11 @@ const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 const ITEMS_PER_PAGE = 5;
 
 export default function InvestmentsPage() {
-    const { investments, investmentRequests, addFdWithdrawalRequest, userBalances } = useData();
+    const { investments, investmentRequests, addFdWithdrawalRequest } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
-
-    const liveGrowthRate = userBalances.find(b => b.userId === user?.uid)?.liveGrowthInterestRate || 0.09;
     
     if (!user) {
         return (
@@ -172,7 +170,7 @@ export default function InvestmentsPage() {
                     const isActive = investment.status === 'Active';
 
                     const daysSinceStart = isActive ? differenceInDays(new Date(), investment.startDate.toDate()) : 0;
-                    const dailyInterest = principal * (liveGrowthRate / 365);
+                    const dailyInterest = principal * (investment.interestRate / 365);
                     const liveInterestAccrued = daysSinceStart * dailyInterest;
                     const liveTotalValue = principal + liveInterestAccrued;
                     
@@ -246,7 +244,7 @@ export default function InvestmentsPage() {
                                     </div>
                                     {isActive && (
                                         <div className="p-3 bg-accent/50 rounded-lg space-y-2 text-sm">
-                                            <p className="font-medium">Live Growth ({ (liveGrowthRate * 100).toFixed(2)}% p.a.)</p>
+                                            <p className="font-medium">Live Growth ({ (investment.interestRate * 100).toFixed(2)}% p.a.)</p>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Live Interest Accrued:</span>
                                                 <span className="font-semibold text-green-600">₹{liveInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -314,5 +312,7 @@ export default function InvestmentsPage() {
         </div>
     );
 }
+
+    
 
     
