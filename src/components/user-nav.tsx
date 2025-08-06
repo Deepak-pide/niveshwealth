@@ -78,6 +78,7 @@ export default function UserNav() {
                     'Maturity Date': format(maturityDate, 'yyyy-MM-dd'),
                     'Return': parseFloat(simpleReturn.toFixed(2)),
                     'Total Amount': parseFloat(totalValue.toFixed(2)),
+                    'Status': inv.status,
                 }
             });
 
@@ -88,7 +89,8 @@ export default function UserNav() {
         const currentUserBalance = userBalances.find(b => b.userId === user.id)?.balance || 0;
         const oneYearAgo = subYears(new Date(), 1);
         const userBalanceHistory = balanceHistory
-            .filter(bh => bh.userId === user.id && bh.date.toDate() >= oneYearAgo)
+            .filter(bh => bh.userId === user.id && isAfter(bh.date.toDate(), oneYearAgo))
+            .sort((a, b) => b.date.toMillis() - a.date.toMillis())
             .map(bh => ({
                 'Date': format(bh.date.toDate(), 'yyyy-MM-dd'),
                 'Description': bh.description,
@@ -100,8 +102,11 @@ export default function UserNav() {
         XLSX.utils.sheet_add_aoa(wsBalance, [
             ["Total Balance", `₹${currentUserBalance.toLocaleString('en-IN')}`],
             [] // Empty row for spacing
-        ]);
-        XLSX.utils.sheet_add_json(wsBalance, userBalanceHistory, { origin: "A3", skipHeader: false });
+        ], { origin: "A1" });
+        XLSX.utils.sheet_add_json(wsBalance, userBalanceHistory, { origin: "A4", skipHeader: false });
+        XLSX.utils.sheet_add_aoa(wsBalance, [
+            ["Date", "Description", "Amount", "Type"]
+        ], { origin: "A3" });
         XLSX.utils.book_append_sheet(wb, wsBalance, "Balance History");
 
         const currentDate = format(new Date(), "dd_MM_yyyy");
