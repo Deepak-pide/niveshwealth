@@ -38,10 +38,13 @@ interface BaseRequest {
     status: 'Pending';
 }
 
+type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal';
+
 export interface Template {
     id: string;
     title: string;
     message: string;
+    type?: RequestType;
 }
 
 // Specific Types
@@ -693,5 +696,6 @@ export const useData = () => {
 };
 
     
+
 
 

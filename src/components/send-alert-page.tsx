@@ -17,20 +17,24 @@ import { Plus, MessageSquare, Info, Trash2 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 
+type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal';
 type CombinedRequest = {
     id: string;
     userId: string;
     userName: string;
     userAvatar: string;
     phoneNumber?: string;
-    type: 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal';
+    type: RequestType;
     amount: number;
     date: Date;
 };
 
 const ITEMS_PER_PAGE = 15;
+const REQUEST_TYPES: (RequestType | 'General')[] = ['General', 'FD Investment', 'FD Withdrawal', 'Balance Top-up', 'Balance Withdrawal'];
+
 
 const HighlightedMessage = ({ text, request }: { text: string, request?: CombinedRequest | null }) => {
     const parts = text.split(/({[a-zA-Z]+})/).map((part, index) => {
@@ -77,6 +81,7 @@ export default function SendAlertPage() {
     const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
     const [newTemplateTitle, setNewTemplateTitle] = useState('');
     const [newTemplateMessage, setNewTemplateMessage] = useState('');
+    const [newTemplateType, setNewTemplateType] = useState<RequestType | 'General'>('General');
     const [isAddTemplateOpen, setIsAddTemplateOpen] = useState(false);
 
     const [isEditAlertOpen, setIsEditAlertOpen] = useState(false);
@@ -151,10 +156,12 @@ export default function SendAlertPage() {
         if (!newTemplateTitle || !newTemplateMessage) return;
         addTemplate({
             title: newTemplateTitle,
-            message: newTemplateMessage
+            message: newTemplateMessage,
+            type: newTemplateType === 'General' ? undefined : newTemplateType
         });
         setNewTemplateTitle('');
         setNewTemplateMessage('');
+        setNewTemplateType('General');
         setIsAddTemplateOpen(false);
     };
 
@@ -162,6 +169,10 @@ export default function SendAlertPage() {
         setAlertMessage(template.message);
         setCurrentTarget(req);
         setIsEditAlertOpen(true);
+    };
+    
+    const getFilteredTemplates = (requestType: RequestType) => {
+        return templates.filter(t => !t.type || t.type === requestType);
     };
 
     const visibleRequests = combinedRequests.slice(0, visibleItems);
@@ -205,6 +216,19 @@ export default function SendAlertPage() {
                                                         <Input id="template-title" value={newTemplateTitle} onChange={(e) => setNewTemplateTitle(e.target.value)} placeholder="e.g., Request Reminder" />
                                                     </div>
                                                     <div className="grid gap-2">
+                                                        <Label htmlFor="template-type">Template Type</Label>
+                                                        <Select value={newTemplateType} onValueChange={(value: RequestType | 'General') => setNewTemplateType(value)}>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select a type" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {REQUEST_TYPES.map(type => (
+                                                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="grid gap-2">
                                                         <div className="flex items-center gap-2">
                                                             <Label htmlFor="template-message">Message</Label>
                                                             <TooltipProvider>
@@ -244,7 +268,10 @@ export default function SendAlertPage() {
                                         {templates.length > 0 ? templates.map(template => (
                                             <Card key={template.id} className="relative group">
                                                 <CardHeader>
-                                                    <CardTitle className="text-base">{template.title}</CardTitle>
+                                                    <CardTitle className="text-base flex justify-between items-center">
+                                                        <span>{template.title}</span>
+                                                        <Badge variant="outline">{template.type || 'General'}</Badge>
+                                                    </CardTitle>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <HighlightedMessage text={template.message} />
@@ -278,7 +305,9 @@ export default function SendAlertPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {visibleRequests.length > 0 ? visibleRequests.map((req) => (
+                                {visibleRequests.length > 0 ? visibleRequests.map((req) => {
+                                    const filteredTemplates = getFilteredTemplates(req.type);
+                                    return (
                                     <TableRow key={`${req.type}-${req.id}`}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -300,13 +329,13 @@ export default function SendAlertPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        disabled={!req.phoneNumber || templates.length === 0}
+                                                        disabled={!req.phoneNumber || filteredTemplates.length === 0}
                                                     >
                                                         Send Alert
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
-                                                    {templates.map(template => (
+                                                    {filteredTemplates.map(template => (
                                                         <DropdownMenuItem 
                                                             key={template.id}
                                                             onClick={() => handleTemplateClick(req, template)}
@@ -318,7 +347,7 @@ export default function SendAlertPage() {
                                             </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
-                                )) : (
+                                )}) : (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center">No pending requests.</TableCell>
                                     </TableRow>
