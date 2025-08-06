@@ -92,8 +92,11 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
             .replace(/{date}/g, format(request.date, 'PPP'));
 
         const encodedMessage = encodeURIComponent(finalMessage);
-        const whatsappUrl = requestPhoneNumber
-            ? `https://wa.me/${requestPhoneNumber.replace(/\D/g, '')}?text=${encodedMessage}`
+        
+        const cleanPhoneNumber = requestPhoneNumber ? requestPhoneNumber.replace(/\D/g, '') : '';
+
+        const whatsappUrl = cleanPhoneNumber
+            ? `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`
             : `https://wa.me/?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');

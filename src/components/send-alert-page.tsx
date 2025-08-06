@@ -168,8 +168,11 @@ export default function SendAlertPage() {
         }
 
         const encodedMessage = encodeURIComponent(finalMessage);
-        const whatsappUrl = phoneNumber
-            ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodedMessage}`
+        
+        const cleanPhoneNumber = phoneNumber ? phoneNumber.replace(/\D/g, '') : '';
+        
+        const whatsappUrl = cleanPhoneNumber
+            ? `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`
             : `https://wa.me/?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');
@@ -518,4 +521,5 @@ export default function SendAlertPage() {
         </div>
     );
 }
+
 
