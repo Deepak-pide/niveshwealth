@@ -115,7 +115,7 @@ export default function MyBalancePage() {
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Add Balance</DialogTitle>
+                                    <DialogTitle>Add Balance via UPI</DialogTitle>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     <div className="grid grid-cols-4 items-center gap-4">
@@ -128,10 +128,12 @@ export default function MyBalancePage() {
                                             value={addAmount}
                                             onChange={(e) => setAddAmount(e.target.value)}
                                             className="col-span-3"
+                                            placeholder="Enter amount"
                                         />
                                     </div>
                                     { !isMobile && (
                                         <div className="space-y-4 pt-4 text-center">
+                                            <p className="text-sm text-muted-foreground">Scan the QR code with your UPI app</p>
                                             <div className="flex justify-center">
                                                 <Image
                                                     src="/QR Code.jpeg"
@@ -140,7 +142,6 @@ export default function MyBalancePage() {
                                                     height={150}
                                                 />
                                             </div>
-                                            <p className="text-muted-foreground">Scan the QR code with your UPI app</p>
                                             <p className="font-semibold">UPI ID: 9179349919-2@axl</p>
                                             <p className="font-semibold">Mobile: 9179349919</p>
                                         </div>
@@ -148,7 +149,7 @@ export default function MyBalancePage() {
                                 </div>
                                 <DialogFooter>
                                     <DialogClose asChild>
-                                        <Button type="submit" onClick={handleAddBalance}>
+                                        <Button type="submit" onClick={handleAddBalance} className="w-full">
                                             {isMobile ? 'Pay using UPI' : 'I Have Paid'}
                                         </Button>
                                     </DialogClose>
@@ -270,7 +271,7 @@ export default function MyBalancePage() {
                                                     <div className="h-8 border-l border-border"></div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{item.description}</TableCell>
+                                            <TableCell className="break-words">{item.description}</TableCell>
                                             <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                 {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                             </TableCell>
