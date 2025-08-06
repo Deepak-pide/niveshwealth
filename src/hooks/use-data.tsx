@@ -327,7 +327,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         batch.set(doc(collection(db, 'balanceHistory')), { 
             userId: request.userId, 
             date: Timestamp.now(), 
-            description: `FD Withdrawal #${investmentSnap.id.substring(0, 5)}`, 
+            description: `Withdrawal from ${investment.name}`, 
             amount: totalValue, 
             type: "Credit" 
         });
