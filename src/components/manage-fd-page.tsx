@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import { Download, Percent } from "lucide-react";
+import { Download, Percent, Wallet } from "lucide-react";
 import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { Timestamp } from "firebase/firestore";
@@ -170,6 +170,7 @@ export default function ManageFdPage() {
                                         <TableHead>Amount</TableHead>
                                         <TableHead>Years</TableHead>
                                         <TableHead>Date</TableHead>
+                                        <TableHead>Method</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -188,6 +189,16 @@ export default function ManageFdPage() {
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{req.years}</TableCell>
                                             <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
+                                            <TableCell>
+                                                {req.paymentMethod === 'balance' ? (
+                                                    <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                                                        <Wallet className="h-3 w-3" />
+                                                        Balance
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge className="w-fit">UPI</Badge>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -209,7 +220,7 @@ export default function ManageFdPage() {
                                                 <Button size="sm" onClick={() => approveInvestmentRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
-                                    )) : <TableRow><TableCell colSpan={5} className="text-center">No pending investment requests.</TableCell></TableRow>}
+                                    )) : <TableRow><TableCell colSpan={6} className="text-center">No pending investment requests.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                             {hasMoreInvestmentReqs && (

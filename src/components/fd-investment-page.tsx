@@ -20,7 +20,7 @@ export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
     const [paymentMethod, setPaymentMethod] = useState<'balance' | 'upi'>('upi');
-    const { addInvestmentRequest, addInvestmentRequestFromBalance, userBalances } = useData();
+    const { addInvestmentRequest, userBalances } = useData();
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
@@ -35,14 +35,6 @@ export default function FdInvestmentPage() {
     const maturityDate = addYears(new Date(), years);
 
     const handlePayment = () => {
-        if (paymentMethod === 'balance') {
-            handleBalanceInvestment();
-        } else {
-            handleUpiInvestment();
-        }
-    }
-
-    const handleUpiInvestment = () => {
         if (!user) {
             toast({
                 title: "Authentication Error",
@@ -52,9 +44,17 @@ export default function FdInvestmentPage() {
             return;
         }
 
-        const transactionNote = `FD for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
-        
-        if (isMobile) {
+        if (paymentMethod === 'balance' && !hasSufficientBalance) {
+             toast({
+                title: "Insufficient Balance",
+                description: "You do not have enough balance to make this investment.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (paymentMethod === 'upi' && isMobile) {
+            const transactionNote = `FD for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
             const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
             window.open(upiUrl, '_blank');
         }
@@ -64,44 +64,12 @@ export default function FdInvestmentPage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
             years: years,
+            paymentMethod: paymentMethod,
         });
 
         toast({
             title: "Investment Request Submitted",
             description: "Your FD investment request has been sent for admin approval.",
-        });
-
-        router.push('/investments');
-    };
-
-    const handleBalanceInvestment = () => {
-        if (!user) {
-            toast({
-                title: "Authentication Error",
-                description: "You must be logged in to make an investment.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        if (!hasSufficientBalance) {
-             toast({
-                title: "Insufficient Balance",
-                description: "You do not have enough balance to make this investment.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        addInvestmentRequestFromBalance({
-            userId: user.uid,
-            amount: amount,
-            years: years,
-        });
-
-        toast({
-            title: "Investment Successful",
-            description: "Your FD has been created and the amount deducted from your balance.",
         });
 
         router.push('/investments');
@@ -204,7 +172,7 @@ export default function FdInvestmentPage() {
                                 <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={handlePayment} disabled={isPayNowDisabled}>
-                                        {paymentMethod === 'upi' && !isMobile ? 'I Have Paid' : 'Pay Now'}
+                                        {paymentMethod === 'upi' && !isMobile ? 'I Have Paid' : 'Submit Request'}
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>

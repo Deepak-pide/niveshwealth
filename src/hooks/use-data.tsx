@@ -62,6 +62,7 @@ export interface Investment {
 export interface InvestmentRequest extends Omit<BaseRequest, 'date'> {
     date: Timestamp;
     years: number;
+    paymentMethod: 'upi' | 'balance';
 }
 
 export interface FdWithdrawalRequest extends BaseRequest {
@@ -126,7 +127,6 @@ interface DataContextType {
     fdTenureRates: {[key: number]: number};
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
-    addInvestmentRequestFromBalance: (requestData: { userId: string, amount: number, years: number }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     approveInvestmentRequest: (requestId: string) => Promise<void>;
     rejectInvestmentRequest: (requestId: string) => Promise<void>;
@@ -274,61 +274,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await addDoc(collection(db, 'investmentRequests'), newRequest);
     };
 
-     const addInvestmentRequestFromBalance = async (requestData: { userId: string, amount: number, years: number }) => {
-        if (!authUser) return;
-        const { userId, amount, years } = requestData;
-        const userBalanceDocRef = doc(db, 'userBalances', userId);
-        
-        const interestRate = fdTenureRates[years] || 0.09; // Fallback to 9% if not set
-
-        try {
-            await runTransaction(db, async (transaction) => {
-                const userBalanceSnap = await transaction.get(userBalanceDocRef);
-                if (!userBalanceSnap.exists()) {
-                    throw "User balance document does not exist!";
-                }
-
-                const currentBalance = userBalanceSnap.data().balance;
-                if (currentBalance < amount) {
-                    throw "Insufficient balance.";
-                }
-
-                // 1. Deduct balance
-                transaction.update(userBalanceDocRef, { balance: currentBalance - amount });
-                
-                // 2. Add to balance history
-                const historyRef = doc(collection(db, 'balanceHistory'));
-                transaction.set(historyRef, {
-                    userId: userId,
-                    date: Timestamp.now(),
-                    description: `FD Investment (${years} years)`,
-                    amount: amount,
-                    type: "Debit"
-                });
-
-                // 3. Create investment directly (approved)
-                const investmentRef = doc(collection(db, 'investments'));
-                const newInvestment = {
-                    userId: userId,
-                    name: `FD for ${years} years`,
-                    amount: amount,
-                    interestRate: interestRate,
-                    startDate: Timestamp.now(),
-                    maturityDate: Timestamp.fromDate(addYears(new Date(), years)),
-                    status: 'Active' as const,
-                };
-                transaction.set(investmentRef, newInvestment);
-            });
-        } catch (e) {
-            console.error("Transaction failed: ", e);
-             toast({
-                title: "Investment Failed",
-                description: typeof e === 'string' ? e : "An unexpected error occurred during the transaction.",
-                variant: "destructive",
-            });
-        }
-    };
-
     const addFdWithdrawalRequest = async (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
         if (!authUser) return;
         const { userName, userAvatar } = getUserInfo();
@@ -344,26 +289,68 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const approveInvestmentRequest = async (requestId: string) => {
         const requestDocRef = doc(db, 'investmentRequests', requestId);
-        const requestSnap = await getDoc(requestDocRef);
-        if (!requestSnap.exists()) return;
-        const requestData = requestSnap.data() as InvestmentRequest;
-
-        const interestRate = fdTenureRates[requestData.years] || 0.09; // Fallback to 9% if not set
-
-        const newInvestment = {
-            userId: requestData.userId,
-            name: `FD for ${requestData.years} years`,
-            amount: requestData.amount,
-            interestRate: interestRate,
-            startDate: Timestamp.now(),
-            maturityDate: Timestamp.fromDate(addYears(new Date(), requestData.years)),
-            status: 'Active' as const,
-        };
         
-        const batch = writeBatch(db);
-        batch.set(doc(collection(db, 'investments')), newInvestment);
-        batch.delete(requestDocRef);
-        await batch.commit();
+        try {
+            await runTransaction(db, async (transaction) => {
+                const requestSnap = await transaction.get(requestDocRef);
+                if (!requestSnap.exists()) {
+                    throw new Error("Investment request not found or already processed.");
+                }
+                const requestData = requestSnap.data() as InvestmentRequest;
+                const { userId, amount, years, paymentMethod } = requestData;
+
+                if (paymentMethod === 'balance') {
+                    const userBalanceDocRef = doc(db, 'userBalances', userId);
+                    const userBalanceSnap = await transaction.get(userBalanceDocRef);
+
+                    if (!userBalanceSnap.exists()) {
+                        throw new Error("User balance document does not exist!");
+                    }
+
+                    const currentBalance = userBalanceSnap.data().balance;
+                    if (currentBalance < amount) {
+                        // Reject request if insufficient balance
+                        transaction.delete(requestDocRef);
+                        throw new Error("User has insufficient balance. Request rejected.");
+                    }
+                    
+                    // 1. Deduct balance
+                    transaction.update(userBalanceDocRef, { balance: currentBalance - amount });
+                    
+                    // 2. Add to balance history
+                    const historyRef = doc(collection(db, 'balanceHistory'));
+                    transaction.set(historyRef, {
+                        userId: userId,
+                        date: Timestamp.now(),
+                        description: `FD Investment (${years} years)`,
+                        amount: amount,
+                        type: "Debit"
+                    });
+                }
+                
+                // 3. Create investment
+                const interestRate = fdTenureRates[years] || 0.09; // Fallback to 9% if not set
+                const newInvestment = {
+                    userId: userId,
+                    name: `FD for ${years} years`,
+                    amount: amount,
+                    interestRate: interestRate,
+                    startDate: Timestamp.now(),
+                    maturityDate: Timestamp.fromDate(addYears(new Date(), years)),
+                    status: 'Active' as const,
+                };
+                const investmentRef = doc(collection(db, 'investments'));
+                transaction.set(investmentRef, newInvestment);
+
+                // 4. Delete the original request
+                transaction.delete(requestDocRef);
+            });
+            toast({ title: "Success", description: "Investment request approved." });
+        } catch (error) {
+            console.error("Investment approval failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+            toast({ title: "Approval Failed", description: errorMessage, variant: "destructive" });
+        }
     };
 
     const rejectInvestmentRequest = async (requestId: string) => {
@@ -607,7 +594,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         fdTenureRates,
         updateUserProfile,
         addInvestmentRequest,
-        addInvestmentRequestFromBalance,
         addFdWithdrawalRequest,
         approveInvestmentRequest,
         rejectInvestmentRequest,
