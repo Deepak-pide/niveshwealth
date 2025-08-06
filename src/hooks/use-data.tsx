@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -440,25 +441,48 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const approveTopupRequest = async (requestId: string) => {
         const requestDocRef = doc(db, 'topupRequests', requestId);
-        const requestSnap = await getDoc(requestDocRef);
-        if (!requestSnap.exists()) return;
-        const request = requestSnap.data() as TopupRequest;
-
-        const userBalanceDocRef = doc(db, 'userBalances', request.userId);
-        const userBalanceSnap = await getDoc(userBalanceDocRef);
-        const currentBalance = userBalanceSnap.exists() ? (userBalanceSnap.data()?.balance || 0) : 0;
-        
-        const batch = writeBatch(db);
-        batch.update(userBalanceDocRef, { balance: currentBalance + request.amount });
-        batch.set(doc(collection(db, 'balanceHistory')), {
-            userId: request.userId,
-            date: Timestamp.now(),
-            description: 'Added to wallet',
-            amount: request.amount,
-            type: 'Credit'
-        });
-        batch.delete(requestDocRef);
-        await batch.commit();
+        try {
+            await runTransaction(db, async (transaction) => {
+                const requestSnap = await transaction.get(requestDocRef);
+                if (!requestSnap.exists()) {
+                    throw new Error("Top-up request not found or already processed.");
+                }
+                const request = requestSnap.data() as TopupRequest;
+    
+                const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+                const userBalanceSnap = await transaction.get(userBalanceDocRef);
+                
+                if (userBalanceSnap.exists()) {
+                    const currentBalance = userBalanceSnap.data()?.balance || 0;
+                    transaction.update(userBalanceDocRef, { balance: currentBalance + request.amount });
+                } else {
+                    // If balance doc doesn't exist, create it.
+                    transaction.set(userBalanceDocRef, {
+                        userId: request.userId,
+                        userName: request.userName,
+                        userAvatar: request.userAvatar,
+                        balance: request.amount,
+                        liveGrowthInterestRate: 0.09, // Default value
+                    });
+                }
+                
+                const historyRef = doc(collection(db, 'balanceHistory'));
+                transaction.set(historyRef, {
+                    userId: request.userId,
+                    date: Timestamp.now(),
+                    description: 'Added to wallet',
+                    amount: request.amount,
+                    type: 'Credit'
+                });
+    
+                transaction.delete(requestDocRef);
+            });
+            toast({ title: "Success", description: "Top-up request approved." });
+        } catch (error) {
+            console.error("Top-up approval failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+            toast({ title: "Top-up Failed", description: errorMessage, variant: "destructive" });
+        }
     };
 
     const rejectTopupRequest = async (requestId: string) => {
