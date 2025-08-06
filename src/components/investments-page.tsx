@@ -90,6 +90,7 @@ export default function InvestmentsPage() {
         toast({
             title: "Withdrawal Request Submitted",
             description: "Your withdrawal request has been submitted for approval.",
+            variant: "success",
         });
     };
     
@@ -312,7 +313,3 @@ export default function InvestmentsPage() {
         </div>
     );
 }
-
-    
-
-    

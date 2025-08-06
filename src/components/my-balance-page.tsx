@@ -71,7 +71,7 @@ export default function MyBalancePage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Request Submitted", description: "Your request to add balance has been submitted." });
+        toast({ title: "Request Submitted", description: "Your request to add balance has been submitted.", variant: "success" });
         setAddAmount("");
     }
     
@@ -90,7 +90,7 @@ export default function MyBalancePage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Request Submitted", description: "Your request to withdraw balance has been submitted." });
+        toast({ title: "Request Submitted", description: "Your request to withdraw balance has been submitted.", variant: "success" });
         setWithdrawAmount("");
     }
     
@@ -187,7 +187,7 @@ export default function MyBalancePage() {
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>Confirm Withdrawal</AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        Are you sure you want to withdraw ₹{parseFloat(withdrawAmount).toLocaleString('en-IN')}?
+                                                        Are you sure you want to withdraw ₹{parseFloat(withdrawAmount || "0").toLocaleString('en-IN')}?
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
