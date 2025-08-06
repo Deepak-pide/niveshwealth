@@ -227,19 +227,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('balanceHistory', setBalanceHistory);
     useDataFetching('templates', setTemplates);
 
-    const getUserInfo = (userId: string) => {
-        const user = users.find(u => u.id === userId);
-        if (user) {
+    const getUserInfo = () => {
+        if (authUser) {
             return {
-                userName: user.name,
-                userAvatar: user.avatar,
-                phoneNumber: user.phoneNumber,
+                userName: authUser.displayName || 'Unknown User',
+                userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
             }
         }
         return {
-            userName: authUser?.displayName || 'Unknown User',
-            userAvatar: authUser?.photoURL || `https://placehold.co/100x100.png`,
-            phoneNumber: undefined
+            userName: 'Unknown User',
+            userAvatar: `https://placehold.co/100x100.png`,
         };
     };
 
@@ -250,7 +247,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const addInvestmentRequest = async (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
         if (!authUser) return;
-        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const { userName, userAvatar } = getUserInfo();
         const newRequest = { 
             ...requestData, 
             status: 'Pending' as const, 
@@ -318,7 +315,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const addFdWithdrawalRequest = async (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
         if (!authUser) return;
-        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const { userName, userAvatar } = getUserInfo();
         const newRequest = { 
             ...requestData, 
             status: 'Pending' as const, 
@@ -420,7 +417,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const addTopupRequest = async (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
         if (!authUser) return;
-        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const { userName, userAvatar } = getUserInfo();
         const newRequest = { 
             ...requestData, 
             status: 'Pending' as const, 
@@ -433,7 +430,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     const addBalanceWithdrawalRequest = async (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'| 'date'> & { date: string }) => {
         if (!authUser) return;
-        const { userName, userAvatar } = getUserInfo(authUser.uid);
+        const { userName, userAvatar } = getUserInfo();
          const newRequest = { 
             ...requestData, 
             status: 'Pending' as const, 
@@ -631,3 +628,5 @@ export const useData = () => {
     }
     return context;
 };
+
+    
