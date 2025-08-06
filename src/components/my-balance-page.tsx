@@ -210,7 +210,7 @@ export default function MyBalancePage() {
                             <CardDescription>The following requests are awaiting approval.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Table className="responsive-table">
+                            <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Type</TableHead>
@@ -221,18 +221,18 @@ export default function MyBalancePage() {
                                 <TableBody>
                                     {pendingTopupRequests.map(req => (
                                         <TableRow key={`topup-${req.id}`}>
-                                            <TableCell data-label="Type">Add Balance</TableCell>
-                                            <TableCell data-label="Amount">₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell data-label="Status">
+                                            <TableCell>Add Balance</TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell className="text-right">
                                                 <Badge variant="secondary">{req.status}</Badge>
                                             </TableCell>
                                         </TableRow>
                                     ))}
                                     {pendingWithdrawalRequests.map(req => (
                                          <TableRow key={`withdraw-${req.id}`}>
-                                            <TableCell data-label="Type">Withdrawal</TableCell>
-                                            <TableCell data-label="Amount">₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell data-label="Status">
+                                            <TableCell>Withdrawal</TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell className="text-right">
                                                 <Badge variant="secondary">{req.status}</Badge>
                                             </TableCell>
                                         </TableRow>
@@ -250,20 +250,20 @@ export default function MyBalancePage() {
                     </CardHeader>
                     <CardContent>
                         <ScrollArea className="h-72 w-full">
-                             <Table className="responsive-table">
+                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
+                                        <TableHead className="whitespace-nowrap">Date</TableHead>
+                                        <TableHead className="whitespace-nowrap">Description</TableHead>
+                                        <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
                                         <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                            <TableCell data-label="Date" className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
-                                            <TableCell data-label="Description">{item.description}</TableCell>
-                                            <TableCell data-label="Amount" className={cn("font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
+                                            <TableCell className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
+                                            <TableCell>{item.description}</TableCell>
+                                            <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                 {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                             </TableCell>
                                         </TableRow>

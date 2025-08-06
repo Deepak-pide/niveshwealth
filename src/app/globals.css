@@ -132,22 +132,4 @@
     }
   }
   
-  @media (max-width: 640px) {
-    .responsive-table thead {
-      @apply hidden;
-    }
-    .responsive-table tbody, .responsive-table tr, .responsive-table td {
-      @apply block;
-    }
-    .responsive-table tr {
-      @apply mb-4 rounded-lg border p-4;
-    }
-    .responsive-table td {
-      @apply grid grid-cols-2 items-center gap-4 text-right;
-    }
-    .responsive-table td::before {
-      content: attr(data-label);
-      @apply text-left font-semibold text-muted-foreground;
-    }
-  }
 }
