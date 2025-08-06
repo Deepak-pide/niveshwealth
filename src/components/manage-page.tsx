@@ -11,6 +11,7 @@ export default function ManagePage() {
 
     const hasFdRequests = investmentRequests.length > 0 || fdWithdrawalRequests.length > 0;
     const hasBalanceRequests = topupRequests.length > 0 || balanceWithdrawalRequests.length > 0;
+    const hasAnyRequests = hasFdRequests || hasBalanceRequests;
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
@@ -51,6 +52,12 @@ export default function ManagePage() {
                 </Link>
                  <Link href="/admin/manage/send-alert">
                     <Card className="relative flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1 h-full">
+                        {hasAnyRequests && (
+                            <span className="absolute top-2 right-2 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                            </span>
+                        )}
                         <div className="mb-4 rounded-full bg-primary/10 p-3">
                             <BellRing className="h-8 w-8 text-primary" />
                         </div>
