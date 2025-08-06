@@ -272,7 +272,7 @@ export default function MyBalancePage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="break-words">{item.description}</TableCell>
-                                            <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
+                                            <TableCell className={cn("text-right font-semibold whitespace-nowrap", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                 {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                             </TableCell>
                                         </TableRow>
