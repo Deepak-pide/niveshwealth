@@ -338,20 +338,21 @@ export default function SendAlertPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        disabled={filteredTemplates.length === 0}
                                                     >
                                                         Send Alert
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
-                                                    {filteredTemplates.map(template => (
+                                                    {filteredTemplates.length > 0 ? filteredTemplates.map(template => (
                                                         <DropdownMenuItem 
                                                             key={template.id}
                                                             onClick={() => handleTemplateClick(req, template)}
                                                         >
                                                             {template.title}
                                                         </DropdownMenuItem>
-                                                    ))}
+                                                    )) : (
+                                                        <DropdownMenuItem disabled>No templates for this type</DropdownMenuItem>
+                                                    )}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
