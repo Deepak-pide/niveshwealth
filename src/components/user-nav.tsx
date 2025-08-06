@@ -10,13 +10,13 @@ import Link from "next/link";
 import { LogOut, User as UserIcon, LayoutDashboard, Download, DownloadCloud, FileText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useData } from "@/hooks/use-data";
-import { format } from "date-fns";
+import { format, subYears, differenceInYears } from "date-fns";
 import React, { useState, useEffect } from "react";
 
 
 export default function UserNav() {
     const { user, logout } = useAuth();
-    const { investments, balanceHistory, users, profileCompletionRequests } = useData();
+    const { investments, balanceHistory, users, profileCompletionRequests, userBalances } = useData();
     const isMobile = useIsMobile();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -60,33 +60,51 @@ export default function UserNav() {
     const handleDownload = () => {
         if (!user) return;
         
+        const wb = XLSX.utils.book_new();
+
+        // Investment Sheet
         const userInvestments = investments
             .filter(inv => inv.userId === user.id)
-            .map(inv => ({
-                'Name': inv.name,
-                'Amount': inv.amount,
-                'Interest Rate': `${(inv.interestRate * 100).toFixed(2)}%`,
-                'Start Date': format(inv.startDate.toDate(), 'yyyy-MM-dd'),
-                'Maturity Date': format(inv.maturityDate.toDate(), 'yyyy-MM-dd'),
-                'Status': inv.status,
-            }));
+            .map(inv => {
+                const startDate = inv.startDate.toDate();
+                const maturityDate = inv.maturityDate.toDate();
+                const years = differenceInYears(maturityDate, startDate);
+                const simpleReturn = inv.amount * inv.interestRate * years;
+                const totalValue = inv.amount + simpleReturn;
 
+                return {
+                    'Issue Date': format(startDate, 'yyyy-MM-dd'),
+                    'Amount': inv.amount,
+                    'Maturity Date': format(maturityDate, 'yyyy-MM-dd'),
+                    'Return': parseFloat(simpleReturn.toFixed(2)),
+                    'Total Amount': parseFloat(totalValue.toFixed(2)),
+                }
+            });
+
+        const wsInvestments = XLSX.utils.json_to_sheet(userInvestments);
+        XLSX.utils.book_append_sheet(wb, wsInvestments, "Investments");
+
+        // Balance Sheet
+        const currentUserBalance = userBalances.find(b => b.userId === user.id)?.balance || 0;
+        const oneYearAgo = subYears(new Date(), 1);
         const userBalanceHistory = balanceHistory
-            .filter(bh => bh.userId === user.id)
+            .filter(bh => bh.userId === user.id && bh.date.toDate() >= oneYearAgo)
             .map(bh => ({
                 'Date': format(bh.date.toDate(), 'yyyy-MM-dd'),
                 'Description': bh.description,
                 'Amount': bh.amount,
                 'Type': bh.type,
             }));
+        
+        const wsBalance = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(wsBalance, [
+            ["Total Balance", `₹${currentUserBalance.toLocaleString('en-IN')}`],
+            [] // Empty row for spacing
+        ]);
+        XLSX.utils.sheet_add_json(wsBalance, userBalanceHistory, { origin: "A3", skipHeader: false });
+        XLSX.utils.book_append_sheet(wb, wsBalance, "Balance History");
 
-        const wb = XLSX.utils.book_new();
-        const wsInvestments = XLSX.utils.json_to_sheet(userInvestments);
-        const wsBalanceHistory = XLSX.utils.json_to_sheet(userBalanceHistory);
-
-        XLSX.utils.book_append_sheet(wb, wsInvestments, "Investments");
-        XLSX.utils.book_append_sheet(wb, wsBalanceHistory, "Balance History");
-        XLSX.writeFile(wb, "nivesh_data.xlsx");
+        XLSX.writeFile(wb, "Nivesh_Statement.xlsx");
     };
 
     const handleInstallClick = async () => {
@@ -154,7 +172,7 @@ export default function UserNav() {
                     
                     <DropdownMenuItem onClick={handleDownload}>
                         <Download className="mr-2 h-4 w-4" />
-                        <span>Download Data</span>
+                        <span>Download Statement</span>
                     </DropdownMenuItem>
                     {showInstall && (
                         <DropdownMenuItem onClick={handleInstallClick}>
