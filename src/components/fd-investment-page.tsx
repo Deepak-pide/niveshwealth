@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { addYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,7 @@ import Image from "next/image";
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
+    const [paymentMethod, setPaymentMethod] = useState<'balance' | 'upi'>('upi');
     const { addInvestmentRequest, addInvestmentRequestFromBalance, userBalances } = useData();
     const { toast } = useToast();
     const router = useRouter();
@@ -31,6 +33,14 @@ export default function FdInvestmentPage() {
     const calculatedReturn = amount * fdRate * years;
     const totalAmount = amount + calculatedReturn;
     const maturityDate = addYears(new Date(), years);
+
+    const handlePayment = () => {
+        if (paymentMethod === 'balance') {
+            handleBalanceInvestment();
+        } else {
+            handleUpiInvestment();
+        }
+    }
 
     const handleUpiInvestment = () => {
         if (!user) {
@@ -99,6 +109,8 @@ export default function FdInvestmentPage() {
         router.push('/investments');
     };
 
+    const isPayNowDisabled = paymentMethod === 'balance' && !hasSufficientBalance;
+
     return (
         <div className="container mx-auto p-4 md:p-8 flex justify-center animate-fade-in">
             <div className="w-full max-w-lg space-y-8">
@@ -142,10 +154,6 @@ export default function FdInvestmentPage() {
                                                 <span className="text-muted-foreground">Investment Amount:</span>
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
                                             </div>
-                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Your Nivesh Balance:</span>
-                                                <span className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>₹{currentUserBalance.toLocaleString('en-IN')}</span>
-                                            </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Estimated Return (at {fdRate*100}%):</span>
                                                 <span className="font-semibold text-green-600">₹{calculatedReturn.toLocaleString('en-IN')}</span>
@@ -158,11 +166,25 @@ export default function FdInvestmentPage() {
                                                 <span className="text-muted-foreground">Maturity Date:</span>
                                                 <span className="font-semibold text-foreground">{format(maturityDate, 'PPP')}</span>
                                             </div>
-                                            {isMobile ? (
-                                                <div className="pt-4 text-center text-muted-foreground">
-                                                    You can pay from your balance or be redirected to your UPI app to complete the payment.
+
+                                             <RadioGroup defaultValue="upi" className="grid gap-4 pt-4" onValueChange={(value: 'balance' | 'upi') => setPaymentMethod(value)}>
+                                                <Label className="font-semibold">Select Payment Method</Label>
+                                                <div className="flex items-center space-x-2 rounded-md border p-4">
+                                                    <RadioGroupItem value="balance" id="balance" />
+                                                    <Label htmlFor="balance" className="flex flex-col w-full cursor-pointer">
+                                                        <span>Pay from My Balance</span>
+                                                        <span className={`text-xs ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>
+                                                            Available: ₹{currentUserBalance.toLocaleString('en-IN')}
+                                                        </span>
+                                                    </Label>
                                                 </div>
-                                            ) : (
+                                                <div className="flex items-center space-x-2 rounded-md border p-4">
+                                                     <RadioGroupItem value="upi" id="upi" />
+                                                    <Label htmlFor="upi" className="w-full cursor-pointer">Pay using UPI</Label>
+                                                </div>
+                                            </RadioGroup>
+
+                                            {paymentMethod === 'upi' && !isMobile && (
                                                  <div className="space-y-4 pt-4 text-center">
                                                     <p className="font-semibold text-muted-foreground">Pay using UPI</p>
                                                     <div className="flex justify-center">
@@ -181,14 +203,11 @@ export default function FdInvestmentPage() {
                                         </div>
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
-                                <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
+                                <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <Button onClick={handleBalanceInvestment} disabled={!hasSufficientBalance}>Pay from Balance</Button>
-                                    {isMobile ? (
-                                        <AlertDialogAction onClick={handleUpiInvestment}>Pay using UPI</AlertDialogAction>
-                                    ) : (
-                                        <AlertDialogAction onClick={handleUpiInvestment}>I Have Paid</AlertDialogAction>
-                                    )}
+                                    <AlertDialogAction onClick={handlePayment} disabled={isPayNowDisabled}>
+                                        {paymentMethod === 'upi' && !isMobile ? 'I Have Paid' : 'Pay Now'}
+                                    </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
