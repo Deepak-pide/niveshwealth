@@ -8,6 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useData } from "@/hooks/use-data";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Plus, MessageSquare, MoreVertical } from "lucide-react";
 
 type CombinedRequest = {
     id: string;
@@ -19,7 +25,26 @@ type CombinedRequest = {
     date: Date;
 };
 
+type Template = {
+    id: string;
+    title: string;
+    message: string;
+};
+
 const ITEMS_PER_PAGE = 15;
+
+const initialTemplates: Template[] = [
+    {
+        id: '1',
+        title: 'Pending Request Reminder',
+        message: 'Hello {userName}, this is a reminder regarding your {requestType} request for ₹{amount}. Please respond if you have any questions.'
+    },
+    {
+        id: '2',
+        title: 'Payment Confirmation',
+        message: 'Hello {userName}, we have received your payment for the {requestType} of ₹{amount}. Your request is now being processed.'
+    }
+];
 
 export default function SendAlertPage() {
     const {
@@ -30,6 +55,10 @@ export default function SendAlertPage() {
         getUserPhoneNumber,
     } = useData();
     const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
+    const [templates, setTemplates] = useState<Template[]>(initialTemplates);
+    const [newTemplateTitle, setNewTemplateTitle] = useState('');
+    const [newTemplateMessage, setNewTemplateMessage] = useState('');
+    const [isAddTemplateOpen, setIsAddTemplateOpen] = useState(false);
 
 
     const combinedRequests: CombinedRequest[] = [
@@ -71,16 +100,26 @@ export default function SendAlertPage() {
         })),
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    const handleSendAlert = (phoneNumber: string | undefined, userName: string, requestType: string, amount: number) => {
+    const handleSendAlert = (phoneNumber: string | undefined, message: string) => {
         if (!phoneNumber) {
             alert("Phone number is not available for this user.");
             return;
         }
-
-        const message = encodeURIComponent(`Hello ${userName}, this is a reminder regarding your ${requestType} request for ₹${amount}.`);
-        // Assumes phone number is in a format compatible with WhatsApp, may need country code.
-        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${message}`;
+        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
+    };
+
+    const handleAddTemplate = () => {
+        if (!newTemplateTitle || !newTemplateMessage) return;
+        const newTemplate: Template = {
+            id: Date.now().toString(),
+            title: newTemplateTitle,
+            message: newTemplateMessage
+        };
+        setTemplates(prev => [...prev, newTemplate]);
+        setNewTemplateTitle('');
+        setNewTemplateMessage('');
+        setIsAddTemplateOpen(false);
     };
 
     const visibleRequests = combinedRequests.slice(0, visibleItems);
@@ -90,11 +129,74 @@ export default function SendAlertPage() {
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
             <div className="max-w-4xl mx-auto">
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Pending Requests</CardTitle>
-                        <CardDescription>
-                            A list of all pending user requests. Click "Send Alert" to notify the user on WhatsApp.
-                        </CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Pending Requests</CardTitle>
+                            <CardDescription>
+                                A list of all pending user requests. Click "Send Alert" to notify the user on WhatsApp.
+                            </CardDescription>
+                        </div>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline">
+                                    <MessageSquare className="mr-2 h-4 w-4" />
+                                    Templates
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-lg">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center justify-between">
+                                        <span>Message Templates</span>
+                                         <Dialog open={isAddTemplateOpen} onOpenChange={setIsAddTemplateOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-md">
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Template</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor="template-title">Title</Label>
+                                                        <Input id="template-title" value={newTemplateTitle} onChange={(e) => setNewTemplateTitle(e.target.value)} placeholder="e.g., Request Reminder" />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor="template-message">Message</Label>
+                                                        <Textarea id="template-message" value={newTemplateMessage} onChange={(e) => setNewTemplateMessage(e.target.value)} placeholder="Use {userName}, {requestType}, {amount}" />
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Use placeholders: {"{userName}"}, {"{requestType}"}, {"{amount}"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button variant="outline" onClick={() => setIsAddTemplateOpen(false)}>Cancel</Button>
+                                                    <Button onClick={handleAddTemplate}>Save</Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Select a template to send a pre-filled message.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 max-h-96 overflow-y-auto p-1">
+                                    {templates.map(template => (
+                                        <Card key={template.id}>
+                                            <CardHeader>
+                                                <CardTitle className="text-base">{template.title}</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm text-muted-foreground p-2 bg-accent/50 rounded-md">
+                                                    {template.message}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -125,13 +227,33 @@ export default function SendAlertPage() {
                                         </TableCell>
                                         <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleSendAlert(req.phoneNumber, req.userName, req.type, req.amount)}
-                                                disabled={!req.phoneNumber}
-                                            >
-                                                Send Alert
-                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        disabled={!req.phoneNumber}
+                                                    >
+                                                        Send Alert
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    {templates.map(template => (
+                                                        <DropdownMenuItem 
+                                                            key={template.id}
+                                                            onClick={() => {
+                                                                const message = template.message
+                                                                    .replace('{userName}', req.userName)
+                                                                    .replace('{requestType}', req.type)
+                                                                    .replace('{amount}', req.amount.toLocaleString('en-IN'));
+                                                                handleSendAlert(req.phoneNumber, message);
+                                                            }}
+                                                        >
+                                                            {template.title}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
