@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -10,7 +11,6 @@ import type {
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
-const SUCCESS_TOAST_DURATION = 3000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -59,7 +59,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string, isSuccess: boolean = false) => {
+const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
   }
@@ -70,7 +70,7 @@ const addToRemoveQueue = (toastId: string, isSuccess: boolean = false) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, isSuccess ? SUCCESS_TOAST_DURATION : TOAST_REMOVE_DELAY)
+  }, TOAST_REMOVE_DELAY)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -164,12 +164,6 @@ function toast({ ...props }: Toast) {
       },
     },
   })
-
-  if (props.variant === 'success') {
-    setTimeout(() => {
-        dismiss()
-    }, SUCCESS_TOAST_DURATION);
-  }
 
   return {
     id: id,

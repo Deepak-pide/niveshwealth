@@ -71,7 +71,7 @@ export default function MyBalancePage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Request Submitted", description: "Your request to add balance has been submitted.", variant: "success" });
+        toast({ title: "Request Submitted", description: "Your request to add balance has been sent for admin approval." });
         setAddAmount("");
     }
     
@@ -90,7 +90,7 @@ export default function MyBalancePage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Request Submitted", description: "Your request to withdraw balance has been submitted.", variant: "success" });
+        toast({ title: "Request Submitted", description: "Your request to withdraw balance has been sent for admin approval." });
         setWithdrawAmount("");
     }
     
