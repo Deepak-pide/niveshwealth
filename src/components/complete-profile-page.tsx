@@ -21,7 +21,7 @@ const profileSchema = z.object({
     occupation: z.string().min(2, "Occupation is too short"),
     panCard: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN card format"),
     aadharCard: z.string().regex(/^[0-9]{12}$/, "Invalid Aadhar card format (12 digits)"),
-    document: z.instanceof(File).optional(),
+    document: z.any().optional(),
 });
 
 export default function CompleteProfilePage() {
@@ -51,9 +51,12 @@ export default function CompleteProfilePage() {
         setIsLoading(true);
 
         try {
+            const documentFile = values.document instanceof File ? values.document : undefined;
+
             await addProfileCompletionRequest({
                 userId: user.uid,
                 ...values,
+                document: documentFile,
             });
             toast({ title: "Profile Submitted", description: "Your profile details have been submitted for verification." });
             router.push("/");

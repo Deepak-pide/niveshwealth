@@ -570,13 +570,17 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
         const { userName, userAvatar } = getUserInfo(authUser.uid);
         const newRequest = { 
-            ...requestData,
+            phoneNumber: requestData.phoneNumber,
+            address: requestData.address,
+            occupation: requestData.occupation,
+            panCard: requestData.panCard,
+            aadharCard: requestData.aadharCard,
+            userId: requestData.userId,
             documentUrl, 
             status: 'Pending' as const, 
             userName, 
             userAvatar,
         };
-        delete (newRequest as any).document;
 
         await addDoc(collection(db, 'profileCompletionRequests'), newRequest);
     };
