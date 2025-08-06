@@ -15,7 +15,7 @@ import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
-import { subYears, isAfter } from "date-fns";
+import { format } from "date-fns";
 import { Badge } from "./ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
@@ -261,7 +261,15 @@ export default function MyBalancePage() {
                                 <TableBody>
                                     {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
                                         <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                            <TableCell className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
+                                            <TableCell className="font-medium text-xs md:text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex flex-col text-center">
+                                                        <span>{format(item.date.toDate(), 'dd/MM')}</span>
+                                                        <span className="text-muted-foreground">{format(item.date.toDate(), 'yyyy')}</span>
+                                                    </div>
+                                                    <div className="h-8 border-l border-border"></div>
+                                                </div>
+                                            </TableCell>
                                             <TableCell>{item.description}</TableCell>
                                             <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
                                                 {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
