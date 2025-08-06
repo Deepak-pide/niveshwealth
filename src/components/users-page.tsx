@@ -68,22 +68,6 @@ export default function UsersPage() {
                                                         <span className="text-muted-foreground">Phone:</span>
                                                         <span className="font-semibold">{user.phoneNumber || 'N/A'}</span>
                                                     </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">Address:</span>
-                                                        <span className="font-semibold">{user.address || 'N/A'}</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">Occupation:</span>
-                                                        <span className="font-semibold">{user.occupation || 'N/A'}</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">PAN:</span>
-                                                        <span className="font-semibold">{user.panCard || 'N/A'}</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">Aadhar:</span>
-                                                        <span className="font-semibold">{user.aadharCard || 'N/A'}</span>
-                                                    </div>
                                                 </div>
                                             </DialogContent>
                                         </Dialog>

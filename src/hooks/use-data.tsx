@@ -71,14 +71,6 @@ export interface FdWithdrawalRequest extends BaseRequest {
 export type TopupRequest = BaseRequest;
 export type BalanceWithdrawalRequest = BaseRequest;
 
-interface UserProfileData {
-    phoneNumber: string;
-    address: string;
-    occupation: string;
-    panCard: string;
-    aadharCard: string;
-}
-
 
 export interface UserBalance {
     id: string;
@@ -104,10 +96,6 @@ export interface AppUser {
     avatar: string;
     joinDate: Timestamp;
     phoneNumber?: string;
-    address?: string;
-    occupation?: string;
-    panCard?: string;
-    aadharCard?: string;
 }
 
 
@@ -137,7 +125,6 @@ interface DataContextType {
     approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
-    updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
     getUserPhoneNumber: (userId: string) => string | undefined;
     addTemplate: (templateData: Omit<Template, 'id'>) => Promise<void>;
@@ -562,11 +549,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     };
 
-    const updateUserProfile = async (userId: string, data: UserProfileData) => {
-        const userDocRef = doc(db, "users", userId);
-        await updateDoc(userDocRef, data);
-    };
-
     const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {
         const docRef = doc(db, 'settings', 'fdTenureRates');
         await setDoc(docRef, rates, { merge: true });
@@ -607,7 +589,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
-        updateUserProfile,
         setFdInterestRatesForTenures,
         getUserPhoneNumber,
         addTemplate,
