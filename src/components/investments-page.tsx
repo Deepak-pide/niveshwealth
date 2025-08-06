@@ -15,7 +15,6 @@ import { useData, Investment } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Timestamp } from "firebase/firestore";
-import { Separator } from "./ui/separator";
 import AppHeader from "./app-header";
 import AppFooter from "./app-footer";
 
@@ -315,3 +314,5 @@ export default function InvestmentsPage() {
         </div>
     );
 }
+
+    
