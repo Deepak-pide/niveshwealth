@@ -63,6 +63,10 @@ export default function SendAlertPage() {
     const [newTemplateMessage, setNewTemplateMessage] = useState('');
     const [isAddTemplateOpen, setIsAddTemplateOpen] = useState(false);
 
+    const [isEditAlertOpen, setIsEditAlertOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [currentTarget, setCurrentTarget] = useState<CombinedRequest | null>(null);
+
 
     const combinedRequests: CombinedRequest[] = [
         ...investmentRequests.map(req => ({
@@ -114,6 +118,9 @@ export default function SendAlertPage() {
         }
         const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
+        setIsEditAlertOpen(false);
+        setAlertMessage('');
+        setCurrentTarget(null);
     };
 
     const handleAddTemplate = () => {
@@ -127,6 +134,17 @@ export default function SendAlertPage() {
         setNewTemplateTitle('');
         setNewTemplateMessage('');
         setIsAddTemplateOpen(false);
+    };
+
+    const handleTemplateClick = (req: CombinedRequest, template: Template) => {
+        const message = template.message
+            .replace('{userName}', req.userName)
+            .replace('{requestType}', req.type)
+            .replace('{amount}', req.amount.toLocaleString('en-IN'));
+        
+        setAlertMessage(message);
+        setCurrentTarget(req);
+        setIsEditAlertOpen(true);
     };
 
     const visibleRequests = combinedRequests.slice(0, visibleItems);
@@ -250,13 +268,7 @@ export default function SendAlertPage() {
                                                     {templates.map(template => (
                                                         <DropdownMenuItem 
                                                             key={template.id}
-                                                            onClick={() => {
-                                                                const message = template.message
-                                                                    .replace('{userName}', req.userName)
-                                                                    .replace('{requestType}', req.type)
-                                                                    .replace('{amount}', req.amount.toLocaleString('en-IN'));
-                                                                handleSendAlert(req.phoneNumber, message);
-                                                            }}
+                                                            onClick={() => handleTemplateClick(req, template)}
                                                         >
                                                             {template.title}
                                                         </DropdownMenuItem>
@@ -281,7 +293,32 @@ export default function SendAlertPage() {
                         )}
                     </CardContent>
                 </Card>
+
+                <Dialog open={isEditAlertOpen} onOpenChange={setIsEditAlertOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Edit and Send Message</DialogTitle>
+                            <DialogDescription>
+                                To: {currentTarget?.userName} ({currentTarget?.phoneNumber})
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Textarea 
+                                value={alertMessage} 
+                                onChange={(e) => setAlertMessage(e.target.value)} 
+                                className="min-h-[120px]"
+                            />
+                        </div>
+                        <DialogFooter>
+                             <Button variant="outline" onClick={() => setIsEditAlertOpen(false)}>Cancel</Button>
+                             <Button onClick={() => handleSendAlert(currentTarget?.phoneNumber, alertMessage)}>Send Message</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
             </div>
         </div>
     );
 }
+
+    
