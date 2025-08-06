@@ -15,7 +15,7 @@ export default function InvestmentPage() {
                         <span className="text-primary">Secure your Future with</span> High-Yield Investments
                     </h2>
                     <p className="mt-4 text-lg text-muted-foreground">
-                        Unlock the potential for up to <span className="font-bold text-green-600">9%</span> returns and build lasting wealth with our expert-guided investment plans.
+                        Unlock the potential up to <span className="font-bold text-green-600">9%</span> guaranteed returns and build strong wealth.
                     </p>
                 </section>
 
