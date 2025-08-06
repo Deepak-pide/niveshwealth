@@ -193,35 +193,37 @@ export default function MyBalancePage() {
                             <CardDescription>The following requests are awaiting approval.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead className="text-right">Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {pendingTopupRequests.map(req => (
-                                        <TableRow key={`topup-${req.id}`}>
-                                            <TableCell>Add Balance</TableCell>
-                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Badge variant="secondary">{req.status}</Badge>
-                                            </TableCell>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Amount</TableHead>
+                                            <TableHead className="text-right">Status</TableHead>
                                         </TableRow>
-                                    ))}
-                                    {pendingWithdrawalRequests.map(req => (
-                                         <TableRow key={`withdraw-${req.id}`}>
-                                            <TableCell>Withdrawal</TableCell>
-                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Badge variant="secondary">{req.status}</Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {pendingTopupRequests.map(req => (
+                                            <TableRow key={`topup-${req.id}`}>
+                                                <TableCell className="whitespace-nowrap">Add Balance</TableCell>
+                                                <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Badge variant="secondary">{req.status}</Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {pendingWithdrawalRequests.map(req => (
+                                             <TableRow key={`withdraw-${req.id}`}>
+                                                <TableCell className="whitespace-nowrap">Withdrawal</TableCell>
+                                                <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Badge variant="secondary">{req.status}</Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 )}
@@ -233,26 +235,28 @@ export default function MyBalancePage() {
                     </CardHeader>
                     <CardContent>
                         <ScrollArea className="h-72">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
-                                        <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                            <TableCell className="font-medium">{item.date.toDate().toLocaleDateString()}</TableCell>
-                                            <TableCell>{item.description}</TableCell>
-                                            <TableCell className={cn("text-right font-semibold", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
-                                                {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
-                                            </TableCell>
+                             <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead className="text-right">Amount</TableHead>
                                         </TableRow>
-                                    )) : <TableRow><TableCell colSpan={3} className="text-center">No transaction history.</TableCell></TableRow>}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
+                                            <TableRow key={index} className="transition-colors hover:bg-muted/50">
+                                                <TableCell className="font-medium whitespace-nowrap">{item.date.toDate().toLocaleDateString()}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{item.description}</TableCell>
+                                                <TableCell className={cn("text-right font-semibold whitespace-nowrap", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
+                                                    {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
+                                                </TableCell>
+                                            </TableRow>
+                                        )) : <TableRow><TableCell colSpan={3} className="text-center">No transaction history.</TableCell></TableRow>}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </ScrollArea>
                           {hasMoreHistory && (
                             <div className="pt-4 text-center">
