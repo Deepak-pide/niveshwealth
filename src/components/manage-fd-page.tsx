@@ -18,8 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Slider } from "./ui/slider";
 
 const ITEMS_PER_PAGE = 10;
+const currentYear = new Date().getFullYear();
 
 export default function ManageFdPage() {
     const { 
@@ -31,7 +33,7 @@ export default function ManageFdPage() {
         rejectInvestmentRequest,
         approveFdWithdrawalRequest,
         rejectFdWithdrawalRequest,
-        setFdInterestRateForDateRange
+        setFdInterestRateForYear
     } = useData();
     const { user: adminUser } = useAuth();
     const { toast } = useToast();
@@ -40,8 +42,7 @@ export default function ManageFdPage() {
     const [visibleWithdrawalReqs, setVisibleWithdrawalReqs] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
-    const [startYear, setStartYear] = useState('');
-    const [endYear, setEndYear] = useState('');
+    const [year, setYear] = useState(currentYear);
     const [interestRate, setInterestRate] = useState('');
 
     const userInvestments = users.map(user => {
@@ -86,26 +87,22 @@ export default function ManageFdPage() {
 
     const handleSetBulkRate = async () => {
         const rate = parseFloat(interestRate);
-        const start = parseInt(startYear, 10);
-        const end = parseInt(endYear, 10);
 
-        if (isNaN(start) || isNaN(end) || isNaN(rate) || start > end) {
+        if (isNaN(rate)) {
             toast({
                 title: "Invalid Input",
-                description: "Please provide a valid start year, end year, and interest rate.",
+                description: "Please provide a valid interest rate.",
                 variant: "destructive"
             });
             return;
         }
 
         try {
-            await setFdInterestRateForDateRange(start, end, rate);
+            await setFdInterestRateForYear(year, rate);
             toast({
                 title: "Success",
-                description: `Interest rate for FDs created between ${startYear} and ${endYear} has been updated to ${rate}%.`
+                description: `Interest rate for FDs created in ${year} has been updated to ${rate}%.`
             });
-            setStartYear('');
-            setEndYear('');
             setInterestRate('');
         } catch (error: any) {
             toast({
@@ -288,17 +285,25 @@ export default function ManageFdPage() {
                                         <DialogHeader>
                                             <DialogTitle>Set FD Interest Rate</DialogTitle>
                                             <DialogDescription>
-                                                Set the interest rate for all FDs created within a specific year range. This will update existing FDs.
+                                                Set the interest rate for all FDs created in a specific year. This will update existing FDs.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="start-year" className="text-right">Start Year</Label>
-                                                <Input id="start-year" type="number" placeholder="e.g., 2023" value={startYear} onChange={(e) => setStartYear(e.target.value)} className="col-span-3" />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="end-year" className="text-right">End Year</Label>
-                                                <Input id="end-year" type="number" placeholder="e.g., 2024" value={endYear} onChange={(e) => setEndYear(e.target.value)} className="col-span-3" />
+                                             <div className="grid gap-4">
+                                                <div className="flex items-center justify-between">
+                                                    <Label htmlFor="year">Year</Label>
+                                                    <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                                                        {year}
+                                                    </span>
+                                                </div>
+                                                <Slider
+                                                    id="year"
+                                                    value={[year]}
+                                                    onValueChange={(value) => setYear(value[0])}
+                                                    min={2020}
+                                                    max={currentYear}
+                                                    step={1}
+                                                />
                                             </div>
                                             <div className="grid grid-cols-4 items-center gap-4">
                                                 <Label htmlFor="interest-rate" className="text-right">Interest Rate (%)</Label>

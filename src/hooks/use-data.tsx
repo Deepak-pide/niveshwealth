@@ -138,7 +138,7 @@ interface DataContextType {
     addProfileCompletionRequest: (requestData: Omit<ProfileCompletionRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'documentUrl'> & { document?: File }) => Promise<void>;
     approveProfileCompletionRequest: (requestId: string) => Promise<void>;
     rejectProfileCompletionRequest: (requestId: string) => Promise<void>;
-    setFdInterestRateForDateRange: (startYear: number, endYear: number, interestRate: number) => Promise<void>;
+    setFdInterestRateForYear: (year: number, interestRate: number) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -571,9 +571,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Request Rejected", variant: "destructive" });
     };
 
-    const setFdInterestRateForDateRange = async (startYear: number, endYear: number, interestRate: number) => {
-        const startDate = startOfYear(new Date(startYear, 0, 1));
-        const endDate = endOfYear(new Date(endYear, 11, 31));
+    const setFdInterestRateForYear = async (year: number, interestRate: number) => {
+        const startDate = startOfYear(new Date(year, 0, 1));
+        const endDate = endOfYear(new Date(year, 11, 31));
         const rate = interestRate / 100;
 
         const investmentsRef = collection(db, 'investments');
@@ -584,7 +584,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
-            throw new Error("No FDs found in the specified year range.");
+            throw new Error(`No FDs found for the year ${year}.`);
         }
 
         const batch = writeBatch(db);
@@ -624,7 +624,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addProfileCompletionRequest,
         approveProfileCompletionRequest,
         rejectProfileCompletionRequest,
-        setFdInterestRateForDateRange,
+        setFdInterestRateForYear,
     };
 
     return (
