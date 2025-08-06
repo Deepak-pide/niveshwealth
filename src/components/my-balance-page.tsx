@@ -26,6 +26,8 @@ export default function MyBalancePage() {
     const [addAmount, setAddAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [visibleHistoryCount, setVisibleHistoryCount] = useState(ITEMS_PER_PAGE);
+    const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+
 
     const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest, topupRequests, balanceWithdrawalRequests } = useData();
     const { toast } = useToast();
@@ -92,6 +94,7 @@ export default function MyBalancePage() {
         });
         toast({ title: "Request Submitted", description: "Your request to withdraw balance has been sent for admin approval." });
         setWithdrawAmount("");
+        setIsWithdrawDialogOpen(false);
     }
     
     const loadMoreHistory = () => {
@@ -156,7 +159,7 @@ export default function MyBalancePage() {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
-                        <Dialog>
+                        <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button variant="outline">Withdraw</Button>
                             </DialogTrigger>
@@ -179,25 +182,23 @@ export default function MyBalancePage() {
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <DialogClose asChild>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="destructive">Withdraw</Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Confirm Withdrawal</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        Are you sure you want to withdraw ₹{parseFloat(withdrawAmount || "0").toLocaleString('en-IN')}?
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={handleWithdrawBalance}>Confirm</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </DialogClose>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive">Withdraw</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Confirm Withdrawal</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Are you sure you want to withdraw ₹{parseFloat(withdrawAmount || "0").toLocaleString('en-IN')}?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleWithdrawBalance}>Confirm</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>

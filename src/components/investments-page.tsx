@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -42,6 +42,7 @@ export default function InvestmentsPage() {
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
+    const [openDialogId, setOpenDialogId] = useState<string | null>(null);
     
     if (!user) {
         return (
@@ -90,8 +91,8 @@ export default function InvestmentsPage() {
         toast({
             title: "Withdrawal Request Submitted",
             description: "Your withdrawal request has been submitted for approval.",
-            variant: "success",
         });
+        setOpenDialogId(null);
     };
     
     const visibleActiveInvestments = combinedActiveInvestments.slice(0, visibleActive);
@@ -182,7 +183,7 @@ export default function InvestmentsPage() {
 
 
                     return (
-                        <Dialog key={investment.id}>
+                        <Dialog key={investment.id} open={openDialogId === investment.id} onOpenChange={(isOpen) => setOpenDialogId(isOpen ? investment.id : null)}>
                             <DialogTrigger asChild disabled={isPending}>
                                  <Card className={`transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                     <CardHeader className="flex flex-row items-center justify-between pb-2">
