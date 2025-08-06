@@ -20,11 +20,13 @@ export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
     const [paymentMethod, setPaymentMethod] = useState<'balance' | 'upi'>('upi');
-    const { addInvestmentRequest, userBalances } = useData();
+    const { addInvestmentRequest, userBalances, investmentRequests } = useData();
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
     const isMobile = useIsMobile();
+    
+    const hasPendingFDRequest = investmentRequests.some(req => req.userId === user?.uid);
     
     const currentUserBalance = user ? userBalances.find(b => b.userId === user.uid)?.balance || 0 : 0;
     const hasSufficientBalance = currentUserBalance >= amount;
@@ -106,10 +108,10 @@ export default function FdInvestmentPage() {
                             />
                         </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex flex-col items-stretch gap-2">
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button className="w-full" disabled={!user}>Invest Now</Button>
+                                <Button className="w-full" disabled={!user || hasPendingFDRequest}>{hasPendingFDRequest ? "Request Pending" : "Invest Now"}</Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -177,6 +179,11 @@ export default function FdInvestmentPage() {
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
+                         {hasPendingFDRequest && (
+                            <p className="text-xs text-center text-muted-foreground">
+                                You have a pending FD investment request. Please wait for admin approval.
+                            </p>
+                        )}
                     </CardFooter>
                 </Card>
             </div>
