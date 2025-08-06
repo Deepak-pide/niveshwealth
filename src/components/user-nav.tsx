@@ -11,6 +11,7 @@ import { LogOut, User as UserIcon, LayoutDashboard, Download, DownloadCloud, Fil
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useData } from "@/hooks/use-data";
 import { format } from "date-fns";
+import React, { useState, useEffect } from "react";
 
 
 export default function UserNav() {
@@ -19,6 +20,28 @@ export default function UserNav() {
     const isMobile = useIsMobile();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
+
+    const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+    const [showInstall, setShowInstall] = useState(false);
+
+
+    useEffect(() => {
+      const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+        const dismissed = localStorage.getItem('nivesh_install_dismissed');
+        if (!dismissed) {
+          setShowInstall(true);
+        }
+      };
+  
+      window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  
+      return () => {
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      };
+    }, []);
+
 
     if (!user) {
         return (
@@ -64,6 +87,19 @@ export default function UserNav() {
         XLSX.utils.book_append_sheet(wb, wsInvestments, "Investments");
         XLSX.utils.book_append_sheet(wb, wsBalanceHistory, "Balance History");
         XLSX.writeFile(wb, "nivesh_data.xlsx");
+    };
+
+    const handleInstallClick = async () => {
+      if (!installPrompt) return;
+      
+      (installPrompt as any).prompt();
+      const { outcome } = await (installPrompt as any).userChoice;
+      
+      if (outcome === 'accepted' || outcome === 'dismissed') {
+        setShowInstall(false);
+        localStorage.setItem('nivesh_install_dismissed', 'true');
+        setInstallPrompt(null);
+      }
     };
 
     return (
@@ -120,12 +156,12 @@ export default function UserNav() {
                         <Download className="mr-2 h-4 w-4" />
                         <span>Download Data</span>
                     </DropdownMenuItem>
-                    <a href="/#" target="_blank" download>
-                            <DropdownMenuItem>
+                    {showInstall && (
+                        <DropdownMenuItem onClick={handleInstallClick}>
                             <DownloadCloud className="mr-2 h-4 w-4" />
                             <span>Download App</span>
                         </DropdownMenuItem>
-                    </a>
+                    )}
                     
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
