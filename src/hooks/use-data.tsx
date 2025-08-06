@@ -375,16 +375,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     throw new Error("User balance document does not exist!");
                 }
 
-                // Calculate interest accrued to date
+                // Calculate interest accrued to date with penalty
                 const daysSinceStart = differenceInDays(new Date(), investment.startDate.toDate());
-                const liveGrowthRate = userBalanceSnap.data().liveGrowthInterestRate || 0.09;
-                const dailyInterest = investment.amount * (liveGrowthRate / 365);
-                const interestAccrued = daysSinceStart * dailyInterest;
-                const totalValue = investment.amount + interestAccrued;
+                const penaltyRate = Math.max(0, investment.interestRate - 0.01); // 1% penalty
+                const dailyPenalizedInterest = investment.amount * (penaltyRate / 365);
+                const interestAccrued = daysSinceStart * dailyPenalizedInterest;
+                const totalWithdrawalAmount = investment.amount + interestAccrued;
                 
                 const currentBalance = userBalanceSnap.data()?.balance || 0;
                 
-                transaction.update(userBalanceDocRef, { balance: currentBalance + totalValue });
+                transaction.update(userBalanceDocRef, { balance: currentBalance + totalWithdrawalAmount });
                 transaction.update(investmentDocRef, { status: 'Withdrawn' });
                 
                 const historyRef = doc(collection(db, 'balanceHistory'));
@@ -392,7 +392,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     userId: request.userId, 
                     date: Timestamp.now(), 
                     description: `Early withdrawal from ${investment.name}`, 
-                    amount: totalValue, 
+                    amount: totalWithdrawalAmount, 
                     type: "Credit" 
                 });
 

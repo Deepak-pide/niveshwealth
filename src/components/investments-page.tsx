@@ -174,6 +174,12 @@ export default function InvestmentsPage() {
                     const liveInterestAccrued = daysSinceStart * dailyInterest;
                     const liveTotalValue = principal + liveInterestAccrued;
                     
+                    const penaltyRate = Math.max(0, investment.interestRate - 0.01);
+                    const dailyPenalizedInterest = principal * (penaltyRate / 365);
+                    const penalizedInterestAccrued = daysSinceStart * dailyPenalizedInterest;
+                    const totalWithdrawalAmount = principal + penalizedInterestAccrued;
+
+
                     return (
                         <Dialog key={investment.id}>
                             <DialogTrigger asChild disabled={isPending}>
@@ -260,7 +266,7 @@ export default function InvestmentsPage() {
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Early Withdrawal Confirmation</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Withdrawing early means you will only receive the interest accrued to date. Please review the details below.
+                                                   Withdrawing early incurs a 1% penalty on the interest rate. Please review the details below.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <div className="space-y-4 text-sm pt-4">
@@ -269,12 +275,12 @@ export default function InvestmentsPage() {
                                                     <span className="font-semibold text-foreground">₹{principal.toLocaleString('en-IN')}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Interest Earned to Date:</span>
-                                                    <span className="font-semibold text-green-600">₹{liveInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                    <span className="text-muted-foreground">Penalized Interest Earned (at { (penaltyRate * 100).toFixed(2)}%):</span>
+                                                    <span className="font-semibold text-green-600">₹{penalizedInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Total Withdrawal Amount:</span>
-                                                    <span className="font-semibold text-foreground">₹{liveTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                <div className="flex justify-between font-bold">
+                                                    <span className="text-foreground">Total Withdrawal Amount:</span>
+                                                    <span className="text-foreground">₹{totalWithdrawalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                             </div>
                                             <AlertDialogFooter>
