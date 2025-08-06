@@ -1,3 +1,4 @@
+
 import AppHeader from "@/components/app-header";
 import InvestmentCalculatorPage from "@/components/investment-calculator-page";
 import AppFooter from "@/components/app-footer";
