@@ -142,6 +142,7 @@ interface DataContextType {
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
     getUserPhoneNumber: (userId: string) => string | undefined;
     addTemplate: (templateData: Omit<Template, 'id'>) => Promise<void>;
+    updateTemplate: (templateId: string, templateData: Omit<Template, 'id'>) => Promise<void>;
     deleteTemplate: (templateId: string) => Promise<void>;
 }
 
@@ -575,6 +576,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Template Saved", description: "Your new message template has been saved." });
     };
     
+    const updateTemplate = async (templateId: string, templateData: Omit<Template, 'id'>) => {
+        const templateDocRef = doc(db, 'templates', templateId);
+        await updateDoc(templateDocRef, templateData);
+        toast({ title: "Template Updated", description: "Your message template has been updated." });
+    };
+    
     const deleteTemplate = async (templateId: string) => {
         await deleteDoc(doc(db, 'templates', templateId));
         toast({ title: "Template Deleted", description: "The message template has been deleted." });
@@ -609,6 +616,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setFdInterestRatesForTenures,
         getUserPhoneNumber,
         addTemplate,
+        updateTemplate,
         deleteTemplate,
     };
 
@@ -628,3 +636,4 @@ export const useData = () => {
 };
 
     
+

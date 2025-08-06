@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef }from "react";
+import { useState, useRef, useEffect }from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Plus, MessageSquare, Info, Trash2, Code } from "lucide-react";
+import { Plus, MessageSquare, Info, Trash2, Code, Pencil } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -82,17 +82,33 @@ export default function SendAlertPage() {
         templates,
         addTemplate,
         deleteTemplate,
+        updateTemplate,
     } = useData();
     const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
+    
     const [newTemplateTitle, setNewTemplateTitle] = useState('');
     const [newTemplateMessage, setNewTemplateMessage] = useState('');
     const [newTemplateType, setNewTemplateType] = useState<RequestType | 'General'>('General');
     const [isAddTemplateOpen, setIsAddTemplateOpen] = useState(false);
 
+    const [isEditTemplateOpen, setIsEditTemplateOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+    const [editTemplateTitle, setEditTemplateTitle] = useState('');
+    const [editTemplateMessage, setEditTemplateMessage] = useState('');
+    const [editTemplateType, setEditTemplateType] = useState<RequestType | 'General'>('General');
+
     const [isEditAlertOpen, setIsEditAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [currentTarget, setCurrentTarget] = useState<CombinedRequest | null>(null);
     const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (editingTemplate) {
+            setEditTemplateTitle(editingTemplate.title);
+            setEditTemplateMessage(editingTemplate.message);
+            setEditTemplateType(editingTemplate.type || 'General');
+        }
+    }, [editingTemplate]);
 
 
     const combinedRequests: CombinedRequest[] = [
@@ -172,6 +188,17 @@ export default function SendAlertPage() {
         setIsAddTemplateOpen(false);
     };
 
+    const handleEditTemplate = () => {
+        if (!editingTemplate || !editTemplateTitle || !editTemplateMessage) return;
+        updateTemplate(editingTemplate.id, {
+            title: editTemplateTitle,
+            message: editTemplateMessage,
+            type: editTemplateType === 'General' ? undefined : editTemplateType,
+        });
+        setIsEditTemplateOpen(false);
+        setEditingTemplate(null);
+    };
+
     const handleSendAlertClick = (req: CombinedRequest) => {
         const filteredTemplates = templates.filter(t => !t.type || t.type === req.type);
         const template = filteredTemplates.length > 0 ? filteredTemplates[0] : null;
@@ -199,7 +226,6 @@ export default function SendAlertPage() {
             const newText = text.substring(0, start) + placeholder + text.substring(end);
             setAlertMessage(newText);
             
-            // Focus and set cursor position after placeholder insertion
             setTimeout(() => {
                 textarea.focus();
                 textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
@@ -207,10 +233,6 @@ export default function SendAlertPage() {
         }
     };
     
-    const getFilteredTemplates = (requestType: RequestType) => {
-        return templates.filter(t => !t.type || t.type === requestType);
-    };
-
     const visibleRequests = combinedRequests.slice(0, visibleItems);
     const hasMore = combinedRequests.length > visibleItems;
     
@@ -316,14 +338,27 @@ export default function SendAlertPage() {
                                                 <CardContent>
                                                     <HighlightedMessage text={template.message} />
                                                 </CardContent>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100"
-                                                    onClick={() => deleteTemplate(template.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
+                                                <div className="absolute top-2 right-2 flex opacity-0 group-hover:opacity-100">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-7 w-7"
+                                                        onClick={() => {
+                                                            setEditingTemplate(template);
+                                                            setIsEditTemplateOpen(true);
+                                                        }}
+                                                    >
+                                                        <Pencil className="h-4 w-4 text-blue-500" />
+                                                    </Button>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-7 w-7"
+                                                        onClick={() => deleteTemplate(template.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </div>
                                             </Card>
                                         )) : (
                                             <p className="text-center text-muted-foreground py-8">No templates found. Click the '+' icon to create one.</p>
@@ -388,6 +423,41 @@ export default function SendAlertPage() {
                     </CardContent>
                 </Card>
 
+                <Dialog open={isEditTemplateOpen} onOpenChange={setIsEditTemplateOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Edit Template</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit-template-title">Template Title</Label>
+                                <Input id="edit-template-title" value={editTemplateTitle} onChange={(e) => setEditTemplateTitle(e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit-template-type">Template Type</Label>
+                                <Select value={editTemplateType} onValueChange={(value: RequestType | 'General') => setEditTemplateType(value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {REQUEST_TYPES.map(type => (
+                                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit-template-message">Message</Label>
+                                <Textarea id="edit-template-message" value={editTemplateMessage} onChange={(e) => setEditTemplateMessage(e.target.value)} />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsEditTemplateOpen(false)}>Cancel</Button>
+                            <Button onClick={handleEditTemplate}>Save Changes</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
                 <Dialog open={isEditAlertOpen} onOpenChange={setIsEditAlertOpen}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
@@ -440,3 +510,4 @@ export default function SendAlertPage() {
         </div>
     );
 }
+
