@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+
 
 interface CalculationResult {
     name: string;
@@ -15,6 +17,33 @@ interface CalculationResult {
     return: number;
     total: number;
 }
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="rounded-lg border bg-background p-2 shadow-sm">
+                <p className="font-bold">{label}</p>
+                {payload.map((pld, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
+                         <span style={{
+                            display: 'inline-block',
+                            width: '10px',
+                            height: '10px',
+                            backgroundColor: pld.color,
+                            marginRight: '5px'
+                        }}></span>
+                        <span style={{ color: pld.name === 'Investment' ? 'hsl(var(--secondary-foreground))' : 'hsl(var(--primary))' }}>
+                            {pld.name}: ₹{pld.value?.toLocaleString('en-IN')}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    return null;
+};
+
 
 export default function InvestmentCalculatorPage() {
     const [amount, setAmount] = useState(50000);
@@ -119,12 +148,7 @@ export default function InvestmentCalculatorPage() {
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="name" />
                                         <YAxis />
-                                        <Tooltip
-                                            formatter={(value, name) => [
-                                                `₹${(value as number).toLocaleString('en-IN')}`,
-                                                name.charAt(0).toUpperCase() + name.slice(1)
-                                            ]}
-                                        />
+                                        <Tooltip content={<CustomTooltip />} />
                                         <Legend />
                                         <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" name="Investment" />
                                         <Bar dataKey="return" stackId="a" fill="hsl(var(--primary))" name="Return" />
@@ -133,8 +157,8 @@ export default function InvestmentCalculatorPage() {
                             </div>
                             <div className="grid grid-cols-3 gap-4 text-center">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Investment Amount</p>
-                                    <p className="text-lg font-semibold">₹{niveshResult.investment.toLocaleString('en-IN')}</p>
+                                    <p className="text-sm text-blue-600">Investment Amount</p>
+                                    <p className="text-lg font-semibold text-blue-600">₹{niveshResult.investment.toLocaleString('en-IN')}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">Return</p>
