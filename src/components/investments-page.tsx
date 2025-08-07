@@ -37,7 +37,6 @@ const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 const ITEMS_PER_PAGE = 5;
 
 const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Investment, onWithdraw: (investmentId: string) => void }) => {
-    const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
     const { principal, totalInterest, totalValue } = calculateInvestmentDetails(investment);
     const chartData = [
         { name: 'Total Interest', value: totalInterest },
@@ -115,17 +114,17 @@ const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Inves
                     </div>
                 )}
 
-                <Dialog open={isWithdrawalDialogOpen} onOpenChange={setIsWithdrawalDialogOpen}>
-                    <DialogTrigger asChild>
-                            <Button variant="destructive" className="w-full">Withdraw</Button>
-                    </DialogTrigger>
-                    <DialogContent>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" className="w-full">Withdraw</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Early Withdrawal Confirmation</AlertDialogTitle>
                             <AlertDialogDescription>
-                                {isPenaltyFree 
-                                    ? "You are within 7 days of maturity, so no penalty will be applied." 
-                                    : "Withdrawing early incurs a 1% penalty on the interest rate. Please review the details below."
+                                {isPenaltyFree
+                                    ? "You are within 7 days of maturity, so no penalty will be applied. Are you sure you want to withdraw?"
+                                    : "Withdrawing early incurs a 1% penalty on the interest rate. Please review the details below before confirming."
                                 }
                             </AlertDialogDescription>
                         </AlertDialogHeader>
@@ -143,32 +142,14 @@ const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Inves
                                 <span className="text-foreground">₹{totalWithdrawalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                         </div>
-                        <AlertDialogFooter className="grid grid-cols-2 mt-4">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive">Confirm Withdrawal</Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will submit a withdrawal request to the admin for approval.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onWithdraw(investment.id)}>
-                                            Continue
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onWithdraw(investment.id)}>
+                                Confirm Withdrawal Request
+                            </AlertDialogAction>
                         </AlertDialogFooter>
-                    </DialogContent>
-                </Dialog>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </DialogContent>
     )
