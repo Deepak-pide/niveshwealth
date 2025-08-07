@@ -44,15 +44,12 @@ const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Inves
     ];
     const isActive = investment.status === 'Active';
     const daysSinceStart = isActive ? differenceInDays(new Date(), investment.startDate.toDate()) : 0;
-    const dailyInterest = principal * (investment.interestRate / 365);
-    const liveInterestAccrued = daysSinceStart * dailyInterest;
-    const liveTotalValue = principal + liveInterestAccrued;
     const daysToMaturity = differenceInDays(investment.maturityDate.toDate(), new Date());
+
     const isPenaltyFree = daysToMaturity <= 7;
     const penaltyRate = isPenaltyFree ? investment.interestRate : Math.max(0, investment.interestRate - 0.01);
-    const dailyPenalizedInterest = principal * (penaltyRate / 365);
-    const penalizedInterestAccrued = daysSinceStart * dailyPenalizedInterest;
-    const totalWithdrawalAmount = principal + penalizedInterestAccrued;
+    const interestEarned = principal * (penaltyRate / 365) * daysSinceStart;
+    const finalWithdrawalAmount = principal + interestEarned;
     
     return (
         <DialogContent className="sm:max-w-md">
@@ -100,46 +97,35 @@ const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Inves
                         <span className="font-semibold text-foreground">{format(investment.maturityDate.toDate(), 'dd MMM yyyy')}</span>
                     </div>
                 </div>
-                {isActive && (
-                    <div className="p-3 bg-accent/50 rounded-lg space-y-2 text-sm">
-                        <p className="font-medium">Live Growth ({ (investment.interestRate * 100).toFixed(2)}% p.a.)</p>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Live Interest Accrued:</span>
-                            <span className="font-semibold text-green-600">₹{liveInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Live Total Value:</span>
-                            <span className="font-semibold text-foreground">₹{liveTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                    </div>
-                )}
-
+                
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive" className="w-full">Withdraw</Button>
+                        <Button variant="destructive" className="w-full" disabled={!isActive}>
+                            {isActive ? "Withdraw" : "Already Withdrawn"}
+                        </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Early Withdrawal Confirmation</AlertDialogTitle>
+                            <AlertDialogTitle>Confirm Early Withdrawal</AlertDialogTitle>
                             <AlertDialogDescription>
                                 {isPenaltyFree
-                                    ? "You are within 7 days of maturity, so no penalty will be applied. Are you sure you want to withdraw?"
-                                    : "Withdrawing early incurs a 1% penalty on the interest rate. Please review the details below before confirming."
+                                    ? "You are within 7 days of maturity, so no penalty will be applied for this withdrawal."
+                                    : "Withdrawing early incurs a 1% penalty on the earned interest. Please review the details below before confirming."
                                 }
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <div className="space-y-4 text-sm pt-4">
+                        <div className="space-y-4 pt-4 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Principal Amount:</span>
+                                <span className="text-muted-foreground">Total Invested (Principal):</span>
                                 <span className="font-semibold text-foreground">₹{principal.toLocaleString('en-IN')}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Interest Earned (at { (penaltyRate * 100).toFixed(2)}%):</span>
-                                <span className="font-semibold text-green-600">₹{penalizedInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className="text-muted-foreground">Interest Earned (at {(penaltyRate * 100).toFixed(2)}%):</span>
+                                <span className="font-semibold text-green-600">₹{interestEarned.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
-                            <div className="flex justify-between font-bold">
+                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
                                 <span className="text-foreground">Total Withdrawal Amount:</span>
-                                <span className="text-foreground">₹{totalWithdrawalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className="text-foreground">₹{finalWithdrawalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                         </div>
                         <AlertDialogFooter>
@@ -156,7 +142,7 @@ const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Inves
 }
 
 export default function InvestmentsPage() {
-    const { investments, investmentRequests, addFdWithdrawalRequest } = useData();
+    const { investments, investmentRequests, addFdWithdrawalRequest, fdWithdrawalRequests } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
@@ -174,6 +160,10 @@ export default function InvestmentsPage() {
             </div>
         )
     }
+
+    const hasPendingWithdrawal = (investmentId: string) => {
+        return fdWithdrawalRequests.some(req => req.investmentIdToWithdraw === investmentId && req.userId === user.uid);
+    };
 
     const userInvestments = investments.filter(inv => inv.userId === user.uid);
     
@@ -200,6 +190,15 @@ export default function InvestmentsPage() {
     const handleWithdraw = (investmentId: string) => {
         const investment = investments.find(inv => inv.id === investmentId);
         if (!investment || !user) return;
+
+        if (hasPendingWithdrawal(investmentId)) {
+            toast({
+                title: "Request Already Pending",
+                description: "You already have a withdrawal request for this investment.",
+                variant: "destructive"
+            });
+            return;
+        }
 
         addFdWithdrawalRequest({
             userId: user.uid,
@@ -289,13 +288,16 @@ export default function InvestmentsPage() {
                 <div className="space-y-4">
                     {visibleActiveInvestments.length > 0 ? visibleActiveInvestments.map((investment) => {
                         const isPending = investment.status === 'Pending';
+                        const isWithdrawalPending = hasPendingWithdrawal(investment.id);
 
                         return (
                             <DialogTrigger key={investment.id} asChild disabled={isPending} onClick={() => openDetailsDialog(investment)}>
                                 <Card className={`transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                                         <CardTitle className="text-lg font-medium">{investment.name}</CardTitle>
-                                        <Badge variant={isPending ? "secondary" : "default"}>{investment.status}</Badge>
+                                        <Badge variant={isPending || isWithdrawalPending ? "secondary" : "default"}>
+                                            {isWithdrawalPending ? 'Withdrawal Pending' : investment.status}
+                                        </Badge>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -339,5 +341,3 @@ export default function InvestmentsPage() {
         </div>
     );
 }
-
-    
