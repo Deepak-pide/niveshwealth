@@ -98,6 +98,7 @@ export interface BalanceHistory {
 
 export interface AppUser {
     id: string;
+    userId: string;
     name: string;
     email: string;
     avatar: string;
@@ -208,6 +209,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     const batch = writeBatch(db);
                     
                     const newUser: Omit<AppUser, 'id'> = {
+                        userId: authUser.uid,
                         name: authUser.displayName || "New User",
                         email: authUser.email || "",
                         avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
@@ -762,3 +764,4 @@ export const useData = () => {
     }
     return context;
 };
+
