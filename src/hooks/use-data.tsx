@@ -306,7 +306,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userDetailsDocRef = doc(db, 'userDetails', userId);
         const userDocRef = doc(db, 'users', userId);
 
-        batch.set(userDetailsDocRef, { ...data, userId }, { merge: true });
+        batch.set(userDetailsDocRef, { ...data, userId: userId }, { merge: true });
         batch.update(userDocRef, { isProfileComplete: true });
 
         await batch.commit();
