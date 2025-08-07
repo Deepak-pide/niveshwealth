@@ -1,0 +1,83 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth.token.email in ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+    }
+
+    // Users can only read/write their own data.
+    match /users/{userId} {
+      allow read, update, delete: if request.auth.uid == userId || isAdmin();
+      allow create: if request.auth.uid != null || isAdmin();
+    }
+
+    match /userDetails/{userId} {
+      allow read, write: if request.auth.uid == userId || isAdmin();
+    }
+
+    match /userBalances/{userId} {
+       allow read: if request.auth.uid == userId || isAdmin();
+       // Only backend/admin can update balances
+       allow write: if isAdmin();
+    }
+
+    match /balanceHistory/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      // Only backend/admin can create history
+      allow write: if isAdmin();
+    }
+
+    // Users can create requests and read their own. Admins can do anything.
+    match /investmentRequests/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /fdWithdrawalRequests/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /topupRequests/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /balanceWithdrawalRequests/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /maturedFdRequests/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      // Only admin can create/update/delete maturity requests
+      allow write: if isAdmin();
+    }
+
+    // Users can only read their own investments.
+    match /investments/{docId} {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+      // Only admin can create/update/delete investments
+      allow write: if isAdmin();
+    }
+
+    // Public templates, readable by all authenticated users, writable only by admin
+    match /templates/{docId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin();
+    }
+    
+    // Settings are readable by all authenticated users, writable only by admin
+    match /settings/{docId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin();
+    }
+  }
+}
