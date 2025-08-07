@@ -9,7 +9,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useData, Template } from "@/hooks/use-data";
-import { useToast } from "./use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Pencil, PlusCircle, Settings, Trash2 } from "lucide-react";
 
 type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
