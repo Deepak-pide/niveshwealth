@@ -22,7 +22,8 @@ export default function SendAlertPage() {
         balanceWithdrawalRequests, 
         investments,
         balanceHistory,
-        maturedFdRequests
+        maturedFdRequests,
+        userDetails
     } = useData();
 
     const [selectedRequest, setSelectedRequest] = useState<CombinedRequest | null>(null);
@@ -34,30 +35,35 @@ export default function SendAlertPage() {
     };
 
     const allRequests: CombinedRequest[] = useMemo(() => {
-        const pendingFD = investmentRequests.map(r => ({ ...r, type: 'FD Investment', date: r.date.toDate() })) as unknown as CombinedRequest[];
-        const pendingFDWithdraw = fdWithdrawalRequests.map(r => ({ ...r, type: 'FD Withdrawal', date: r.date.toDate() })) as unknown as CombinedRequest[];
-        const pendingTopup = topupRequests.map(r => ({ ...r, type: 'Balance Top-up', date: r.date.toDate() })) as unknown as CombinedRequest[];
-        const pendingBalanceWithdraw = balanceWithdrawalRequests.map(r => ({ ...r, type: 'Balance Withdrawal', date: r.date.toDate() })) as unknown as CombinedRequest[];
+
+        const getUserPhoneNumber = (userId: string) => {
+            return userDetails.find(ud => ud.userId === userId)?.phoneNumber;
+        }
+
+        const pendingFD = investmentRequests.map(r => ({ ...r, type: 'FD Investment', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
+        const pendingFDWithdraw = fdWithdrawalRequests.map(r => ({ ...r, type: 'FD Withdrawal', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
+        const pendingTopup = topupRequests.map(r => ({ ...r, type: 'Balance Top-up', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
+        const pendingBalanceWithdraw = balanceWithdrawalRequests.map(r => ({ ...r, type: 'Balance Withdrawal', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
 
         const approvedFD = investments
             .filter(inv => inv.status === 'Active')
-            .map(inv => ({...inv, type: 'FD Approved' as const, date: inv.startDate.toDate() }));
+            .map(inv => ({...inv, type: 'FD Approved' as const, date: inv.startDate.toDate(), phoneNumber: getUserPhoneNumber(inv.userId) }));
             
         const approvedFDWithdrawal = investments
             .filter(inv => inv.status === 'Withdrawn')
-            .map(inv => ({...inv, type: 'FD Withdrawal Approved' as const, date: inv.maturityDate.toDate() }));
+            .map(inv => ({...inv, type: 'FD Withdrawal Approved' as const, date: inv.maturityDate.toDate(), phoneNumber: getUserPhoneNumber(inv.userId) }));
 
         const approvedBalanceTopup = balanceHistory
             .filter(h => h.description === 'Added to wallet')
-            .map(h => ({ ...h, type: 'Balance Top-up Approved' as const, date: h.date.toDate() }));
+            .map(h => ({ ...h, type: 'Balance Top-up Approved' as const, date: h.date.toDate(), phoneNumber: getUserPhoneNumber(h.userId) }));
 
         const approvedBalanceWithdrawal = balanceHistory
             .filter(h => h.description === 'Withdrawn from wallet')
-            .map(h => ({ ...h, type: 'Balance Withdrawal Approved' as const, date: h.date.toDate() }));
+            .map(h => ({ ...h, type: 'Balance Withdrawal Approved' as const, date: h.date.toDate(), phoneNumber: getUserPhoneNumber(h.userId) }));
         
         const maturedFDs = investments
             .filter(inv => inv.status === 'Matured')
-            .map(inv => ({ ...inv, type: 'FD Matured' as const, date: inv.maturityDate.toDate() }));
+            .map(inv => ({ ...inv, type: 'FD Matured' as const, date: inv.maturityDate.toDate(), phoneNumber: getUserPhoneNumber(inv.userId) }));
 
         const combined = [
             ...pendingFD,
@@ -73,7 +79,7 @@ export default function SendAlertPage() {
         
         return combined as CombinedRequest[];
 
-    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory, maturedFdRequests]);
+    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory, maturedFdRequests, userDetails]);
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -95,6 +101,7 @@ export default function SendAlertPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>User</TableHead>
+                                <TableHead>Phone Number</TableHead>
                                 <TableHead>Type</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Date</TableHead>
@@ -118,6 +125,7 @@ export default function SendAlertPage() {
                                                 <span className="font-medium">{req.userName}</span>
                                             </div>
                                         </TableCell>
+                                        <TableCell>{req.phoneNumber || 'N/A'}</TableCell>
                                         <TableCell>{requestTypeDisplay}</TableCell>
                                         <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                         <TableCell>{req.date.toLocaleDateString()}</TableCell>
