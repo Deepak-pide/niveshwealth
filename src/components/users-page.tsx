@@ -31,10 +31,10 @@ const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetail
     const handleSaveChanges = async () => {
         try {
             if (name !== user.name) {
-                await updateUserName(user.userId, name);
+                await updateUserName(user.id, name);
             }
             if (phone !== details?.phoneNumber || occupation !== details?.occupation) {
-                await updateUserProfile(user.userId, { phoneNumber: phone, occupation: occupation });
+                await updateUserProfile(user.id, { phoneNumber: phone, occupation: occupation });
             }
             toast({ title: "Success", description: "User profile updated successfully." });
             setIsEditing(false);
@@ -54,7 +54,7 @@ const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetail
                  <div className="grid gap-4 py-4 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">User ID:</span>
-                        <span className="font-semibold select-all">{user.userId}</span>
+                        <span className="font-semibold select-all">{user.id}</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <Label htmlFor="name" className="text-muted-foreground">Name:</Label>
