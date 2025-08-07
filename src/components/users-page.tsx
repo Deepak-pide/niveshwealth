@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useData, UserDetails, AppUser } from "@/hooks/use-data";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { useToast } from "./use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const ITEMS_PER_PAGE = 10;
 
