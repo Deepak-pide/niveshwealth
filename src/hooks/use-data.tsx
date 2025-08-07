@@ -305,6 +305,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         const allHistory = [...balanceHistory, ...interestPayouts];
+        allHistory.sort((a, b) => b.date.toMillis() - a.date.toMillis());
         setCombinedHistory(allHistory);
     }, [balanceHistory, interestPayouts]);
 

@@ -46,7 +46,7 @@ export default function MyBalancePage() {
     }
 
     const currentUserBalance = userBalances.find(b => b.userId === user.uid)?.balance || 0;
-    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => b.date.toMillis() - a.date.toMillis());
+    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid);
 
     const visibleHistory = allUserHistory.slice(0, visibleHistoryCount);
     const hasMoreHistory = allUserHistory.length > visibleHistoryCount;
