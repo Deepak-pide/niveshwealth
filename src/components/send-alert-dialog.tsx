@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useData } from "@/hooks/use-data";
 import { format } from "date-fns";
 
-type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
+export type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
 
 export type CombinedRequest = {
     id: string;
@@ -23,10 +23,12 @@ export type CombinedRequest = {
 };
 
 const HighlightedMessage = ({ text, request }: { text: string; request?: CombinedRequest | null }) => {
+    if (!text) return null;
+    
     const parts = text.split(/({[a-zA-Z]+})/).map((part, index) => {
         if (part.match(/({[a-zA-Z]+})/)) {
             const key = part.replace(/[{}]/g, '');
-            let value = part; // Default to showing the placeholder
+            let value = part; 
             if (request) {
                 switch (key) {
                     case 'userName':
@@ -65,14 +67,17 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
     const { templates, getUserPhoneNumber, users } = useData();
     const [alertMessage, setAlertMessage] = useState('');
 
-    const approvedRequestType = `${request?.type} Approved` as RequestType;
     const requestUser = request ? users.find(u => u.id === request.userId) : null;
     const requestPhoneNumber = requestUser ? getUserPhoneNumber(request.userId) : undefined;
+    
+    const isApproved = request?.type.includes('Approved') || request?.type.includes('Matured');
+    const templateTypeToFind = isApproved ? request?.type : (request?.type as RequestType | undefined);
+
 
     useEffect(() => {
         if (request) {
-            const relevantTemplates = templates.filter(t => t.type === approvedRequestType || t.type === request.type || !t.type);
-            const template = relevantTemplates.find(t => t.type === approvedRequestType) || relevantTemplates.find(t => t.type === request.type) || relevantTemplates[0];
+            const relevantTemplates = templates.filter(t => t.type === templateTypeToFind || !t.type);
+            const template = relevantTemplates.find(t => t.type === templateTypeToFind) || relevantTemplates[0];
 
             let message = '';
             if (template) {
@@ -80,7 +85,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
             }
             setAlertMessage(message);
         }
-    }, [request, templates, approvedRequestType]);
+    }, [request, templates, templateTypeToFind]);
 
 
     const handleSendFinalAlert = () => {

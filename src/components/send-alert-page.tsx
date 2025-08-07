@@ -21,7 +21,8 @@ export default function SendAlertPage() {
         topupRequests, 
         balanceWithdrawalRequests, 
         investments,
-        balanceHistory
+        balanceHistory,
+        maturedFdRequests
     } = useData();
 
     const [selectedRequest, setSelectedRequest] = useState<CombinedRequest | null>(null);
@@ -72,7 +73,7 @@ export default function SendAlertPage() {
         
         return combined as CombinedRequest[];
 
-    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory]);
+    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory, maturedFdRequests]);
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -104,6 +105,8 @@ export default function SendAlertPage() {
                         <TableBody>
                             {allRequests.map((req) => {
                                 const isApproved = req.type.includes('Approved') || req.type.includes('Matured');
+                                const requestTypeDisplay = req.type.replace(' Approved', '').replace('Matured', 'FD Matured');
+
                                 return (
                                     <TableRow key={`${req.id}-${req.type}`}>
                                         <TableCell>
@@ -115,7 +118,7 @@ export default function SendAlertPage() {
                                                 <span className="font-medium">{req.userName}</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{req.type.replace(' Approved', '').replace('Matured', 'FD Matured')}</TableCell>
+                                        <TableCell>{requestTypeDisplay}</TableCell>
                                         <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                         <TableCell>{req.date.toLocaleDateString()}</TableCell>
                                         <TableCell>
