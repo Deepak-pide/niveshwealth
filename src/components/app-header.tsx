@@ -11,7 +11,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useData } from '@/hooks/use-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Button } from './ui/button';
-import { UserSidebar } from './user-sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AppHeader() {

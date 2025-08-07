@@ -25,9 +25,20 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
 import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter, isBefore } from 'date-fns';
 import { useToast } from './use-toast';
-import type { CombinedRequest } from '@/components/send-alert-dialog';
 import type { User } from 'firebase/auth';
 
+type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
+
+export interface CombinedRequest {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    phoneNumber?: string;
+    type: RequestType;
+    amount: number;
+    date: Date;
+};
 
 // Base Types
 interface BaseRequest {
@@ -40,13 +51,11 @@ interface BaseRequest {
     status: 'Pending';
 }
 
-type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
-
 export interface Template {
     id: string;
     title: string;
     message: string;
-    type?: RequestType;
+    type?: Omit<RequestType, 'General'>;
 }
 
 // Specific Types
@@ -148,8 +157,6 @@ interface DataContextType {
     interestPayouts: InterestPayout[];
     templates: Template[];
     fdTenureRates: {[key: number]: number};
-    alertRequest: CombinedRequest | null;
-    setAlertRequest: (request: CombinedRequest | null) => void;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -203,7 +210,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [combinedHistory, setCombinedHistory] = useState<BalanceHistory[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
-    const [alertRequest, setAlertRequest] = useState<CombinedRequest | null>(null);
 
     const initializeNewUser = useCallback(async (user: User) => {
         const userDocRef = doc(db, 'users', user.uid);
@@ -356,7 +362,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceRef = doc(db, 'userBalances', userId);
         batch.update(userBalanceRef, { userName: newName });
 
-        const collectionsToUpdate: (keyof DataContextType)[] = [
+        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate'>)[] = [
             'investments', 'investmentRequests', 'fdWithdrawalRequests', 
             'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
             'balanceHistory', 'interestPayouts'
@@ -410,12 +416,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     throw new Error("Investment request not found or already processed.");
                 }
                 const reqData = { ...requestSnap.data(), id: requestSnap.id } as InvestmentRequest;
-                
-                setAlertRequest({
-                    ...reqData,
-                    type: 'FD Investment',
-                    date: reqData.date.toDate()
-                });
 
                 const { userId, userName, amount, years, paymentMethod } = reqData;
 
@@ -489,12 +489,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 }
                 const request = { ...requestSnap.data(), id: requestSnap.id } as FdWithdrawalRequest;
                 
-                setAlertRequest({
-                    ...request,
-                    type: 'FD Withdrawal',
-                    date: request.date.toDate()
-                });
-
                 const investmentDocRef = doc(db, 'investments', request.investmentIdToWithdraw);
                 const investmentSnap = await transaction.get(investmentDocRef);
                 if (!investmentSnap.exists()) {
@@ -558,12 +552,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 }
                 const request = { ...requestSnap.data(), id: requestSnap.id } as MaturedFdRequest;
                 
-                setAlertRequest({
-                    ...request,
-                    type: 'FD Matured',
-                    date: request.date.toDate()
-                });
-
                 const investmentDocRef = doc(db, 'investments', request.investmentIdToMature);
                 const investmentSnap = await transaction.get(investmentDocRef);
                 if (!investmentSnap.exists()) throw new Error("Investment not found.");
@@ -638,12 +626,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     throw new Error("Top-up request not found or already processed.");
                 }
                 const request = { ...requestSnap.data(), id: requestSnap.id } as TopupRequest;
-                
-                setAlertRequest({
-                    ...request,
-                    type: 'Balance Top-up',
-                    date: request.date.toDate()
-                });
     
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
@@ -694,12 +676,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     throw new Error("Withdrawal request not found.");
                 }
                 const request = { ...requestSnap.data(), id: requestSnap.id } as BalanceWithdrawalRequest;
-                
-                setAlertRequest({
-                    ...request,
-                    type: 'Balance Withdrawal',
-                    date: request.date.toDate()
-                });
 
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
@@ -799,8 +775,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         interestPayouts,
         templates,
         fdTenureRates,
-        alertRequest,
-        setAlertRequest,
         updateUserProfile,
         updateUserName,
         addInvestmentRequest,
@@ -838,3 +812,5 @@ export const useData = () => {
     }
     return context;
 };
+
+    
