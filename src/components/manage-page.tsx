@@ -2,7 +2,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Briefcase, Wallet } from "lucide-react";
+import { Briefcase, Wallet, Send } from "lucide-react";
 import Link from "next/link";
 import { useData } from "@/hooks/use-data";
 
@@ -49,9 +49,16 @@ export default function ManagePage() {
                         <p className="text-sm text-muted-foreground">View and manage user balances</p>
                     </Card>
                 </Link>
+                 <Link href="/admin/manage/send-alert">
+                    <Card className="relative flex cursor-pointer flex-col items-center justify-center p-6 text-center transition-all duration-300 hover:bg-accent/50 hover:shadow-lg hover:-translate-y-1 h-full">
+                        <div className="mb-4 rounded-full bg-primary/10 p-3">
+                            <Send className="h-8 w-8 text-primary" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground">Send Alerts</h3>
+                        <p className="text-sm text-muted-foreground">Notify users about requests</p>
+                    </Card>
+                </Link>
             </div>
         </div>
     );
 }
-
-    
