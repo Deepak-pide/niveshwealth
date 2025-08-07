@@ -35,10 +35,10 @@ export default function SendAlertPage() {
     };
 
     const allRequests: CombinedRequest[] = useMemo(() => {
-
         const getUserPhoneNumber = (userId: string) => {
-            return userDetails.find(ud => ud.userId === userId)?.phoneNumber;
-        }
+            const detail = userDetails.find(ud => ud.userId === userId);
+            return detail?.phoneNumber;
+        };
 
         const pendingFD = investmentRequests.map(r => ({ ...r, type: 'FD Investment', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
         const pendingFDWithdraw = fdWithdrawalRequests.map(r => ({ ...r, type: 'FD Withdrawal', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
