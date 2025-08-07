@@ -50,6 +50,7 @@ export interface Template {
 export interface Investment {
     id: string;
     userId: string;
+    userName: string;
     name: string;
     amount: number;
     interestRate: number;
@@ -88,6 +89,7 @@ export interface UserBalance {
 export interface BalanceHistory {
     id: string;
     userId: string;
+    userName: string;
     date: Timestamp;
     description: string;
     amount: number;
@@ -349,7 +351,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 }
                 const reqData = { ...requestSnap.data(), id: requestSnap.id } as InvestmentRequest;
                 requestData = reqData;
-                const { userId, amount, years, paymentMethod } = reqData;
+                const { userId, userName, amount, years, paymentMethod } = reqData;
 
                 if (paymentMethod === 'balance') {
                     const userBalanceDocRef = doc(db, 'userBalances', userId);
@@ -373,6 +375,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     const historyRef = doc(collection(db, 'balanceHistory'));
                     transaction.set(historyRef, {
                         userId: userId,
+                        userName: userName,
                         date: Timestamp.now(),
                         description: `FD Investment (${years} years)`,
                         amount: amount,
@@ -384,6 +387,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const interestRate = fdTenureRates[years] || 0.09; // Fallback to 9% if not set
                 const newInvestment = {
                     userId: userId,
+                    userName: userName,
                     name: `FD for ${years} years`,
                     amount: amount,
                     interestRate: interestRate,
@@ -453,7 +457,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 
                 const historyRef = doc(collection(db, 'balanceHistory'));
                 transaction.set(historyRef, { 
-                    userId: request.userId, 
+                    userId: request.userId,
+                    userName: request.userName,
                     date: Timestamp.now(), 
                     description: `Early withdrawal from ${investment.name}`, 
                     amount: totalWithdrawalAmount, 
@@ -509,7 +514,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 
                 const historyRef = doc(collection(db, 'balanceHistory'));
                 transaction.set(historyRef, { 
-                    userId: request.userId, 
+                    userId: request.userId,
+                    userName: request.userName,
                     date: Timestamp.now(), 
                     description: `FD Matured: ${investment.name}`, 
                     amount: totalValue, 
@@ -586,6 +592,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const historyRef = doc(collection(db, 'balanceHistory'));
                 transaction.set(historyRef, {
                     userId: request.userId,
+                    userName: request.userName,
                     date: Timestamp.now(),
                     description: 'Added to wallet',
                     amount: request.amount,
@@ -637,6 +644,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const historyRef = doc(collection(db, 'balanceHistory'));
                 transaction.set(historyRef, {
                     userId: request.userId,
+                    userName: request.userName,
                     date: Timestamp.now(),
                     description: 'Withdrawn from wallet',
                     amount: request.amount,
@@ -673,6 +681,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const historyRef = doc(collection(db, 'balanceHistory'));
                 batch.set(historyRef, {
                     userId: userBalance.userId,
+                    userName: userBalance.userName,
                     date: Timestamp.now(),
                     description: "Monthly Interest",
                     amount: interest,
