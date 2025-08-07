@@ -26,6 +26,7 @@ export default function UserNav() {
     const { users } = useData();
     const isMobile = useIsMobile();
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+    const [isStandalone, setIsStandalone] = useState(false);
 
      useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
@@ -34,6 +35,10 @@ export default function UserNav() {
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            setIsStandalone(true);
+        }
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -62,6 +67,8 @@ export default function UserNav() {
             });
         }
     };
+
+    const showInstallButton = isMobile && deferredPrompt && !isStandalone;
 
     return (
         <DropdownMenu>
@@ -99,7 +106,7 @@ export default function UserNav() {
                             </DropdownMenuItem>
                         </Link>
                     )}
-                     {isMobile && deferredPrompt && (
+                     {showInstallButton && (
                         <DropdownMenuItem onClick={handleInstallClick}>
                             <Download className="mr-2 h-4 w-4" />
                             <span>Install App</span>
