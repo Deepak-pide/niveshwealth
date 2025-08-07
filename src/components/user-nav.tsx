@@ -30,7 +30,7 @@ export default function UserNav() {
 
      useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
-            e.preventDefault();
+            // e.preventDefault(); // Keep the event from being handled by the browser.
             setDeferredPrompt(e as BeforeInstallPromptEvent);
         };
 
