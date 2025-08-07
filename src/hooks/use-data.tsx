@@ -1,8 +1,4 @@
 
-
-
-
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -441,8 +437,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 // Calculate interest accrued to date with penalty
+                const daysToMaturity = differenceInDays(investment.maturityDate.toDate(), new Date());
+                const isPenaltyFree = daysToMaturity <= 7;
+                const penaltyRate = isPenaltyFree ? investment.interestRate : Math.max(0, investment.interestRate - 0.01);
+                
                 const daysSinceStart = differenceInDays(new Date(), investment.startDate.toDate());
-                const penaltyRate = Math.max(0, investment.interestRate - 0.01); // 1% penalty
                 const dailyPenalizedInterest = investment.amount * (penaltyRate / 365);
                 const interestAccrued = daysSinceStart * dailyPenalizedInterest;
                 const totalWithdrawalAmount = investment.amount + interestAccrued;

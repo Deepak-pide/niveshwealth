@@ -43,6 +43,7 @@ export default function InvestmentsPage() {
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
     const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
+    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
     
     if (!user) {
         return (
@@ -66,7 +67,7 @@ export default function InvestmentsPage() {
             amount: req.amount,
             interestRate: 0.09, // Assumed rate for display
             startDate: req.date, // Request date as start date for now
-            maturityDate: Timestamp.fromDate(addYears(req.date.toDate(), req.years)),
+            maturityDate: Timestamp.fromDate(addYears(new Date(req.date.toDate()), req.years)),
             status: 'Pending' as const,
         }));
     
@@ -93,6 +94,7 @@ export default function InvestmentsPage() {
             description: "Your withdrawal request has been submitted for approval.",
         });
         setIsWithdrawalDialogOpen(false);
+        setIsDetailsDialogOpen(false);
     };
     
     const visibleActiveInvestments = combinedActiveInvestments.slice(0, visibleActive);
@@ -176,14 +178,16 @@ export default function InvestmentsPage() {
                     const liveInterestAccrued = daysSinceStart * dailyInterest;
                     const liveTotalValue = principal + liveInterestAccrued;
                     
-                    const penaltyRate = Math.max(0, investment.interestRate - 0.01);
+                    const daysToMaturity = differenceInDays(investment.maturityDate.toDate(), new Date());
+                    const isPenaltyFree = daysToMaturity <= 7;
+                    const penaltyRate = isPenaltyFree ? investment.interestRate : Math.max(0, investment.interestRate - 0.01);
                     const dailyPenalizedInterest = principal * (penaltyRate / 365);
                     const penalizedInterestAccrued = daysSinceStart * dailyPenalizedInterest;
                     const totalWithdrawalAmount = principal + penalizedInterestAccrued;
 
 
                     return (
-                        <Dialog key={investment.id}>
+                        <Dialog key={investment.id} open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
                             <DialogTrigger asChild disabled={isPending}>
                                  <Card className={`transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                     <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -266,7 +270,10 @@ export default function InvestmentsPage() {
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Early Withdrawal Confirmation</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                   Withdrawing early incurs a 1% penalty on the interest rate. Please review the details below.
+                                                   {isPenaltyFree 
+                                                        ? "You are within 7 days of maturity, so no penalty will be applied." 
+                                                        : "Withdrawing early incurs a 1% penalty on the interest rate. Please review the details below."
+                                                   }
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <div className="space-y-4 text-sm pt-4">
@@ -275,7 +282,7 @@ export default function InvestmentsPage() {
                                                     <span className="font-semibold text-foreground">₹{principal.toLocaleString('en-IN')}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Penalized Interest Earned (at { (penaltyRate * 100).toFixed(2)}%):</span>
+                                                    <span className="text-muted-foreground">Interest Earned (at { (penaltyRate * 100).toFixed(2)}%):</span>
                                                     <span className="font-semibold text-green-600">₹{penalizedInterestAccrued.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                                 <div className="flex justify-between font-bold">
