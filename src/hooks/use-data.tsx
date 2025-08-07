@@ -151,6 +151,7 @@ interface DataContextType {
     alertRequest: CombinedRequest | null;
     setAlertRequest: (request: CombinedRequest | null) => void;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
+    updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     approveInvestmentRequest: (requestId: string) => Promise<void>;
@@ -341,6 +342,34 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         batch.set(userDetailsDocRef, { ...data, userId: userId }, { merge: true });
         batch.update(userDocRef, { isProfileComplete: true });
 
+        await batch.commit();
+    };
+
+    const updateUserName = async (userId: string, newName: string) => {
+        const batch = writeBatch(db);
+        
+        // 1. Update user document
+        const userRef = doc(db, 'users', userId);
+        batch.update(userRef, { name: newName });
+        
+        // 2. Update userBalance document
+        const userBalanceRef = doc(db, 'userBalances', userId);
+        batch.update(userBalanceRef, { userName: newName });
+
+        const collectionsToUpdate: (keyof DataContextType)[] = [
+            'investments', 'investmentRequests', 'fdWithdrawalRequests', 
+            'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
+            'balanceHistory', 'interestPayouts'
+        ];
+
+        for (const collectionName of collectionsToUpdate) {
+            const q = query(collection(db, collectionName), where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                batch.update(doc.ref, { userName: newName });
+            });
+        }
+    
         await batch.commit();
     };
 
@@ -773,6 +802,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         alertRequest,
         setAlertRequest,
         updateUserProfile,
+        updateUserName,
         addInvestmentRequest,
         addFdWithdrawalRequest,
         approveInvestmentRequest,
