@@ -9,7 +9,7 @@ import { Textarea } from "./ui/textarea";
 import { useData, Template } from "@/hooks/use-data";
 import { format } from "date-fns";
 
-type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved';
+type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
 
 export type CombinedRequest = {
     id: string;
@@ -71,7 +71,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
     useEffect(() => {
         if (request) {
             const relevantTemplates = templates.filter(t => t.type === approvedRequestType || t.type === request.type || !t.type);
-            const template = relevantTemplates.find(t => t.type === approvedRequestType) || relevantTemplates[0];
+            const template = relevantTemplates.find(t => t.type === approvedRequestType) || relevantTemplates.find(t => t.type === request.type) || relevantTemplates[0];
 
             let message = '';
             if (template) {
@@ -96,7 +96,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
         const cleanPhoneNumber = requestPhoneNumber ? requestPhoneNumber.replace(/\D/g, '') : '';
 
         const whatsappUrl = cleanPhoneNumber
-            ? `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`
+            ? `https://wa.me/91${cleanPhoneNumber}?text=${encodedMessage}`
             : `https://wa.me/?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');

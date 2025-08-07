@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { format } from "date-fns";
 
 
-type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal';
+type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Matured';
 type CombinedRequest = {
     id: string;
     userId: string;
@@ -34,7 +34,7 @@ type CombinedRequest = {
 };
 
 const ITEMS_PER_PAGE = 15;
-const REQUEST_TYPES: (RequestType | 'General')[] = ['General', 'FD Investment', 'FD Withdrawal', 'Balance Top-up', 'Balance Withdrawal'];
+const REQUEST_TYPES: (RequestType | 'General')[] = ['General', 'FD Investment', 'FD Withdrawal', 'Balance Top-up', 'Balance Withdrawal', 'FD Matured'];
 const PLACEHOLDERS = ['{userName}', '{requestType}', '{amount}', '{date}'];
 
 
@@ -78,6 +78,7 @@ export default function SendAlertPage() {
         fdWithdrawalRequests,
         topupRequests,
         balanceWithdrawalRequests,
+        maturedFdRequests,
         getUserPhoneNumber,
         templates,
         addTemplate,
@@ -135,6 +136,16 @@ export default function SendAlertPage() {
             amount: req.amount,
             date: req.date.toDate(),
         })),
+        ...maturedFdRequests.map(req => ({
+            id: req.id,
+            userId: req.userId,
+            userName: req.userName,
+            userAvatar: req.userAvatar,
+            phoneNumber: getUserPhoneNumber(req.userId),
+            type: 'FD Matured' as const,
+            amount: req.amount,
+            date: req.date.toDate(),
+        })),
         ...topupRequests.map(req => ({
             id: req.id,
             userId: req.userId,
@@ -172,7 +183,7 @@ export default function SendAlertPage() {
         const cleanPhoneNumber = phoneNumber ? phoneNumber.replace(/\D/g, '') : '';
         
         const whatsappUrl = cleanPhoneNumber
-            ? `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`
+            ? `https://wa.me/91${cleanPhoneNumber}?text=${encodedMessage}`
             : `https://wa.me/?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');
@@ -287,7 +298,7 @@ export default function SendAlertPage() {
                                                     </div>
                                                     <div className="grid gap-2">
                                                         <Label htmlFor="template-type">Template Type</Label>
-                                                        <Select value={newTemplateType} onValueChange={(value: RequestType | 'General') => setNewTemplateType(value)}>
+                                                        <Select value={newTemplateType} onValueChange={(value: any) => setNewTemplateType(value)}>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Select a type" />
                                                             </SelectTrigger>
@@ -445,7 +456,7 @@ export default function SendAlertPage() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-template-type">Template Type</Label>
-                                <Select value={editTemplateType} onValueChange={(value: RequestType | 'General') => setEditTemplateType(value)}>
+                                <Select value={editTemplateType} onValueChange={(value: any) => setEditTemplateType(value)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a type" />
                                     </SelectTrigger>
@@ -521,5 +532,3 @@ export default function SendAlertPage() {
         </div>
     );
 }
-
-

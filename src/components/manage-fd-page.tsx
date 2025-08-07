@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import { Download, Percent, Wallet } from "lucide-react";
+import { Download, Percent, Wallet, CheckCircle } from "lucide-react";
 import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
 import { Timestamp } from "firebase/firestore";
@@ -28,12 +28,14 @@ export default function ManageFdPage() {
     const { 
         investmentRequests,
         fdWithdrawalRequests,
+        maturedFdRequests,
         investments, 
         users, 
         approveInvestmentRequest, 
         rejectInvestmentRequest,
         approveFdWithdrawalRequest,
         rejectFdWithdrawalRequest,
+        approveMaturedFdRequest,
         setFdInterestRatesForTenures,
         fdTenureRates
     } = useData();
@@ -42,6 +44,7 @@ export default function ManageFdPage() {
 
     const [visibleInvestmentReqs, setVisibleInvestmentReqs] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawalReqs, setVisibleWithdrawalReqs] = useState(ITEMS_PER_PAGE);
+    const [visibleMaturedReqs, setVisibleMaturedReqs] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
     
     const [tenureRates, setTenureRates] = useState<{[key: number]: string}>({
@@ -71,6 +74,17 @@ export default function ManageFdPage() {
             setAlertRequest({
                 ...approvedRequest,
                 type: 'FD Withdrawal',
+                date: approvedRequest.date.toDate()
+            });
+        }
+    };
+
+    const handleApproveMaturity = async (requestId: string) => {
+        const approvedRequest = await approveMaturedFdRequest(requestId);
+        if (approvedRequest) {
+            setAlertRequest({
+                ...approvedRequest,
+                type: 'FD Matured',
                 date: approvedRequest.date.toDate()
             });
         }
@@ -167,6 +181,9 @@ export default function ManageFdPage() {
     const visibleFdWithdrawalRequests = fdWithdrawalRequests.slice(0, visibleWithdrawalReqs);
     const hasMoreFdWithdrawalReqs = fdWithdrawalRequests.length > visibleWithdrawalReqs;
 
+    const visibleMaturedFdRequests = maturedFdRequests.slice(0, visibleMaturedReqs);
+    const hasMoreMaturedFdReqs = maturedFdRequests.length > visibleMaturedReqs;
+
     const visibleUserInvestments = userInvestments.slice(0, visibleUsers);
     const hasMoreUsers = userInvestments.length > visibleUsers;
 
@@ -178,9 +195,10 @@ export default function ManageFdPage() {
             </header>
 
             <Tabs defaultValue="investment-requests">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="investment-requests">Investment Requests</TabsTrigger>
                     <TabsTrigger value="withdrawal-requests">Withdrawal Requests</TabsTrigger>
+                    <TabsTrigger value="maturity-requests">Maturity Approvals</TabsTrigger>
                     <TabsTrigger value="users">User Investments</TabsTrigger>
                 </TabsList>
                 <TabsContent value="investment-requests">
@@ -317,6 +335,56 @@ export default function ManageFdPage() {
                             {hasMoreFdWithdrawalReqs && (
                                 <div className="pt-4 text-center">
                                     <Button variant="outline" onClick={() => setVisibleWithdrawalReqs(prev => prev + ITEMS_PER_PAGE)}>
+                                        Load More
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="maturity-requests">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Matured FD Approvals</CardTitle>
+                            <CardDescription>Approve matured FDs to credit the amount to the user's balance.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>User</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                        <TableHead>Maturity Date</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {visibleMaturedFdRequests.length > 0 ? visibleMaturedFdRequests.map((req) => (
+                                        <TableRow key={req.id}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <AvatarImage src={req.userAvatar} />
+                                                        <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium">{req.userName}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
+                                            <TableCell className="text-right space-x-2">
+                                                <Button size="sm" onClick={() => handleApproveMaturity(req.id)}>
+                                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                                    Confirm Maturity
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : <TableRow><TableCell colSpan={4} className="text-center">No FDs pending maturity approval.</TableCell></TableRow>}
+                                </TableBody>
+                            </Table>
+                            {hasMoreMaturedFdReqs && (
+                                <div className="pt-4 text-center">
+                                    <Button variant="outline" onClick={() => setVisibleMaturedReqs(prev => prev + ITEMS_PER_PAGE)}>
                                         Load More
                                     </Button>
                                 </div>

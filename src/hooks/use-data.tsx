@@ -2,6 +2,7 @@
 
 
 
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -26,7 +27,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
-import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter } from 'date-fns';
+import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter, isBefore } from 'date-fns';
 import { useToast } from './use-toast';
 
 // Base Types
@@ -40,7 +41,7 @@ interface BaseRequest {
     status: 'Pending';
 }
 
-type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved';
+type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
 
 export interface Template {
     id: string;
@@ -70,6 +71,11 @@ export interface InvestmentRequest extends Omit<BaseRequest, 'date'> {
 export interface FdWithdrawalRequest extends BaseRequest {
     investmentIdToWithdraw: string;
 }
+
+export interface MaturedFdRequest extends BaseRequest {
+    investmentIdToMature: string;
+}
+
 
 export type TopupRequest = BaseRequest;
 export type BalanceWithdrawalRequest = BaseRequest;
@@ -121,6 +127,7 @@ interface DataContextType {
     investments: Investment[];
     investmentRequests: InvestmentRequest[];
     fdWithdrawalRequests: FdWithdrawalRequest[];
+    maturedFdRequests: MaturedFdRequest[];
     topupRequests: TopupRequest[];
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
@@ -134,6 +141,7 @@ interface DataContextType {
     rejectInvestmentRequest: (requestId: string) => Promise<void>;
     approveFdWithdrawalRequest: (requestId: string) => Promise<FdWithdrawalRequest | null>;
     rejectFdWithdrawalRequest: (requestId: string) => Promise<void>;
+    approveMaturedFdRequest: (requestId: string) => Promise<MaturedFdRequest | null>;
     addTopupRequest: (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addBalanceWithdrawalRequest: (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'| 'date'> & { date: string }) => Promise<void>;
     approveTopupRequest: (requestId: string) => Promise<TopupRequest | null>;
@@ -169,6 +177,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [investments, setInvestments] = useState<Investment[]>([]);
     const [investmentRequests, setInvestmentRequests] = useState<InvestmentRequest[]>([]);
     const [fdWithdrawalRequests, setFdWithdrawalRequests] = useState<FdWithdrawalRequest[]>([]);
+    const [maturedFdRequests, setMaturedFdRequests] = useState<MaturedFdRequest[]>([]);
     const [topupRequests, setTopupRequests] = useState<TopupRequest[]>([]);
     const [balanceWithdrawalRequests, setBalanceWithdrawalRequests] = useState<BalanceWithdrawalRequest[]>([]);
     const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
@@ -223,11 +232,53 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [authUser]);
 
+    useEffect(() => {
+        // This effect checks for matured FDs and creates requests if they don't already exist.
+        // It should only be run by an admin to avoid multiple writes.
+        const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+        const isAdmin = authUser?.email ? adminEmails.includes(authUser.email) : false;
+
+        if (isAdmin && investments.length > 0 && users.length > 0 && maturedFdRequests.length >= 0) {
+            const checkMaturedInvestments = async () => {
+                const batch = writeBatch(db);
+                const today = new Date();
+                
+                const activeInvestments = investments.filter(inv => inv.status === 'Active');
+    
+                for (const investment of activeInvestments) {
+                    if (isAfter(today, investment.maturityDate.toDate())) {
+                        const requestExists = maturedFdRequests.some(req => req.investmentIdToMature === investment.id);
+                        
+                        if (!requestExists) {
+                            const user = users.find(u => u.id === investment.userId);
+                            if (user) {
+                                const newMaturedRequest: Omit<MaturedFdRequest, 'id'> = {
+                                    userId: user.id,
+                                    userName: user.name,
+                                    userAvatar: user.avatar,
+                                    amount: investment.amount,
+                                    date: investment.maturityDate,
+                                    status: 'Pending',
+                                    investmentIdToMature: investment.id,
+                                };
+                                const newReqRef = doc(collection(db, 'maturedFdRequests'));
+                                batch.set(newReqRef, newMaturedRequest);
+                            }
+                        }
+                    }
+                }
+                await batch.commit();
+            };
+            checkMaturedInvestments();
+        }
+    }, [investments, users, maturedFdRequests, authUser]);
+
     useDataFetching('users', setUsers);
     useDataFetching('userDetails', setUserDetails);
     useDataFetching('investments', setInvestments);
     useDataFetching('investmentRequests', setInvestmentRequests);
     useDataFetching('fdWithdrawalRequests', setFdWithdrawalRequests);
+    useDataFetching('maturedFdRequests', setMaturedFdRequests);
     useDataFetching('topupRequests', setTopupRequests);
     useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
     useDataFetching('userBalances', setUserBalances);
@@ -427,6 +478,58 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'fdWithdrawalRequests', requestId));
     };
 
+     const approveMaturedFdRequest = async (requestId: string): Promise<MaturedFdRequest | null> => {
+        const requestDocRef = doc(db, 'maturedFdRequests', requestId);
+        let requestData: MaturedFdRequest | null = null;
+        try {
+            await runTransaction(db, async (transaction) => {
+                const requestSnap = await transaction.get(requestDocRef);
+                if (!requestSnap.exists()) {
+                    throw new Error("Maturity request not found or already processed.");
+                }
+                const request = { ...requestSnap.data(), id: requestSnap.id } as MaturedFdRequest;
+                requestData = request;
+
+                const investmentDocRef = doc(db, 'investments', request.investmentIdToMature);
+                const investmentSnap = await transaction.get(investmentDocRef);
+                if (!investmentSnap.exists()) throw new Error("Investment not found.");
+                
+                const investment = investmentSnap.data() as Investment;
+                const years = differenceInYears(investment.maturityDate.toDate(), investment.startDate.toDate());
+                const totalInterest = investment.amount * investment.interestRate * years;
+                const totalValue = investment.amount + totalInterest;
+
+                const userBalanceDocRef = doc(db, 'userBalances', request.userId);
+                const userBalanceSnap = await transaction.get(userBalanceDocRef);
+                if (!userBalanceSnap.exists()) throw new Error("User balance not found.");
+
+                const currentBalance = userBalanceSnap.data()?.balance || 0;
+                
+                transaction.update(userBalanceDocRef, { balance: currentBalance + totalValue });
+                transaction.update(investmentDocRef, { status: 'Matured' });
+                
+                const historyRef = doc(collection(db, 'balanceHistory'));
+                transaction.set(historyRef, { 
+                    userId: request.userId, 
+                    date: Timestamp.now(), 
+                    description: `FD Matured: ${investment.name}`, 
+                    amount: totalValue, 
+                    type: "Credit" 
+                });
+
+                transaction.delete(requestDocRef);
+            });
+            toast({ title: "Success", description: "FD matured and amount credited to balance.", variant: "success" });
+            return requestData;
+        } catch (error) {
+            console.error("FD Maturity approval failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+            toast({ title: "FD Maturity Failed", description: errorMessage, variant: "destructive" });
+            return null;
+        }
+    };
+
+
     const addTopupRequest = async (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => {
         if (!authUser) return;
         const { userName, userAvatar } = getUserInfo();
@@ -608,6 +711,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         investments,
         investmentRequests,
         fdWithdrawalRequests,
+        maturedFdRequests,
         topupRequests,
         balanceWithdrawalRequests,
         userBalances,
@@ -621,6 +725,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         rejectInvestmentRequest,
         approveFdWithdrawalRequest,
         rejectFdWithdrawalRequest,
+        approveMaturedFdRequest,
         addTopupRequest,
         addBalanceWithdrawalRequest,
         approveTopupRequest,
