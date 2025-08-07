@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { db, storage } from '@/lib/firebase';
 import { 
     collection, 
@@ -26,6 +26,7 @@ import { useAuth } from './use-auth';
 import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter, isBefore } from 'date-fns';
 import { useToast } from './use-toast';
 import type { CombinedRequest } from '@/components/send-alert-dialog';
+import type { User } from 'firebase/auth';
 
 
 // Base Types
@@ -203,6 +204,42 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
     const [alertRequest, setAlertRequest] = useState<CombinedRequest | null>(null);
 
+    const initializeNewUser = useCallback(async (user: User) => {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userBalanceDocRef = doc(db, 'userBalances', user.uid);
+        
+        const userDocSnap = await getDoc(userDocRef);
+        if (!userDocSnap.exists()) {
+            const batch = writeBatch(db);
+            
+            const newUser: Omit<AppUser, 'id'> = {
+                userId: user.uid,
+                name: user.displayName || "New User",
+                email: user.email || "",
+                avatar: user.photoURL || `https://placehold.co/100x100.png`,
+                joinDate: Timestamp.now(),
+                isProfileComplete: false,
+            };
+            batch.set(userDocRef, newUser);
+
+            const newUserBalance: Omit<UserBalance, 'id' > = {
+                userId: user.uid,
+                userName: user.displayName || "New User",
+                userAvatar: user.photoURL || `https://placehold.co/100x100.png`,
+                balance: 0,
+            };
+            batch.set(userBalanceDocRef, newUserBalance);
+
+            await batch.commit();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (authUser) {
+            initializeNewUser(authUser);
+        }
+    }, [authUser, initializeNewUser]);
+
     useEffect(() => {
         const docRef = doc(db, 'settings', 'fdTenureRates');
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
@@ -217,39 +254,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         });
         return () => unsubscribe();
     }, []);
-
-    useEffect(() => {
-        if (authUser?.uid) {
-            const userDocRef = doc(db, 'users', authUser.uid);
-            const userBalanceDocRef = doc(db, 'userBalances', authUser.uid);
-    
-            getDoc(userDocRef).then(docSnap => {
-                if (!docSnap.exists()) {
-                    const batch = writeBatch(db);
-                    
-                    const newUser: Omit<AppUser, 'id'> = {
-                        userId: authUser.uid,
-                        name: authUser.displayName || "New User",
-                        email: authUser.email || "",
-                        avatar: authUser.photoURL || `https://placehold.co/100x100.png`,
-                        joinDate: Timestamp.now(),
-                        isProfileComplete: false,
-                    };
-                    batch.set(userDocRef, newUser);
-    
-                    const newUserBalance: Omit<UserBalance, 'id' > = {
-                        userId: authUser.uid,
-                        userName: authUser.displayName || "New User",
-                        userAvatar: authUser.photoURL || `https://placehold.co/100x100.png`,
-                        balance: 0,
-                    };
-                    batch.set(userBalanceDocRef, newUserBalance);
-    
-                    batch.commit();
-                }
-            });
-        }
-    }, [authUser]);
 
     useEffect(() => {
         // This effect checks for matured FDs and creates requests if they don't already exist.
