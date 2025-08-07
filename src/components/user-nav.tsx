@@ -6,12 +6,39 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
-import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, Download } from "lucide-react";
 import { useData } from "@/hooks/use-data";
+import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
 
 export default function UserNav() {
     const { user, logout } = useAuth();
     const { users } = useData();
+    const isMobile = useIsMobile();
+    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+     useEffect(() => {
+        const handleBeforeInstallPrompt = (e: Event) => {
+            e.preventDefault();
+            setDeferredPrompt(e as BeforeInstallPromptEvent);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
     
     if (!user) {
         return (
@@ -26,6 +53,15 @@ export default function UserNav() {
     
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
+
+    const handleInstallClick = () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => {
+                setDeferredPrompt(null);
+            });
+        }
+    };
 
     return (
         <DropdownMenu>
@@ -62,6 +98,12 @@ export default function UserNav() {
                                 <span>Home</span>
                             </DropdownMenuItem>
                         </Link>
+                    )}
+                     {isMobile && deferredPrompt && (
+                        <DropdownMenuItem onClick={handleInstallClick}>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Install App</span>
+                        </DropdownMenuItem>
                     )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
