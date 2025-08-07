@@ -96,6 +96,17 @@ export interface BalanceHistory {
     type: "Credit" | "Debit";
 }
 
+export interface InterestPayout {
+    id: string;
+    userId: string;
+    userName: string;
+    date: Timestamp;
+    description: string;
+    amount: number;
+    type: "Credit";
+}
+
+
 export interface AppUser {
     id: string;
     userId: string;
@@ -131,6 +142,7 @@ interface DataContextType {
     balanceWithdrawalRequests: BalanceWithdrawalRequest[];
     userBalances: UserBalance[];
     balanceHistory: BalanceHistory[];
+    interestPayouts: InterestPayout[];
     templates: Template[];
     fdTenureRates: {[key: number]: number};
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
@@ -181,6 +193,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [balanceWithdrawalRequests, setBalanceWithdrawalRequests] = useState<BalanceWithdrawalRequest[]>([]);
     const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
+    const [interestPayouts, setInterestPayouts] = useState<InterestPayout[]>([]);
+    const [combinedHistory, setCombinedHistory] = useState<BalanceHistory[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
 
@@ -272,6 +286,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             checkMaturedInvestments();
         }
     }, [investments, users, maturedFdRequests, authUser]);
+    
+    useEffect(() => {
+        const allHistory = [...balanceHistory, ...interestPayouts];
+        setCombinedHistory(allHistory);
+    }, [balanceHistory, interestPayouts]);
+
 
     useDataFetching('users', setUsers);
     useDataFetching('userDetails', setUserDetails);
@@ -283,6 +303,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
     useDataFetching('userBalances', setUserBalances);
     useDataFetching('balanceHistory', setBalanceHistory);
+    useDataFetching('interestPayouts', setInterestPayouts);
     useDataFetching('templates', setTemplates);
 
     const getUserInfo = () => {
@@ -680,8 +701,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const userBalanceRef = doc(db, 'userBalances', userBalance.id);
                 batch.update(userBalanceRef, { balance: userBalance.balance + interest });
 
-                const historyRef = doc(collection(db, 'balanceHistory'));
-                batch.set(historyRef, {
+                const payoutRef = doc(collection(db, 'interestPayouts'));
+                batch.set(payoutRef, {
                     userId: userBalance.userId,
                     userName: userBalance.userName,
                     date: Timestamp.now(),
@@ -725,7 +746,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         topupRequests,
         balanceWithdrawalRequests,
         userBalances,
-        balanceHistory,
+        balanceHistory: combinedHistory,
+        interestPayouts,
         templates,
         fdTenureRates,
         updateUserProfile,
@@ -764,4 +786,3 @@ export const useData = () => {
     }
     return context;
 };
-
