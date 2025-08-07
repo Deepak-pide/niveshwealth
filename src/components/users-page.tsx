@@ -33,7 +33,7 @@ const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetail
             if (name !== user.name) {
                 await updateUserName(user.id, name);
             }
-            if (phone !== details?.phoneNumber || occupation !== details?.occupation) {
+            if (phone !== (details?.phoneNumber || '') || occupation !== (details?.occupation || '')) {
                 await updateUserProfile(user.id, { phoneNumber: phone, occupation: occupation });
             }
             toast({ title: "Success", description: "User profile updated successfully." });
@@ -45,57 +45,55 @@ const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetail
 
 
     return (
-        <>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{user.name}'s Profile</DialogTitle>
-                    <DialogDescription>{user.email}</DialogDescription>
-                </DialogHeader>
-                 <div className="grid gap-4 py-4 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">User ID:</span>
-                        <span className="font-semibold select-all">{user.id}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="name" className="text-muted-foreground">Name:</Label>
-                        {isEditing ? (
-                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-3/4" />
-                        ) : (
-                            <span className="font-semibold">{name}</span>
-                        )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="phone" className="text-muted-foreground">Phone:</Label>
-                         {isEditing ? (
-                            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-3/4" />
-                        ) : (
-                            <span className="font-semibold">{phone || 'N/A'}</span>
-                        )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="occupation" className="text-muted-foreground">Occupation:</Label>
-                         {isEditing ? (
-                            <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="w-3/4" />
-                        ) : (
-                            <span className="font-semibold">{occupation || 'N/A'}</span>
-                        )}
-                    </div>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{user.name}'s Profile</DialogTitle>
+                <DialogDescription>{user.email}</DialogDescription>
+            </DialogHeader>
+             <div className="grid gap-4 py-4 text-sm">
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">User ID:</span>
+                    <span className="font-semibold select-all">{user.id}</span>
                 </div>
-                <DialogFooter>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="name" className="text-muted-foreground">Name:</Label>
                     {isEditing ? (
-                        <>
-                            <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                            <Button onClick={handleSaveChanges}>Save Changes</Button>
-                        </>
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-3/4" />
                     ) : (
-                         <DialogClose asChild>
-                            <Button variant="outline">Close</Button>
-                        </DialogClose>
+                        <span className="font-semibold">{name}</span>
                     )}
-                     {!isEditing && <Button onClick={() => setIsEditing(true)}>Update Profile</Button>}
-                </DialogFooter>
-            </DialogContent>
-        </>
+                </div>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="phone" className="text-muted-foreground">Phone:</Label>
+                     {isEditing ? (
+                        <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-3/4" />
+                    ) : (
+                        <span className="font-semibold">{phone || 'N/A'}</span>
+                    )}
+                </div>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="occupation" className="text-muted-foreground">Occupation:</Label>
+                     {isEditing ? (
+                        <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="w-3/4" />
+                    ) : (
+                        <span className="font-semibold">{occupation || 'N/A'}</span>
+                    )}
+                </div>
+            </div>
+            <DialogFooter>
+                {isEditing ? (
+                    <>
+                        <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                        <Button onClick={handleSaveChanges}>Save Changes</Button>
+                    </>
+                ) : (
+                     <DialogClose asChild>
+                        <Button variant="outline">Close</Button>
+                    </DialogClose>
+                )}
+                 {!isEditing && <Button onClick={() => setIsEditing(true)}>Update Profile</Button>}
+            </DialogFooter>
+        </DialogContent>
     );
 };
 

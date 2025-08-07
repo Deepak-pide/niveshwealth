@@ -64,11 +64,8 @@ interface SendAlertDialogProps {
 }
 
 export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogProps) {
-    const { templates, getUserPhoneNumber, users } = useData();
+    const { templates } = useData();
     const [alertMessage, setAlertMessage] = useState('');
-
-    const requestUser = request ? users.find(u => u.id === request.userId) : null;
-    const requestPhoneNumber = requestUser ? getUserPhoneNumber(request.userId) : undefined;
     
     const isApproved = request?.type.includes('Approved') || request?.type.includes('Matured');
     const templateTypeToFind = isApproved ? request?.type : (request?.type as RequestType | undefined);
@@ -89,17 +86,17 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
 
 
     const handleSendFinalAlert = () => {
-        if (!request || !requestUser) return;
+        if (!request) return;
 
         let finalMessage = alertMessage
-            .replace(/{userName}/g, requestUser.name)
+            .replace(/{userName}/g, request.userName)
             .replace(/{requestType}/g, request.type.replace(' Approved', ''))
             .replace(/{amount}/g, `₹${request.amount.toLocaleString('en-IN')}`)
             .replace(/{date}/g, format(request.date, 'PPP'));
 
         const encodedMessage = encodeURIComponent(finalMessage);
         
-        const cleanPhoneNumber = requestPhoneNumber ? requestPhoneNumber.replace(/\D/g, '') : '';
+        const cleanPhoneNumber = request.phoneNumber ? request.phoneNumber.replace(/\D/g, '') : '';
 
         const whatsappUrl = cleanPhoneNumber
             ? `https://wa.me/91${cleanPhoneNumber}?text=${encodedMessage}`
@@ -110,7 +107,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
         setAlertMessage('');
     };
 
-    if (!request || !requestUser) return null;
+    if (!request) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -118,7 +115,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
                 <DialogHeader>
                     <DialogTitle>Compose and Send Message</DialogTitle>
                     <DialogDescription>
-                        To: {requestUser.name} ({requestPhoneNumber || 'No number'})
+                        To: {request.userName} ({request.phoneNumber || 'No number'})
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-4">
@@ -133,7 +130,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
                     </div>
                     <div className="grid gap-2">
                         <Label>Preview</Label>
-                        <HighlightedMessage text={alertMessage} request={{...request, userName: requestUser.name}} />
+                        <HighlightedMessage text={alertMessage} request={request} />
                     </div>
                 </div>
                 <DialogFooter>

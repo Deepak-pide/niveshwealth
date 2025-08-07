@@ -23,7 +23,8 @@ export default function SendAlertPage() {
         investments,
         balanceHistory,
         maturedFdRequests,
-        userDetails
+        userDetails,
+        users
     } = useData();
 
     const [selectedRequest, setSelectedRequest] = useState<CombinedRequest | null>(null);
@@ -35,35 +36,79 @@ export default function SendAlertPage() {
     };
 
     const allRequests: CombinedRequest[] = useMemo(() => {
-        const getUserPhoneNumber = (userId: string) => {
+        const getUserDetails = (userId: string) => {
+            const user = users.find(u => u.id === userId);
             const detail = userDetails.find(ud => ud.userId === userId);
-            return detail?.phoneNumber;
+            return {
+                name: user?.name || 'Unknown',
+                avatar: user?.avatar || '',
+                phoneNumber: detail?.phoneNumber
+            };
         };
 
-        const pendingFD = investmentRequests.map(r => ({ ...r, type: 'FD Investment', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
-        const pendingFDWithdraw = fdWithdrawalRequests.map(r => ({ ...r, type: 'FD Withdrawal', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
-        const pendingTopup = topupRequests.map(r => ({ ...r, type: 'Balance Top-up', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
-        const pendingBalanceWithdraw = balanceWithdrawalRequests.map(r => ({ ...r, type: 'Balance Withdrawal', date: r.date.toDate(), phoneNumber: getUserPhoneNumber(r.userId) })) as unknown as CombinedRequest[];
+        const mapRequest = (req: any, type: CombinedRequest['type']): CombinedRequest => {
+            const user = getUserDetails(req.userId);
+            return {
+                ...req,
+                id: req.id,
+                type,
+                date: req.date?.toDate(),
+                userName: user.name,
+                userAvatar: user.avatar,
+                phoneNumber: user.phoneNumber,
+            };
+        };
+        
+        const mapInvestment = (inv: any, type: CombinedRequest['type'], dateField: 'startDate' | 'maturityDate'): CombinedRequest => {
+            const user = getUserDetails(inv.userId);
+            return {
+                ...inv,
+                id: inv.id,
+                type,
+                date: inv[dateField]?.toDate(),
+                userName: user.name,
+                userAvatar: user.avatar,
+                phoneNumber: user.phoneNumber,
+            };
+        };
+
+        const mapHistory = (hist: any, type: CombinedRequest['type']): CombinedRequest => {
+            const user = getUserDetails(hist.userId);
+            return {
+                ...hist,
+                id: hist.id,
+                type,
+                date: hist.date?.toDate(),
+                userName: user.name,
+                userAvatar: user.avatar,
+                phoneNumber: user.phoneNumber,
+            };
+        }
+
+        const pendingFD = investmentRequests.map(r => mapRequest(r, 'FD Investment'));
+        const pendingFDWithdraw = fdWithdrawalRequests.map(r => mapRequest(r, 'FD Withdrawal'));
+        const pendingTopup = topupRequests.map(r => mapRequest(r, 'Balance Top-up'));
+        const pendingBalanceWithdraw = balanceWithdrawalRequests.map(r => mapRequest(r, 'Balance Withdrawal'));
 
         const approvedFD = investments
             .filter(inv => inv.status === 'Active')
-            .map(inv => ({...inv, type: 'FD Approved' as const, date: inv.startDate.toDate(), phoneNumber: getUserPhoneNumber(inv.userId) }));
+            .map(inv => mapInvestment(inv, 'FD Approved', 'startDate'));
             
         const approvedFDWithdrawal = investments
             .filter(inv => inv.status === 'Withdrawn')
-            .map(inv => ({...inv, type: 'FD Withdrawal Approved' as const, date: inv.maturityDate.toDate(), phoneNumber: getUserPhoneNumber(inv.userId) }));
+            .map(inv => mapInvestment(inv, 'FD Withdrawal Approved', 'maturityDate'));
 
         const approvedBalanceTopup = balanceHistory
             .filter(h => h.description === 'Added to wallet')
-            .map(h => ({ ...h, type: 'Balance Top-up Approved' as const, date: h.date.toDate(), phoneNumber: getUserPhoneNumber(h.userId) }));
+            .map(h => mapHistory(h, 'Balance Top-up Approved'));
 
         const approvedBalanceWithdrawal = balanceHistory
             .filter(h => h.description === 'Withdrawn from wallet')
-            .map(h => ({ ...h, type: 'Balance Withdrawal Approved' as const, date: h.date.toDate(), phoneNumber: getUserPhoneNumber(h.userId) }));
+            .map(h => mapHistory(h, 'Balance Withdrawal Approved'));
         
         const maturedFDs = investments
             .filter(inv => inv.status === 'Matured')
-            .map(inv => ({ ...inv, type: 'FD Matured' as const, date: inv.maturityDate.toDate(), phoneNumber: getUserPhoneNumber(inv.userId) }));
+            .map(inv => mapInvestment(inv, 'FD Matured', 'maturityDate'));
 
         const combined = [
             ...pendingFD,
@@ -75,11 +120,12 @@ export default function SendAlertPage() {
             ...approvedBalanceTopup,
             ...approvedBalanceWithdrawal,
             ...maturedFDs
-        ].sort((a, b) => b.date.getTime() - a.date.getTime());
+        ].filter(r => r.date)
+         .sort((a, b) => b.date.getTime() - a.date.getTime());
         
         return combined as CombinedRequest[];
 
-    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory, maturedFdRequests, userDetails]);
+    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory, maturedFdRequests, userDetails, users]);
 
     return (
         <div className="container mx-auto p-4 md:p-8">
