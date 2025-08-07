@@ -16,7 +16,7 @@ import React, { useState, useEffect } from "react";
 
 export default function UserNav() {
     const { user, logout } = useAuth();
-    const { investments, balanceHistory, users, userBalances } = useData();
+    const { investments, balanceHistory, users, userDetails, userBalances } = useData();
     const isMobile = useIsMobile();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -59,6 +59,21 @@ export default function UserNav() {
         if (!user) return;
         
         const wb = XLSX.utils.book_new();
+
+        // User Profile Sheet
+        const currentUserData = users.find(u => u.id === user.id);
+        const currentUserDetails = userDetails.find(ud => ud.userId === user.id);
+
+        const profileData = [
+            { "Field": "Name", "Value": currentUserData?.name || 'N/A' },
+            { "Field": "Email", "Value": currentUserData?.email || 'N/A' },
+            { "Field": "Phone Number", "Value": currentUserDetails?.phoneNumber || 'N/A' },
+            { "Field": "Occupation", "Value": currentUserDetails?.occupation || 'N/A' }
+        ];
+
+        const wsProfile = XLSX.utils.json_to_sheet(profileData, { skipHeader: true });
+        XLSX.utils.book_append_sheet(wb, wsProfile, "User Profile");
+
 
         // Investment Sheet
         const userInvestments = investments
