@@ -7,9 +7,11 @@ import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { useData } from "@/hooks/use-data";
 
 export default function UserNav() {
     const { user, logout } = useAuth();
+    const { users } = useData();
     
     if (!user) {
         return (
@@ -18,6 +20,9 @@ export default function UserNav() {
             </Link>
         )
     }
+
+    const appUser = users.find(u => u.userId === user.uid);
+    const displayName = appUser?.name || user.displayName;
     
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -27,15 +32,15 @@ export default function UserNav() {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.photoURL ?? ""} alt={user.displayName ?? ""} />
-                        <AvatarFallback>{user.displayName?.[0].toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={user.photoURL ?? ""} alt={displayName ?? ""} />
+                        <AvatarFallback>{displayName?.[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                            <p className="text-sm font-medium leading-none">{displayName}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                             {user.email}
                         </p>
