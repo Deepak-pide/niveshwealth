@@ -8,6 +8,9 @@ import { AuthProvider } from '@/hooks/use-auth';
 export const metadata: Metadata = {
   title: 'Nivesh',
   description: 'Grow Steady. Earn Smart. Up to 9% Returns with Confidence',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
