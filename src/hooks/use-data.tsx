@@ -363,7 +363,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         ];
 
         for (const collectionName of collectionsToUpdate) {
-            const q = query(collection(db, collectionName), where("userId", "==", userId));
+            const q = query(collection(db, collectionName as string), where("userId", "==", userId));
             const querySnapshot = await getDocs(q);
             querySnapshot.forEach((doc) => {
                 batch.update(doc.ref, { userName: newName });

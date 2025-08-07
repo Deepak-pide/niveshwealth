@@ -6,40 +6,101 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useData, UserDetails } from "@/hooks/use-data";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { useData, UserDetails, AppUser } from "@/hooks/use-data";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { useToast } from "./use-toast";
 
 const ITEMS_PER_PAGE = 10;
 
-const UserDetailsView = ({ userId }: { userId: string }) => {
-    const { userDetails } = useData();
-    const [details, setDetails] = useState<UserDetails | null>(null);
+const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetails | null }) => {
+    const { updateUserProfile, updateUserName } = useData();
+    const { toast } = useToast();
+    const [isEditing, setIsEditing] = useState(false);
+    const [name, setName] = useState(user.name);
+    const [phone, setPhone] = useState(details?.phoneNumber || '');
+    const [occupation, setOccupation] = useState(details?.occupation || '');
 
     useEffect(() => {
-        const foundDetails = userDetails.find(ud => ud.userId === userId);
-        setDetails(foundDetails || null);
-    }, [userDetails, userId]);
+        setName(user.name);
+        setPhone(details?.phoneNumber || '');
+        setOccupation(details?.occupation || '');
+    }, [user, details]);
+
+    const handleSaveChanges = async () => {
+        try {
+            if (name !== user.name) {
+                await updateUserName(user.userId, name);
+            }
+            if (phone !== details?.phoneNumber || occupation !== details?.occupation) {
+                await updateUserProfile(user.userId, { phoneNumber: phone, occupation: occupation });
+            }
+            toast({ title: "Success", description: "User profile updated successfully." });
+            setIsEditing(false);
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+    }
+
 
     return (
-        <div className="grid gap-4 py-4 text-sm">
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">User ID:</span>
-                <span className="font-semibold">{userId}</span>
-            </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Phone:</span>
-                <span className="font-semibold">{details?.phoneNumber || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Occupation:</span>
-                <span className="font-semibold">{details?.occupation || 'N/A'}</span>
-            </div>
-        </div>
+        <>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{user.name}'s Profile</DialogTitle>
+                    <DialogDescription>{user.email}</DialogDescription>
+                </DialogHeader>
+                 <div className="grid gap-4 py-4 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">User ID:</span>
+                        <span className="font-semibold select-all">{user.userId}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="name" className="text-muted-foreground">Name:</Label>
+                        {isEditing ? (
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{name}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="phone" className="text-muted-foreground">Phone:</Label>
+                         {isEditing ? (
+                            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{phone || 'N/A'}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="occupation" className="text-muted-foreground">Occupation:</Label>
+                         {isEditing ? (
+                            <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{occupation || 'N/A'}</span>
+                        )}
+                    </div>
+                </div>
+                <DialogFooter>
+                    {isEditing ? (
+                        <>
+                            <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                            <Button onClick={handleSaveChanges}>Save Changes</Button>
+                        </>
+                    ) : (
+                         <DialogClose asChild>
+                            <Button variant="outline">Close</Button>
+                        </DialogClose>
+                    )}
+                     {!isEditing && <Button onClick={() => setIsEditing(true)}>Update Profile</Button>}
+                </DialogFooter>
+            </DialogContent>
+        </>
     );
 };
 
 export default function UsersPage() {
-    const { users } = useData();
+    const { users, userDetails } = useData();
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
 
     const visibleUsersList = users.slice(0, visibleUsers);
@@ -67,35 +128,32 @@ export default function UsersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {visibleUsersList.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar>
-                                                <AvatarImage src={user.avatar} />
-                                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="font-medium">{user.name}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell>{user.joinDate.toDate().toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button variant="outline" size="sm">View</Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>{user.name}'s Profile</DialogTitle>
-                                                    <DialogDescription>{user.email}</DialogDescription>
-                                                </DialogHeader>
-                                                <UserDetailsView userId={user.id} />
-                                            </DialogContent>
-                                        </Dialog>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            {visibleUsersList.map((user) => {
+                                const details = userDetails.find(ud => ud.userId === user.id) || null;
+                                return (
+                                    <TableRow key={user.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar>
+                                                    <AvatarImage src={user.avatar} />
+                                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <span className="font-medium">{user.name}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell>{user.joinDate.toDate().toLocaleDateString()}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm">View</Button>
+                                                </DialogTrigger>
+                                                <UserDetailsView user={user} details={details} />
+                                            </Dialog>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                     {hasMoreUsers && (

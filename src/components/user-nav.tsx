@@ -7,36 +7,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
-import { LogOut, User as UserIcon, LayoutDashboard, Download, DownloadCloud, FileText, Pencil } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, Download, DownloadCloud, FileText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useData } from "@/hooks/use-data";
-import { format, subYears, differenceInYears, isAfter } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { useToast } from "@/hooks/use-toast";
 
 
 export default function UserNav() {
     const { user, logout } = useAuth();
-    const { investments, balanceHistory, users, userDetails, userBalances, updateUserName } = useData();
+    const { investments, balanceHistory, users, userDetails, userBalances } = useData();
     const isMobile = useIsMobile();
-    const { toast } = useToast();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
 
     const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
     const [showInstall, setShowInstall] = useState(false);
-    const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
-    const [newName, setNewName] = useState(user?.displayName || '');
 
-
-    useEffect(() => {
-        if (user?.displayName) {
-            setNewName(user.displayName);
-        }
-    }, [user?.displayName]);
 
     useEffect(() => {
       const handleBeforeInstallPrompt = (e: Event) => {
@@ -160,118 +147,71 @@ export default function UserNav() {
       }
     };
     
-    const handleNameUpdate = async () => {
-        if (!user || !newName.trim()) return;
-        try {
-            await updateUserName(user.uid, newName.trim());
-            toast({
-                title: "Success",
-                description: "Your name has been updated.",
-                variant: "success"
-            });
-            setIsNameDialogOpen(false);
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "Failed to update your name.",
-                variant: "destructive"
-            });
-        }
-    };
 
     return (
-        <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.photoURL ?? ""} alt={user.displayName ?? ""} />
-                            <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
-                        </Avatar>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                             <DialogTrigger asChild>
-                                <div className="flex items-center gap-2 cursor-pointer group">
-                                     <p className="text-sm font-medium leading-none">{user.displayName}</p>
-                                     <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                            </DialogTrigger>
-                            <p className="text-xs leading-none text-muted-foreground">
-                                {user.email}
-                            </p>
-                        </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                        {isAdmin ? (
-                            <Link href="/admin">
-                                <DropdownMenuItem>
-                                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                                    <span>Dashboard</span>
-                                </DropdownMenuItem>
-                            </Link>
-                        ) : (
-                            <Link href="/">
-                                <DropdownMenuItem>
-                                    <UserIcon className="mr-2 h-4 w-4" />
-                                    <span>Home</span>
-                                </DropdownMenuItem>
-                            </Link>
-                        )}
-                        
-                        {!isAdmin && !isProfileComplete && (
-                            <Link href="/complete-profile">
-                                <DropdownMenuItem>
-                                    <UserIcon className="mr-2 h-4 w-4" />
-                                    <span>Complete Profile</span>
-                                </DropdownMenuItem>
-                            </Link>
-                        )}
-                        
-                        <DropdownMenuItem onClick={handleDownload}>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Download Statement</span>
-                        </DropdownMenuItem>
-                        {showInstall && (
-                            <DropdownMenuItem onClick={handleInstallClick}>
-                                <DownloadCloud className="mr-2 h-4 w-4" />
-                                <span>Download App</span>
-                            </DropdownMenuItem>
-                        )}
-                        
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Update Your Name</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">
-                            Name
-                        </Label>
-                        <Input
-                            id="name"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            className="col-span-3"
-                        />
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL ?? ""} alt={user.displayName ?? ""} />
+                        <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                    </Avatar>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                        </p>
                     </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleNameUpdate}>Save Changes</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    {isAdmin ? (
+                        <Link href="/admin">
+                            <DropdownMenuItem>
+                                <LayoutDashboard className="mr-2 h-4 w-4" />
+                                <span>Dashboard</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    ) : (
+                        <Link href="/">
+                            <DropdownMenuItem>
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span>Home</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    )}
+                    
+                    {!isAdmin && !isProfileComplete && (
+                        <Link href="/complete-profile">
+                            <DropdownMenuItem>
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span>Complete Profile</span>
+                            </DropdownMenuItem>
+                        </Link>
+                    )}
+                    
+                    <DropdownMenuItem onClick={handleDownload}>
+                        <Download className="mr-2 h-4 w-4" />
+                        <span>Download Statement</span>
+                    </DropdownMenuItem>
+                    {showInstall && (
+                        <DropdownMenuItem onClick={handleInstallClick}>
+                            <DownloadCloud className="mr-2 h-4 w-4" />
+                            <span>Download App</span>
+                        </DropdownMenuItem>
+                    )}
+                    
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }
