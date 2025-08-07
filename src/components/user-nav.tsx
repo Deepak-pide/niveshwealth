@@ -30,7 +30,8 @@ export default function UserNav() {
 
      useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
-            e.preventDefault(); // Keep the event from being handled by the browser.
+            // NOTE: We don't prevent default here to allow the browser's default install promotion to show.
+            // We still capture the event so we can trigger the prompt manually from our custom button.
             setDeferredPrompt(e as BeforeInstallPromptEvent);
         };
 
