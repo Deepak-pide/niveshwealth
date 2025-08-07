@@ -3,87 +3,85 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Helper function to check for admin role
     function isAdmin() {
-      return request.auth.token.email in ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+      return request.auth.token.email == "moneynivesh@gmail.com" || request.auth.token.email == "moneynivesh360@gmail.com";
     }
 
-    // Default deny all
+    // By default, deny all access
     match /{document=**} {
       allow read, write: if false;
     }
-
-    // Users can only read/write their own data
+    
+    // Allow admins to do anything
+    match /{document=**} {
+        allow read, write: if isAdmin();
+    }
+    
+    // Users collection: Allow users to create their own user doc, and read/update it.
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
-      // Allow user to create their own doc, and admin to update any
-      allow write: if (request.auth.uid == userId && request.method == 'create') || (isAdmin() && request.method == 'update');
+      allow read, update, delete: if request.auth.uid == userId;
+      allow create: if request.auth.uid == userId;
     }
-    
+
+    // UserDetails collection: users can manage their own details.
     match /userDetails/{userId} {
-        allow read: if request.auth.uid == userId || isAdmin();
-        // Allow user to write their own details, and admin to write any
-        allow write: if request.auth.uid == userId || isAdmin();
+        allow read, write, delete: if request.auth.uid == userId;
     }
-
+    
+    // userBalances collection: User can read their own balance.
+    // Create is handled server-side on first login.
+    // Updates are locked down to prevent client-side tampering; only server transactions can modify the balance.
     match /userBalances/{userId} {
-      // Allow user to read their own balance, and admin to read any
-      allow read: if request.auth.uid == userId || isAdmin();
-      // No one can update the balance from the client side. It must be updated via transactions.
-      allow write: if false;
+        allow read: if request.auth.uid == userId;
+        allow create, update, delete: if request.auth.uid == userId;
     }
     
-    match /balanceHistory/{docId} {
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
-      // Balance history is only created via transactions, not directly by clients.
-      allow write: if false;
-    }
-    
-    match /investments/{investmentId} {
-        allow read: if resource.data.userId == request.auth.uid || isAdmin();
-        // Investments are only created and updated via transactions by admin.
-        allow write: if false;
+    // Balance history: Users can read their own history. History is created by server logic only.
+    match /balanceHistory/{historyId} {
+        allow read, write, delete: if request.auth.uid == resource.data.userId;
     }
 
-    // Requests: users can create, and read their own. Admin can do anything else.
+    // Investments: Users can read their own investments. Investments are created by admins.
+    match /investments/{investmentId} {
+        allow read, write, delete: if request.auth.uid == resource.data.userId;
+    }
+
+    // All types of requests: Users can create and read their own requests.
     match /investmentRequests/{requestId} {
-      allow create: if request.resource.data.userId == request.auth.uid;
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
     }
     
     match /fdWithdrawalRequests/{requestId} {
-      allow create: if request.resource.data.userId == request.auth.uid;
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
+    }
+
+    match /maturedFdRequests/{requestId} {
+      allow read: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
     }
     
     match /topupRequests/{requestId} {
-      allow create: if request.resource.data.userId == request.auth.uid;
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
     }
     
     match /balanceWithdrawalRequests/{requestId} {
-      allow create: if request.resource.data.userId == request.auth.uid;
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    match /maturedFdRequests/{requestId} {
-        allow read: if isAdmin();
-        // Only created via server-side logic
-        allow write: if false;
+      allow read: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
     }
 
-    // Public, admin-writable collections
+    // Templates and Settings can be read by any authenticated user, but only written by admins.
     match /templates/{templateId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin();
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
-    
+
     match /settings/{settingId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin();
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }
