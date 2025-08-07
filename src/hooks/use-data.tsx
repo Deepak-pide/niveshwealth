@@ -69,12 +69,14 @@ export interface Investment {
     startDate: Timestamp;
     maturityDate: Timestamp;
     status: 'Active' | 'Matured' | 'Withdrawn' | 'Pending';
+    description?: string;
 }
 
 export interface InvestmentRequest extends Omit<BaseRequest, 'date'> {
     date: Timestamp;
     years: number;
     paymentMethod: 'upi' | 'balance';
+    description?: string;
 }
 
 export interface FdWithdrawalRequest extends BaseRequest {
@@ -424,7 +426,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 }
                 reqData = { ...requestSnap.data(), id: requestSnap.id } as InvestmentRequest;
 
-                const { userId, userName, amount, years, paymentMethod } = reqData;
+                const { userId, userName, amount, years, paymentMethod, description } = reqData;
 
                 if (paymentMethod === 'balance') {
                     const userBalanceDocRef = doc(db, 'userBalances', userId);
@@ -463,6 +465,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     startDate: Timestamp.now(),
                     maturityDate: Timestamp.fromDate(addYears(new Date(), years)),
                     status: 'Active' as const,
+                    description: description || '',
                 };
                 const investmentRef = doc(collection(db, 'investments'));
                 transaction.set(investmentRef, newInvestment);

@@ -15,10 +15,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
+import { Textarea } from "./ui/textarea";
 
 export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
+    const [description, setDescription] = useState("");
     const [paymentMethod, setPaymentMethod] = useState<'balance' | 'upi'>('upi');
     const { addInvestmentRequest, userBalances, investmentRequests, fdTenureRates } = useData();
     const { toast } = useToast();
@@ -67,6 +69,7 @@ export default function FdInvestmentPage() {
             date: new Date().toISOString().split('T')[0],
             years: years,
             paymentMethod: paymentMethod,
+            description: description,
         });
 
         toast({
@@ -107,6 +110,15 @@ export default function FdInvestmentPage() {
                                 placeholder="e.g., 5"
                             />
                         </div>
+                         <div className="grid gap-4">
+                            <Label htmlFor="description">Description (Optional)</Label>
+                            <Textarea
+                                id="description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="e.g., For my child's education"
+                            />
+                        </div>
                     </CardContent>
                     <CardFooter className="flex flex-col items-stretch gap-2">
                         <AlertDialog>
@@ -122,6 +134,12 @@ export default function FdInvestmentPage() {
                                                 <span className="text-muted-foreground">Investment Amount:</span>
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
                                             </div>
+                                             {description && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Description:</span>
+                                                    <span className="font-semibold text-foreground">{description}</span>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Estimated Return (at {(fdRate * 100).toFixed(2)}%):</span>
                                                 <span className="font-semibold text-green-600">₹{calculatedReturn.toLocaleString('en-IN')}</span>

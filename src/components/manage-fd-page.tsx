@@ -24,17 +24,18 @@ import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
 const ITEMS_PER_PAGE = 10;
 
 const ActiveFdsDialog = ({ user, fds }: { user: any; fds: any[] }) => (
-    <DialogContent>
+    <DialogContent className="max-w-2xl">
         <DialogHeader>
             <DialogTitle>{user.userName}'s Active FDs</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-4 max-h-[60vh] overflow-y-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>FD Name</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Maturity</TableHead>
+                        <TableHead>Description</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -43,6 +44,7 @@ const ActiveFdsDialog = ({ user, fds }: { user: any; fds: any[] }) => (
                             <TableCell>{fd.name}</TableCell>
                             <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
                             <TableCell>{format(fd.maturityDate.toDate(), 'dd MMM yyyy')}</TableCell>
+                            <TableCell>{fd.description || 'N/A'}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
