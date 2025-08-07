@@ -62,11 +62,12 @@ interface SendAlertDialogProps {
 }
 
 export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogProps) {
-    const { templates, getUserPhoneNumber } = useData();
+    const { templates, getUserPhoneNumber, users } = useData();
     const [alertMessage, setAlertMessage] = useState('');
 
     const approvedRequestType = `${request?.type} Approved` as RequestType;
-    const requestPhoneNumber = request ? getUserPhoneNumber(request.userId) : undefined;
+    const requestUser = request ? users.find(u => u.id === request.userId) : null;
+    const requestPhoneNumber = requestUser ? getUserPhoneNumber(request.userId) : undefined;
 
     useEffect(() => {
         if (request) {
@@ -83,10 +84,10 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
 
 
     const handleSendFinalAlert = () => {
-        if (!request) return;
+        if (!request || !requestUser) return;
 
         let finalMessage = alertMessage
-            .replace(/{userName}/g, request.userName)
+            .replace(/{userName}/g, requestUser.name)
             .replace(/{requestType}/g, request.type.replace(' Approved', ''))
             .replace(/{amount}/g, `₹${request.amount.toLocaleString('en-IN')}`)
             .replace(/{date}/g, format(request.date, 'PPP'));
@@ -104,7 +105,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
         setAlertMessage('');
     };
 
-    if (!request) return null;
+    if (!request || !requestUser) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -112,7 +113,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
                 <DialogHeader>
                     <DialogTitle>Compose and Send Message</DialogTitle>
                     <DialogDescription>
-                        To: {request.userName} ({requestPhoneNumber || 'No number'})
+                        To: {requestUser.name} ({requestPhoneNumber || 'No number'})
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-4">
@@ -127,7 +128,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
                     </div>
                     <div className="grid gap-2">
                         <Label>Preview</Label>
-                        <HighlightedMessage text={alertMessage} request={request} />
+                        <HighlightedMessage text={alertMessage} request={{...request, userName: requestUser.name}} />
                     </div>
                 </div>
                 <DialogFooter>
