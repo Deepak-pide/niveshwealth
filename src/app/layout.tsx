@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { DataProvider } from '@/hooks/use-data';
 import { AuthProvider } from '@/hooks/use-auth';
+import { GlobalAlertDialog } from '@/components/global-alert-dialog';
 
 export const metadata: Metadata = {
   title: 'Nivesh',
@@ -52,6 +53,7 @@ export default function RootLayout({
             <DataProvider>
               {children}
               <Toaster />
+              <GlobalAlertDialog />
             </DataProvider>
           </AuthProvider>
       </body>

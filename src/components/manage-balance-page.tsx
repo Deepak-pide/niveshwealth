@@ -17,7 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "./ui/separator";
 import { format } from "date-fns";
-import { SendAlertDialog, type CombinedRequest } from "./send-alert-dialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -40,30 +39,6 @@ export default function ManageBalancePage() {
     const [visibleTopups, setVisibleTopups] = useState(ITEMS_PER_PAGE);
     const [visibleWithdrawals, setVisibleWithdrawals] = useState(ITEMS_PER_PAGE);
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
-    const [alertRequest, setAlertRequest] = useState<CombinedRequest | null>(null);
-
-    const handleApproveTopup = async (requestId: string) => {
-        const approvedRequest = await approveTopupRequest(requestId);
-        if (approvedRequest) {
-            setAlertRequest({
-                ...approvedRequest,
-                type: 'Balance Top-up',
-                date: approvedRequest.date.toDate()
-            });
-        }
-    };
-
-    const handleApproveBalanceWithdrawal = async (requestId: string) => {
-        const approvedRequest = await approveBalanceWithdrawalRequest(requestId);
-        if (approvedRequest) {
-            setAlertRequest({
-                ...approvedRequest,
-                type: 'Balance Withdrawal',
-                date: approvedRequest.date.toDate()
-            });
-        }
-    };
-
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
@@ -155,7 +130,7 @@ export default function ManageBalancePage() {
                                             <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <Button variant="outline" size="sm" onClick={() => rejectTopupRequest(req.id)}>Reject</Button>
-                                                <Button size="sm" onClick={() => handleApproveTopup(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => approveTopupRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow><TableCell colSpan={4} className="text-center">No pending top-up requests.</TableCell></TableRow>}
@@ -203,7 +178,7 @@ export default function ManageBalancePage() {
                                             <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <Button variant="outline" size="sm" onClick={() => rejectBalanceWithdrawalRequest(req.id)}>Reject</Button>
-                                                <Button size="sm" onClick={() => handleApproveBalanceWithdrawal(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => approveBalanceWithdrawalRequest(req.id)}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow><TableCell colSpan={4} className="text-center">No pending withdrawal requests.</TableCell></TableRow>}
@@ -325,14 +300,6 @@ export default function ManageBalancePage() {
                     </Card>
                 </TabsContent>
             </Tabs>
-
-            {alertRequest && (
-                <SendAlertDialog 
-                    request={alertRequest}
-                    isOpen={!!alertRequest}
-                    onClose={() => setAlertRequest(null)}
-                />
-            )}
         </div>
     );
 }
