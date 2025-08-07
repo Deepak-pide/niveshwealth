@@ -20,7 +20,7 @@ export default function FdInvestmentPage() {
     const [amount, setAmount] = useState(50000);
     const [years, setYears] = useState(5);
     const [paymentMethod, setPaymentMethod] = useState<'balance' | 'upi'>('upi');
-    const { addInvestmentRequest, userBalances, investmentRequests } = useData();
+    const { addInvestmentRequest, userBalances, investmentRequests, fdTenureRates } = useData();
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
@@ -31,7 +31,7 @@ export default function FdInvestmentPage() {
     const currentUserBalance = user ? userBalances.find(b => b.userId === user.uid)?.balance || 0 : 0;
     const hasSufficientBalance = currentUserBalance >= amount;
 
-    const fdRate = 0.09; // Using the higher 9% rate
+    const fdRate = fdTenureRates[years] || 0.09;
     const calculatedReturn = amount * fdRate * years;
     const totalAmount = amount + calculatedReturn;
     const maturityDate = addYears(new Date(), years);
@@ -123,7 +123,7 @@ export default function FdInvestmentPage() {
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Estimated Return (at {fdRate*100}%):</span>
+                                                <span className="text-muted-foreground">Estimated Return (at {(fdRate * 100).toFixed(2)}%):</span>
                                                 <span className="font-semibold text-green-600">₹{calculatedReturn.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="flex justify-between">

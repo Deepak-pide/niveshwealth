@@ -16,7 +16,7 @@ import React, { useState, useEffect } from "react";
 
 export default function UserNav() {
     const { user, logout } = useAuth();
-    const { investments, balanceHistory, users, userDetails, userBalances } = useData();
+    const { investments, balanceHistory, users, userDetails, userBalances } from useData();
     const isMobile = useIsMobile();
     const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
     const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -155,7 +155,7 @@ export default function UserNav() {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={user.photoURL ?? ""} alt={displayName ?? ""} />
-                        <AvatarFallback>{displayName?.[0]}</AvatarFallback>
+                        <AvatarFallback>{displayName?.[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
