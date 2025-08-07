@@ -161,16 +161,16 @@ interface DataContextType {
     updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
-    approveInvestmentRequest: (requestId: string) => Promise<void>;
+    approveInvestmentRequest: (requestId: string) => Promise<InvestmentRequest | null>;
     rejectInvestmentRequest: (requestId: string) => Promise<void>;
-    approveFdWithdrawalRequest: (requestId: string) => Promise<void>;
+    approveFdWithdrawalRequest: (requestId: string) => Promise<FdWithdrawalRequest | null>;
     rejectFdWithdrawalRequest: (requestId: string) => Promise<void>;
-    approveMaturedFdRequest: (requestId: string) => Promise<void>;
+    approveMaturedFdRequest: (requestId: string) => Promise<MaturedFdRequest | null>;
     addTopupRequest: (requestData: Omit<TopupRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addBalanceWithdrawalRequest: (requestData: Omit<BalanceWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar'| 'date'> & { date: string }) => Promise<void>;
-    approveTopupRequest: (requestId: string) => Promise<void>;
+    approveTopupRequest: (requestId: string) => Promise<TopupRequest | null>;
     rejectTopupRequest: (requestId: string) => Promise<void>;
-    approveBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
+    approveBalanceWithdrawalRequest: (requestId: string) => Promise<BalanceWithdrawalRequest | null>;
     rejectBalanceWithdrawalRequest: (requestId: string) => Promise<void>;
     payInterestToAll: (annualRate: number) => Promise<void>;
     setFdInterestRatesForTenures: (rates: { [key: number]: number }) => Promise<void>;
@@ -406,16 +406,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await addDoc(collection(db, 'fdWithdrawalRequests'), newRequest);
     };
 
-    const approveInvestmentRequest = async (requestId: string) => {
+    const approveInvestmentRequest = async (requestId: string): Promise<InvestmentRequest | null> => {
         const requestDocRef = doc(db, 'investmentRequests', requestId);
-        
+        let reqData: InvestmentRequest | null = null;
         try {
             await runTransaction(db, async (transaction) => {
                 const requestSnap = await transaction.get(requestDocRef);
                 if (!requestSnap.exists()) {
                     throw new Error("Investment request not found or already processed.");
                 }
-                const reqData = { ...requestSnap.data(), id: requestSnap.id } as InvestmentRequest;
+                reqData = { ...requestSnap.data(), id: requestSnap.id } as InvestmentRequest;
 
                 const { userId, userName, amount, years, paymentMethod } = reqData;
 
@@ -429,15 +429,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
                     const currentBalance = userBalanceSnap.data().balance;
                     if (currentBalance < amount) {
-                        // Reject request if insufficient balance
                         transaction.delete(requestDocRef);
                         throw new Error("User has insufficient balance. Request rejected.");
                     }
                     
-                    // 1. Deduct balance
                     transaction.update(userBalanceDocRef, { balance: currentBalance - amount });
                     
-                    // 2. Add to balance history
                     const historyRef = doc(collection(db, 'balanceHistory'));
                     transaction.set(historyRef, {
                         userId: userId,
@@ -449,8 +446,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     });
                 }
                 
-                // 3. Create investment
-                const interestRate = fdTenureRates[years] || 0.09; // Fallback to 9% if not set
+                const interestRate = fdTenureRates[years] || 0.09;
                 const newInvestment = {
                     userId: userId,
                     userName: userName,
@@ -463,15 +459,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 };
                 const investmentRef = doc(collection(db, 'investments'));
                 transaction.set(investmentRef, newInvestment);
-
-                // 4. Delete the original request
                 transaction.delete(requestDocRef);
             });
             toast({ title: "Success", description: "Investment request approved.", variant: "success" });
+            return reqData;
         } catch (error) {
             console.error("Investment approval failed:", error);
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
             toast({ title: "Approval Failed", description: errorMessage, variant: "destructive" });
+            return null;
         }
     };
 
@@ -479,15 +475,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'investmentRequests', requestId));
     };
 
-     const approveFdWithdrawalRequest = async (requestId: string) => {
+     const approveFdWithdrawalRequest = async (requestId: string): Promise<FdWithdrawalRequest | null> => {
         const requestDocRef = doc(db, 'fdWithdrawalRequests', requestId);
+        let request: FdWithdrawalRequest | null = null;
         try {
             await runTransaction(db, async (transaction) => {
                 const requestSnap = await transaction.get(requestDocRef);
                 if (!requestSnap.exists()) {
                     throw new Error("Withdrawal request not found or already processed.");
                 }
-                const request = { ...requestSnap.data(), id: requestSnap.id } as FdWithdrawalRequest;
+                request = { ...requestSnap.data(), id: requestSnap.id } as FdWithdrawalRequest;
                 
                 const investmentDocRef = doc(db, 'investments', request.investmentIdToWithdraw);
                 const investmentSnap = await transaction.get(investmentDocRef);
@@ -502,7 +499,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     throw new Error("User balance record not found.");
                 }
 
-                // Calculate interest accrued to date with penalty
                 const daysToMaturity = differenceInDays(investment.maturityDate.toDate(), new Date());
                 const isPenaltyFree = daysToMaturity <= 7;
                 const penaltyRate = isPenaltyFree ? investment.interestRate : Math.max(0, investment.interestRate - 0.01);
@@ -531,10 +527,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             });
             
             toast({ title: "Success", description: "Withdrawal approved and amount credited to balance.", variant: "success" });
+            return request;
         } catch (error) {
              console.error("FD Withdrawal approval failed:", error);
              const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
              toast({ title: "FD Withdrawal Failed", description: errorMessage, variant: "destructive" });
+             return null;
         }
     };
 
@@ -542,15 +540,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'fdWithdrawalRequests', requestId));
     };
 
-     const approveMaturedFdRequest = async (requestId: string) => {
+     const approveMaturedFdRequest = async (requestId: string): Promise<MaturedFdRequest | null> => {
         const requestDocRef = doc(db, 'maturedFdRequests', requestId);
+        let request: MaturedFdRequest | null = null;
         try {
             await runTransaction(db, async (transaction) => {
                 const requestSnap = await transaction.get(requestDocRef);
                 if (!requestSnap.exists()) {
                     throw new Error("Maturity request not found or already processed.");
                 }
-                const request = { ...requestSnap.data(), id: requestSnap.id } as MaturedFdRequest;
+                request = { ...requestSnap.data(), id: requestSnap.id } as MaturedFdRequest;
                 
                 const investmentDocRef = doc(db, 'investments', request.investmentIdToMature);
                 const investmentSnap = await transaction.get(investmentDocRef);
@@ -583,10 +582,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 transaction.delete(requestDocRef);
             });
             toast({ title: "Success", description: "FD matured and amount credited to balance.", variant: "success" });
+            return request;
         } catch (error) {
             console.error("FD Maturity approval failed:", error);
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
             toast({ title: "FD Maturity Failed", description: errorMessage, variant: "destructive" });
+            return null;
         }
     };
 
@@ -617,15 +618,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await addDoc(collection(db, 'balanceWithdrawalRequests'), newRequest);
     };
 
-    const approveTopupRequest = async (requestId: string) => {
+    const approveTopupRequest = async (requestId: string): Promise<TopupRequest | null> => {
         const requestDocRef = doc(db, 'topupRequests', requestId);
+        let request: TopupRequest | null = null;
         try {
             await runTransaction(db, async (transaction) => {
                 const requestSnap = await transaction.get(requestDocRef);
                 if (!requestSnap.exists()) {
                     throw new Error("Top-up request not found or already processed.");
                 }
-                const request = { ...requestSnap.data(), id: requestSnap.id } as TopupRequest;
+                request = { ...requestSnap.data(), id: requestSnap.id } as TopupRequest;
     
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
@@ -634,7 +636,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                     const currentBalance = userBalanceSnap.data()?.balance || 0;
                     transaction.update(userBalanceDocRef, { balance: currentBalance + request.amount });
                 } else {
-                    // If balance doc doesn't exist, create it.
                     transaction.set(userBalanceDocRef, {
                         userId: request.userId,
                         userName: request.userName,
@@ -656,10 +657,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 transaction.delete(requestDocRef);
             });
             toast({ title: "Success", description: "Top-up request approved.", variant: "success" });
+            return request;
         } catch (error) {
             console.error("Top-up approval failed:", error);
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
             toast({ title: "Top-up Failed", description: errorMessage, variant: "destructive" });
+            return null;
         }
     };
 
@@ -667,15 +670,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'topupRequests', requestId));
     };
 
-    const approveBalanceWithdrawalRequest = async (requestId: string) => {
+    const approveBalanceWithdrawalRequest = async (requestId: string): Promise<BalanceWithdrawalRequest | null> => {
         const requestDocRef = doc(db, 'balanceWithdrawalRequests', requestId);
+        let request: BalanceWithdrawalRequest | null = null;
         try {
              await runTransaction(db, async (transaction) => {
                 const requestSnap = await transaction.get(requestDocRef);
                 if (!requestSnap.exists()) {
                     throw new Error("Withdrawal request not found.");
                 }
-                const request = { ...requestSnap.data(), id: requestSnap.id } as BalanceWithdrawalRequest;
+                request = { ...requestSnap.data(), id: requestSnap.id } as BalanceWithdrawalRequest;
 
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
@@ -705,10 +709,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             });
 
             toast({ title: "Success", description: "Withdrawal approved.", variant: "success" });
+            return request;
         } catch (error) {
             console.error("Balance Withdrawal approval failed:", error);
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
             toast({ title: "Balance Withdrawal Failed", description: errorMessage, variant: "destructive" });
+            return null;
         }
     };
 
@@ -812,3 +818,5 @@ export const useData = () => {
     }
     return context;
 };
+
+    

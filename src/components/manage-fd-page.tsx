@@ -13,12 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Download, Percent, Wallet, CheckCircle } from "lucide-react";
 import { differenceInYears, format } from 'date-fns';
 import { useData } from "@/hooks/use-data";
-import { Timestamp } from "firebase/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -52,6 +53,17 @@ export default function ManageFdPage() {
         4: (fdTenureRates['4'] * 100).toString(),
         5: (fdTenureRates['5'] * 100).toString(),
     });
+
+    const [selectedRequest, setSelectedRequest] = useState<CombinedRequest | null>(null);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+
+    const handleApproval = async (action: () => Promise<any>, requestData: any, type: CombinedRequest['type']) => {
+        const approvedRequest = await action();
+        if (approvedRequest) {
+            setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate() });
+            setIsAlertOpen(true);
+        }
+    };
 
 
     React.useEffect(() => {
@@ -225,7 +237,7 @@ export default function ManageFdPage() {
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-                                                <Button size="sm" onClick={() => approveInvestmentRequest(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => handleApproval(() => approveInvestmentRequest(req.id), req, 'FD Approved')}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow><TableCell colSpan={6} className="text-center">No pending investment requests.</TableCell></TableRow>}
@@ -289,7 +301,7 @@ export default function ManageFdPage() {
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-                                                <Button size="sm" onClick={() => approveFdWithdrawalRequest(req.id)}>Accept</Button>
+                                                <Button size="sm" onClick={() => handleApproval(() => approveFdWithdrawalRequest(req.id), req, 'FD Withdrawal Approved')}>Accept</Button>
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow><TableCell colSpan={4} className="text-center">No pending withdrawal requests.</TableCell></TableRow>}
@@ -336,7 +348,7 @@ export default function ManageFdPage() {
                                             <TableCell>₹{req.amount.toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{req.date.toDate().toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
-                                                <Button size="sm" onClick={() => approveMaturedFdRequest(req.id)}>
+                                                <Button size="sm" onClick={() => handleApproval(() => approveMaturedFdRequest(req.id), req, 'FD Matured')}>
                                                     <CheckCircle className="mr-2 h-4 w-4" />
                                                     Confirm Maturity
                                                 </Button>
@@ -482,6 +494,14 @@ export default function ManageFdPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <SendAlertDialog
+                isOpen={isAlertOpen}
+                onClose={() => setIsAlertOpen(false)}
+                request={selectedRequest}
+            />
         </div>
     );
 }
+
+    
