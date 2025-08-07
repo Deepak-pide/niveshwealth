@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
                             backgroundColor: pld.color,
                             marginRight: '5px'
                         }}></span>
-                        <span style={{ color: pld.name === 'Investment' ? 'hsl(var(--secondary-foreground))' : 'hsl(var(--primary))' }}>
+                        <span style={{ color: pld.name === 'Investment' ? 'hsl(var(--foreground))' : 'hsl(var(--primary))' }}>
                             {pld.name}: ₹{pld.value?.toLocaleString('en-IN')}
                         </span>
                     </div>
@@ -150,15 +150,15 @@ export default function InvestmentCalculatorPage() {
                                         <YAxis />
                                         <Tooltip content={<CustomTooltip />} />
                                         <Legend />
-                                        <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" name="Investment" />
+                                        <Bar dataKey="investment" stackId="a" fill="#3b82f6" name="Investment" />
                                         <Bar dataKey="return" stackId="a" fill="hsl(var(--primary))" name="Return" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
                             <div className="grid grid-cols-3 gap-4 text-center">
                                 <div>
-                                    <p className="text-sm text-blue-600">Investment Amount</p>
-                                    <p className="text-lg font-semibold text-blue-600">₹{niveshResult.investment.toLocaleString('en-IN')}</p>
+                                    <p className="text-sm text-foreground">Investment Amount</p>
+                                    <p className="text-lg font-semibold text-foreground">₹{niveshResult.investment.toLocaleString('en-IN')}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">Return</p>
