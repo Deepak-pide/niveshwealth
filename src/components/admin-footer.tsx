@@ -1,7 +1,7 @@
 
 "use client";
 
-import { LayoutDashboard, Users } from 'lucide-react';
+import { LayoutDashboard, Users, Send } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminFooter() {
@@ -17,6 +17,10 @@ export default function AdminFooter() {
           <Link href="/admin/users" className="relative flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
             <Users className="h-6 w-6" />
             <span className="text-xs font-medium">Users</span>
+          </Link>
+          <Link href="/admin/manage/send-alert" className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
+            <Send className="h-6 w-6" />
+            <span className="text-xs font-medium">Send Alert</span>
           </Link>
         </nav>
       </div>

@@ -4,8 +4,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useData, Template } from "@/hooks/use-data";
 import { format } from "date-fns";
 
