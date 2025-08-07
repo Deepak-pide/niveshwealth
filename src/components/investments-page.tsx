@@ -44,7 +44,6 @@ export default function InvestmentsPage() {
     const [visibleActive, setVisibleActive] = useState(ITEMS_PER_PAGE);
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
     const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
-    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
     
     if (!user) {
         return (
@@ -95,7 +94,6 @@ export default function InvestmentsPage() {
             description: "Your withdrawal request has been submitted for approval.",
         });
         setIsWithdrawalDialogOpen(false);
-        setIsDetailsDialogOpen(false);
     };
     
     const visibleActiveInvestments = combinedActiveInvestments.slice(0, visibleActive);
@@ -188,7 +186,7 @@ export default function InvestmentsPage() {
 
 
                     return (
-                        <Dialog key={investment.id} onOpenChange={setIsDetailsDialogOpen}>
+                        <Dialog key={investment.id}>
                             <DialogTrigger asChild disabled={isPending}>
                                  <Card className={`transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl ${isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                     <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -300,9 +298,29 @@ export default function InvestmentsPage() {
                                                     <span className="text-foreground">₹{totalWithdrawalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                             </div>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleWithdraw(investment.id)}>Confirm Withdrawal</AlertDialogAction>
+                                            <AlertDialogFooter className="grid grid-cols-2 mt-4">
+                                                <DialogClose asChild>
+                                                    <Button variant="outline">Cancel</Button>
+                                                </DialogClose>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive">Confirm Withdrawal</Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                         <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will submit a withdrawal request to the admin for approval.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleWithdraw(investment.id)}>
+                                                                Continue
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </AlertDialogFooter>
                                         </DialogContent>
                                     </Dialog>
@@ -331,3 +349,5 @@ export default function InvestmentsPage() {
         </div>
     );
 }
+
+    
