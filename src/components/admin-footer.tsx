@@ -18,10 +18,6 @@ export default function AdminFooter() {
             <Users className="h-6 w-6" />
             <span className="text-xs font-medium">Users</span>
           </Link>
-          <Link href="/admin/manage/send-alert" className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
-            <Send className="h-6 w-6" />
-            <span className="text-xs font-medium">Send Alert</span>
-          </Link>
         </nav>
       </div>
     </footer>
