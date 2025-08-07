@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "./ui/scroll-area";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Sector } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { differenceInYears, format, addYears, differenceInDays } from 'date-fns';
 import Link from "next/link";
 import { useData, Investment } from "@/hooks/use-data";
@@ -36,37 +36,6 @@ const calculateInvestmentDetails = (investment: { amount: number, interestRate: 
 const COLORS = ['hsl(var(--primary))', '#3b82f6'];
 const ITEMS_PER_PAGE = 5;
 
-const renderActiveShape = (props: any) => {
-    const RADIAN = Math.PI / 180;
-    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-    const sin = Math.sin(-RADIAN * midAngle);
-    const cos = Math.cos(-RADIAN * midAngle);
-    const sx = cx + (outerRadius + 10) * cos;
-    const sy = cy + (outerRadius + 10) * sin;
-    const mx = cx + (outerRadius + 30) * cos;
-    const my = cy + (outerRadius + 30) * sin;
-    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
-    const ey = my;
-    const textAnchor = cos >= 0 ? 'start' : 'end';
-
-    return (
-        <g>
-            <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
-                {payload.name}
-            </text>
-            <Sector
-                cx={cx}
-                cy={cy}
-                innerRadius={innerRadius}
-                outerRadius={outerRadius + 4} // This creates the zoom effect
-                startAngle={startAngle}
-                endAngle={endAngle}
-                fill={fill}
-            />
-        </g>
-    );
-};
-
 
 export default function InvestmentsPage() {
     const { investments, investmentRequests, addFdWithdrawalRequest } = useData();
@@ -76,7 +45,6 @@ export default function InvestmentsPage() {
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
     const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-    const [activeIndex, setActiveIndex] = useState(0);
     
     if (!user) {
         return (
@@ -88,10 +56,6 @@ export default function InvestmentsPage() {
             </div>
         )
     }
-
-    const onPieEnter = (_: any, index: number) => {
-        setActiveIndex(index);
-    };
 
     const userInvestments = investments.filter(inv => inv.userId === user.uid);
     
@@ -257,17 +221,15 @@ export default function InvestmentsPage() {
                                     <div className="h-48 w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie 
-                                                    activeIndex={activeIndex}
-                                                    activeShape={renderActiveShape}
-                                                    data={chartData} 
-                                                    dataKey="value" 
-                                                    nameKey="name" 
-                                                    cx="50%" 
-                                                    cy="50%" 
-                                                    outerRadius={60} 
-                                                    fill="#8884d8" 
-                                                    onMouseEnter={onPieEnter}
+                                                <Pie
+                                                    data={chartData}
+                                                    dataKey="value"
+                                                    nameKey="name"
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    outerRadius={60}
+                                                    labelLine
+                                                    label={(entry) => `₹${entry.value.toLocaleString('en-IN')}`}
                                                 >
                                                     {chartData.map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
