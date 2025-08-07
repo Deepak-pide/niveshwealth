@@ -31,6 +31,7 @@ export default function ManageBalancePage() {
         approveBalanceWithdrawalRequest,
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
+        getUserPhoneNumber,
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
@@ -48,17 +49,11 @@ export default function ManageBalancePage() {
         const approvedRequest = await action();
         if (approvedRequest) {
             const phoneNumber = getUserPhoneNumber(approvedRequest.userId);
-            setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate(), phoneNumber });
+            setSelectedRequest({ ...approvedRequest, type, date: new Date(approvedRequest.date.seconds * 1000), phoneNumber });
             setIsAlertOpen(true);
         }
     };
     
-    const getUserPhoneNumber = (userId: string) => {
-        const user = userDetails.find(u => u.userId === userId);
-        return user?.phoneNumber;
-    }
-
-
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
         if (balance <= 0) return '0.00';
         const monthlyRate = annualRate / 12 / 100;
@@ -118,7 +113,6 @@ export default function ManageBalancePage() {
 
     const visibleUserBalances = filteredUserBalances.slice(0, visibleUsers);
     const hasMoreUsers = filteredUserBalances.length > visibleUsers;
-    const { userDetails } = useData();
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -346,5 +340,3 @@ export default function ManageBalancePage() {
         </div>
     );
 }
-
-    

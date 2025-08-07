@@ -70,7 +70,8 @@ export default function ManageFdPage() {
         rejectFdWithdrawalRequest,
         approveMaturedFdRequest,
         setFdInterestRatesForTenures,
-        fdTenureRates
+        fdTenureRates,
+        getUserPhoneNumber,
     } = useData();
     const { user: adminUser } = useAuth();
     const { toast } = useToast();
@@ -96,7 +97,8 @@ export default function ManageFdPage() {
     const handleApproval = async (action: () => Promise<any>, requestData: any, type: CombinedRequest['type']) => {
         const approvedRequest = await action();
         if (approvedRequest) {
-            setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate() });
+            const phoneNumber = getUserPhoneNumber(approvedRequest.userId);
+            setSelectedRequest({ ...approvedRequest, type, date: new Date(approvedRequest.date.seconds * 1000), phoneNumber });
             setIsAlertOpen(true);
         }
     };
@@ -527,5 +529,3 @@ export default function ManageFdPage() {
         </div>
     );
 }
-
-    

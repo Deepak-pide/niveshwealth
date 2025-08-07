@@ -46,7 +46,7 @@ export default function MyBalancePage() {
     }
 
     const currentUserBalance = userBalances.find(b => b.userId === user.uid)?.balance || 0;
-    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid).sort((a, b) => b.date.toMillis() - a.date.toMillis());
+    const allUserHistory = balanceHistory.filter(h => h.userId === user.uid);
 
     const visibleHistory = allUserHistory.slice(0, visibleHistoryCount);
     const hasMoreHistory = allUserHistory.length > visibleHistoryCount;
@@ -261,23 +261,29 @@ export default function MyBalancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {visibleHistory.length > 0 ? visibleHistory.map((item, index) => (
-                                        <TableRow key={index} className="transition-colors hover:bg-muted/50">
-                                            <TableCell className="font-medium text-xs md:text-sm">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex flex-col text-center">
-                                                        <span>{format(item.date.toDate(), 'dd/MM')}</span>
-                                                        <span className="text-muted-foreground">{format(item.date.toDate(), 'yyyy')}</span>
+                                    {visibleHistory.length > 0 ? visibleHistory.map((item, index) => {
+                                        const isInterest = item.description === 'Monthly Interest';
+                                        return (
+                                            <TableRow key={index} className="transition-colors hover:bg-muted/50">
+                                                <TableCell className="font-medium text-xs md:text-sm">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex flex-col text-center">
+                                                            <span>{format(item.date.toDate(), 'dd/MM')}</span>
+                                                            <span className="text-muted-foreground">{format(item.date.toDate(), 'yyyy')}</span>
+                                                        </div>
+                                                        <div className="h-8 border-l border-border"></div>
                                                     </div>
-                                                    <div className="h-8 border-l border-border"></div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="break-words">{item.description}</TableCell>
-                                            <TableCell className={cn("text-right font-semibold whitespace-nowrap", item.type === 'Credit' ? 'text-green-600' : 'text-red-600')}>
-                                                {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
-                                            </TableCell>
-                                        </TableRow>
-                                    )) : <TableRow><TableCell colSpan={3} className="text-center">No transaction history.</TableCell></TableRow>}
+                                                </TableCell>
+                                                <TableCell className="break-words">{item.description}</TableCell>
+                                                <TableCell className={cn(
+                                                    "text-right font-semibold whitespace-nowrap",
+                                                    isInterest ? 'text-primary' : (item.type === 'Credit' ? 'text-green-600' : 'text-red-600')
+                                                )}>
+                                                    {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    }) : <TableRow><TableCell colSpan={3} className="text-center">No transaction history.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </ScrollArea>
@@ -294,5 +300,3 @@ export default function MyBalancePage() {
         </div>
     )
 }
-
-    
