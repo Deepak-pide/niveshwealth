@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const ITEMS_PER_PAGE = 10;
 
-const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetails | null }) => {
+const UserDetailsView = ({ isOpen, onOpenChange, user, details }: { isOpen: boolean, onOpenChange: (open: boolean) => void, user: AppUser, details: UserDetails | null }) => {
     const { updateUserProfile, updateUserName } = useData();
     const { toast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
@@ -23,10 +23,13 @@ const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetail
     const [occupation, setOccupation] = useState(details?.occupation || '');
 
     useEffect(() => {
-        setName(user.name);
-        setPhone(details?.phoneNumber || '');
-        setOccupation(details?.occupation || '');
-    }, [user, details]);
+        if(isOpen) {
+            setName(user.name);
+            setPhone(details?.phoneNumber || '');
+            setOccupation(details?.occupation || '');
+            setIsEditing(false); // Reset editing state when dialog opens
+        }
+    }, [isOpen, user, details]);
 
     const handleSaveChanges = async () => {
         try {
@@ -45,62 +48,71 @@ const UserDetailsView = ({ user, details }: { user: AppUser, details: UserDetail
 
 
     return (
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>{user.name}'s Profile</DialogTitle>
-                <DialogDescription>{user.email}</DialogDescription>
-            </DialogHeader>
-             <div className="grid gap-4 py-4 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">User ID:</span>
-                    <span className="font-semibold select-all">{user.id}</span>
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{user.name}'s Profile</DialogTitle>
+                    <DialogDescription>{user.email}</DialogDescription>
+                </DialogHeader>
+                 <div className="grid gap-4 py-4 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">User ID:</span>
+                        <span className="font-semibold select-all">{user.id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="name" className="text-muted-foreground">Name:</Label>
+                        {isEditing ? (
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{name}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="phone" className="text-muted-foreground">Phone:</Label>
+                         {isEditing ? (
+                            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{phone || 'N/A'}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="occupation" className="text-muted-foreground">Occupation:</Label>
+                         {isEditing ? (
+                            <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{occupation || 'N/A'}</span>
+                        )}
+                    </div>
                 </div>
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="name" className="text-muted-foreground">Name:</Label>
+                <DialogFooter>
                     {isEditing ? (
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-3/4" />
+                        <>
+                            <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                            <Button onClick={handleSaveChanges}>Save Changes</Button>
+                        </>
                     ) : (
-                        <span className="font-semibold">{name}</span>
+                         <DialogClose asChild>
+                            <Button variant="outline">Close</Button>
+                        </DialogClose>
                     )}
-                </div>
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="phone" className="text-muted-foreground">Phone:</Label>
-                     {isEditing ? (
-                        <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-3/4" />
-                    ) : (
-                        <span className="font-semibold">{phone || 'N/A'}</span>
-                    )}
-                </div>
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="occupation" className="text-muted-foreground">Occupation:</Label>
-                     {isEditing ? (
-                        <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="w-3/4" />
-                    ) : (
-                        <span className="font-semibold">{occupation || 'N/A'}</span>
-                    )}
-                </div>
-            </div>
-            <DialogFooter>
-                {isEditing ? (
-                    <>
-                        <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                        <Button onClick={handleSaveChanges}>Save Changes</Button>
-                    </>
-                ) : (
-                     <DialogClose asChild>
-                        <Button variant="outline">Close</Button>
-                    </DialogClose>
-                )}
-                 {!isEditing && <Button onClick={() => setIsEditing(true)}>Update Profile</Button>}
-            </DialogFooter>
-        </DialogContent>
+                     {!isEditing && <Button onClick={() => setIsEditing(true)}>Update Profile</Button>}
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 };
 
 export default function UsersPage() {
     const { users, userDetails } = useData();
     const [visibleUsers, setVisibleUsers] = useState(ITEMS_PER_PAGE);
+    const [selectedUser, setSelectedUser] = useState<{ user: AppUser, details: UserDetails | null } | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+    const openDialog = (user: AppUser, details: UserDetails | null) => {
+        setSelectedUser({ user, details });
+        setIsDialogOpen(true);
+    }
+    
     const visibleUsersList = users.slice(0, visibleUsers);
     const hasMoreUsers = users.length > visibleUsers;
 
@@ -142,12 +154,7 @@ export default function UsersPage() {
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>{user.joinDate.toDate().toLocaleDateString()}</TableCell>
                                         <TableCell className="text-right">
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm">View</Button>
-                                                </DialogTrigger>
-                                                <UserDetailsView user={user} details={details} />
-                                            </Dialog>
+                                            <Button variant="outline" size="sm" onClick={() => openDialog(user, details)}>View</Button>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -163,6 +170,17 @@ export default function UsersPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {selectedUser && (
+                <UserDetailsView
+                    isOpen={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    user={selectedUser.user}
+                    details={selectedUser.details}
+                />
+            )}
         </div>
     );
 }
+
+    

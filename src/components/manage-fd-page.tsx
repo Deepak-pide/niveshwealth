@@ -23,6 +23,40 @@ import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
 
 const ITEMS_PER_PAGE = 10;
 
+const ActiveFdsDialog = ({ user, fds }: { user: any; fds: any[] }) => (
+    <DialogContent>
+        <DialogHeader>
+            <DialogTitle>{user.userName}'s Active FDs</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>FD Name</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Maturity</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {fds.map(fd => (
+                        <TableRow key={fd.id}>
+                            <TableCell>{fd.name}</TableCell>
+                            <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{format(fd.maturityDate.toDate(), 'dd MMM yyyy')}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+        <DialogFooter>
+            <DialogClose asChild>
+                <Button>Close</Button>
+            </DialogClose>
+        </DialogFooter>
+    </DialogContent>
+);
+
+
 export default function ManageFdPage() {
     const { 
         investmentRequests,
@@ -56,6 +90,8 @@ export default function ManageFdPage() {
 
     const [selectedRequest, setSelectedRequest] = useState<CombinedRequest | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [selectedUserForFds, setSelectedUserForFds] = useState<any>(null);
+    const [isFdsDialogOpen, setIsFdsDialogOpen] = useState(false);
 
     const handleApproval = async (action: () => Promise<any>, requestData: any, type: CombinedRequest['type']) => {
         const approvedRequest = await action();
@@ -445,38 +481,18 @@ export default function ManageFdPage() {
                                             <TableCell className="text-right">
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button variant="outline" size="sm" disabled={user.activeFDs.length === 0}>View</Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            disabled={user.activeFDs.length === 0}
+                                                            onClick={() => {
+                                                                setSelectedUserForFds(user);
+                                                                setIsFdsDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            View
+                                                        </Button>
                                                     </DialogTrigger>
-                                                    <DialogContent>
-                                                        <DialogHeader>
-                                                            <DialogTitle>{user.userName}'s Active FDs</DialogTitle>
-                                                        </DialogHeader>
-                                                        <div className="py-4">
-                                                            <Table>
-                                                                <TableHeader>
-                                                                    <TableRow>
-                                                                        <TableHead>FD Name</TableHead>
-                                                                        <TableHead>Amount</TableHead>
-                                                                        <TableHead>Maturity</TableHead>
-                                                                    </TableRow>
-                                                                </TableHeader>
-                                                                <TableBody>
-                                                                    {user.activeFDs.map(fd => (
-                                                                        <TableRow key={fd.id}>
-                                                                            <TableCell>{fd.name}</TableCell>
-                                                                            <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
-                                                                            <TableCell>{format(fd.maturityDate.toDate(), 'dd MMM yyyy')}</TableCell>
-                                                                        </TableRow>
-                                                                    ))}
-                                                                </TableBody>
-                                                            </Table>
-                                                        </div>
-                                                        <DialogFooter>
-                                                            <DialogClose asChild>
-                                                                <Button>Close</Button>
-                                                            </DialogClose>
-                                                        </DialogFooter>
-                                                    </DialogContent>
                                                 </Dialog>
                                             </TableCell>
                                         </TableRow>
@@ -494,6 +510,14 @@ export default function ManageFdPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+            <Dialog open={isFdsDialogOpen} onOpenChange={setIsFdsDialogOpen}>
+                {selectedUserForFds && (
+                    <ActiveFdsDialog
+                        user={selectedUserForFds}
+                        fds={selectedUserForFds.activeFDs}
+                    />
+                )}
+            </Dialog>
 
             <SendAlertDialog
                 isOpen={isAlertOpen}
