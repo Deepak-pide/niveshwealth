@@ -30,7 +30,7 @@ export default function UserNav() {
 
      useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
-            // e.preventDefault(); // Keep the event from being handled by the browser.
+            e.preventDefault(); // Keep the event from being handled by the browser.
             setDeferredPrompt(e as BeforeInstallPromptEvent);
         };
 
@@ -68,7 +68,7 @@ export default function UserNav() {
         }
     };
 
-    const showInstallButton = isMobile && deferredPrompt && !isStandalone;
+    const showInstallButton = deferredPrompt && !isStandalone;
 
     return (
         <DropdownMenu>
