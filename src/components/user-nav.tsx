@@ -105,9 +105,8 @@ export default function UserNav() {
         const currentUserBalanceData = userBalances.find(b => b.userId === user.id);
         const currentUserBalance = currentUserBalanceData?.balance ?? 0;
         
-        const oneYearAgo = subYears(new Date(), 1);
         const userBalanceHistory = balanceHistory
-            .filter(bh => bh.userId === user.id && isAfter(bh.date.toDate(), oneYearAgo))
+            .filter(bh => bh.userId === user.id)
             .sort((a, b) => b.date.toMillis() - a.date.toMillis())
             .map(bh => ({
                 'Date': format(bh.date.toDate(), 'yyyy-MM-dd'),
