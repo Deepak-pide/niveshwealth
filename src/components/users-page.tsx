@@ -23,6 +23,10 @@ const UserDetailsView = ({ userId }: { userId: string }) => {
     return (
         <div className="grid gap-4 py-4 text-sm">
             <div className="flex justify-between">
+                <span className="text-muted-foreground">User ID:</span>
+                <span className="font-semibold">{userId}</span>
+            </div>
+            <div className="flex justify-between">
                 <span className="text-muted-foreground">Phone:</span>
                 <span className="font-semibold">{details?.phoneNumber || 'N/A'}</span>
             </div>
