@@ -134,11 +134,17 @@ export interface UserDetails {
     userId: string;
     phoneNumber: string;
     occupation: string;
+    upiId?: string;
+    accountNumber?: string;
+    accountHolderName?: string;
 }
 
 export interface UserProfileData {
     phoneNumber: string;
     occupation: string;
+    upiId?: string;
+    accountNumber?: string;
+    accountHolderName?: string;
 }
 
 

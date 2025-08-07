@@ -12,11 +12,15 @@ import { useData } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { LineChart } from "lucide-react";
+import { LineChart, Banknote } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 const formSchema = z.object({
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number must be at most 15 digits"),
   occupation: z.string().min(2, "Occupation is required"),
+  upiId: z.string().optional(),
+  accountNumber: z.string().optional(),
+  accountHolderName: z.string().optional(),
 });
 
 export default function CompleteProfilePage() {
@@ -30,6 +34,9 @@ export default function CompleteProfilePage() {
     defaultValues: {
       phoneNumber: "",
       occupation: "",
+      upiId: "",
+      accountNumber: "",
+      accountHolderName: "",
     },
   });
 
@@ -49,7 +56,7 @@ export default function CompleteProfilePage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className='flex justify-center items-center gap-2 mb-4'>
             <LineChart className="h-8 w-8 text-primary" />
@@ -88,6 +95,59 @@ export default function CompleteProfilePage() {
                   </FormItem>
                 )}
               />
+
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="bank-details">
+                  <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <Banknote className="h-5 w-5 text-primary" />
+                        <span className="font-semibold">Bank Details (Optional)</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                     <FormField
+                        control={form.control}
+                        name="upiId"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>UPI ID</FormLabel>
+                            <FormControl>
+                            <Input placeholder="your-upi@id" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="accountNumber"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Account Number</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Your bank account number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="accountHolderName"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Account Holder Name</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Name as per bank records" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Saving..." : "Save and Continue"}
               </Button>
