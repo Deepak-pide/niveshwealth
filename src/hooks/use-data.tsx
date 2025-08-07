@@ -23,7 +23,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
-import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter, isBefore } from 'date-fns';
+import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter, isBefore, subMonths } from 'date-fns';
 import { useToast } from './use-toast';
 import type { User } from 'firebase/auth';
 
@@ -725,25 +725,47 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const payInterestToAll = async (annualRate: number) => {
         const monthlyRate = annualRate / 12 / 100;
         const batch = writeBatch(db);
+        const oneMonthAgo = subMonths(new Date(), 1);
 
-        userBalances.forEach(userBalance => {
+        for (const userBalance of userBalances) {
             if (userBalance.balance > 0) {
-                const interest = parseFloat((userBalance.balance * monthlyRate).toFixed(2));
-                const userBalanceRef = doc(db, 'userBalances', userBalance.id);
-                batch.update(userBalanceRef, { balance: userBalance.balance + interest });
+                // Find the user's transaction history
+                const userHistory = combinedHistory.filter(h => h.userId === userBalance.userId);
+                
+                // Calculate balance from one month ago
+                let balanceOneMonthAgo = userBalance.balance;
+                const recentTransactions = userHistory.filter(h => h.date.toDate() > oneMonthAgo);
 
-                const payoutRef = doc(collection(db, 'interestPayouts'));
-                batch.set(payoutRef, {
-                    userId: userBalance.userId,
-                    userName: userBalance.userName,
-                    date: Timestamp.now(),
-                    description: "Monthly Interest",
-                    amount: interest,
-                    type: 'Credit'
-                });
+                for (const tx of recentTransactions) {
+                    if (tx.type === 'Credit') {
+                        balanceOneMonthAgo -= tx.amount;
+                    } else { // Debit
+                        balanceOneMonthAgo += tx.amount;
+                    }
+                }
+                
+                if (balanceOneMonthAgo > 0) {
+                    const interest = parseFloat((balanceOneMonthAgo * monthlyRate).toFixed(2));
+                    
+                    if (interest > 0) {
+                        const userBalanceRef = doc(db, 'userBalances', userBalance.id);
+                        batch.update(userBalanceRef, { balance: userBalance.balance + interest });
+
+                        const payoutRef = doc(collection(db, 'interestPayouts'));
+                        batch.set(payoutRef, {
+                            userId: userBalance.userId,
+                            userName: userBalance.userName,
+                            date: Timestamp.now(),
+                            description: "Monthly Interest",
+                            amount: interest,
+                            type: 'Credit'
+                        });
+                    }
+                }
             }
-        });
+        }
         await batch.commit();
+        toast({ title: "Interest Paid", description: "Monthly interest has been successfully paid to all eligible users."});
     };
 
     const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {

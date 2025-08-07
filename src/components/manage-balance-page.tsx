@@ -15,7 +15,7 @@ import { Download, Settings } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { format } from "date-fns";
+import { format, subMonths } from "date-fns";
 import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
 
 const ITEMS_PER_PAGE = 10;
@@ -25,6 +25,7 @@ export default function ManageBalancePage() {
         topupRequests, 
         balanceWithdrawalRequests, 
         userBalances, 
+        balanceHistory,
         approveTopupRequest, 
         rejectTopupRequest, 
         approveBalanceWithdrawalRequest,
@@ -46,16 +47,41 @@ export default function ManageBalancePage() {
     const handleApproval = async (action: () => Promise<any>, requestData: any, type: CombinedRequest['type']) => {
         const approvedRequest = await action();
         if (approvedRequest) {
-            setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate() });
+            const phoneNumber = getUserPhoneNumber(approvedRequest.userId);
+            setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate(), phoneNumber });
             setIsAlertOpen(true);
         }
     };
+    
+    const getUserPhoneNumber = (userId: string) => {
+        const user = userDetails.find(u => u.userId === userId);
+        return user?.phoneNumber;
+    }
 
 
     const calculateMonthlyInterest = (balance: number, annualRate: number) => {
+        if (balance <= 0) return '0.00';
         const monthlyRate = annualRate / 12 / 100;
         return (balance * monthlyRate).toFixed(2);
     };
+
+    const getBalanceOneMonthAgo = (userBalance: (typeof userBalances)[0]) => {
+        const oneMonthAgo = subMonths(new Date(), 1);
+        let balance = userBalance.balance;
+        
+        const recentTransactions = balanceHistory
+            .filter(h => h.userId === userBalance.userId && h.date.toDate() > oneMonthAgo);
+            
+        for (const tx of recentTransactions) {
+            if (tx.type === 'Credit') {
+                balance -= tx.amount;
+            } else {
+                balance += tx.amount;
+            }
+        }
+        return balance;
+    }
+
 
     const filteredUserBalances = userBalances
         .filter(user => user.balance > 0 && user.userId !== adminUser?.uid)
@@ -82,10 +108,6 @@ export default function ManageBalancePage() {
 
     const handleConfirmSettings = () => {
         payInterestToAll(interestRate);
-        toast({
-            title: "Settings Updated",
-            description: `Monthly interest paid at ${interestRate}%.`,
-        });
     }
     
     const visibleTopupRequests = topupRequests.slice(0, visibleTopups);
@@ -96,6 +118,7 @@ export default function ManageBalancePage() {
 
     const visibleUserBalances = filteredUserBalances.slice(0, visibleUsers);
     const hasMoreUsers = filteredUserBalances.length > visibleUsers;
+    const { userDetails } = useData();
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -244,20 +267,23 @@ export default function ManageBalancePage() {
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead>User</TableHead>
-                                                                <TableHead>Balance</TableHead>
+                                                                <TableHead>Prev. Balance</TableHead>
                                                                 <TableHead className="text-right">Interest to Pay</TableHead>
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                            {filteredUserBalances.map((user) => (
-                                                                <TableRow key={user.id}>
-                                                                    <TableCell className="font-medium">{user.userName}</TableCell>
-                                                                    <TableCell>₹{user.balance.toLocaleString('en-IN')}</TableCell>
-                                                                    <TableCell className="text-right font-semibold text-green-600">
-                                                                        +₹{calculateMonthlyInterest(user.balance, interestRate)}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ))}
+                                                            {filteredUserBalances.map((user) => {
+                                                                const balanceOneMonthAgo = getBalanceOneMonthAgo(user);
+                                                                return (
+                                                                    <TableRow key={user.id}>
+                                                                        <TableCell className="font-medium">{user.userName}</TableCell>
+                                                                        <TableCell>₹{balanceOneMonthAgo.toLocaleString('en-IN')}</TableCell>
+                                                                        <TableCell className="text-right font-semibold text-green-600">
+                                                                            +₹{calculateMonthlyInterest(balanceOneMonthAgo, interestRate)}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )
+                                                            })}
                                                         </TableBody>
                                                     </Table>
                                                 </div>
