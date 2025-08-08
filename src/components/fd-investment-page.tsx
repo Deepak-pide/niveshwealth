@@ -59,7 +59,7 @@ export default function FdInvestmentPage() {
 
         if (paymentMethod === 'upi' && isMobile) {
             const transactionNote = `FD for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
-            const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+            const upiUrl = `upi://pay?pa=9179349919@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
             window.open(upiUrl, '_blank');
         }
 
@@ -182,8 +182,7 @@ export default function FdInvestmentPage() {
                                                         />
                                                     </div>
                                                     <p className="text-muted-foreground">Scan the QR code with your UPI app</p>
-                                                    <p className="font-semibold">UPI ID: 9179349919-2@axl</p>
-                                                    <p className="font-semibold">Mobile: 9179349919</p>
+                                                    <p className="font-semibold">UPI Number: 9179349919</p>
                                                 </div>
                                             )}
                                         </div>

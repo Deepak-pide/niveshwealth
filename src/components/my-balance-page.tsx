@@ -64,7 +64,7 @@ export default function MyBalancePage() {
 
         if (isMobile) {
             const transactionNote = "Add to Nivesh Wallet";
-            const upiUrl = `upi://pay?pa=9179349919-2@axl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
+            const upiUrl = `upi://pay?pa=9179349919@upi&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
             window.open(upiUrl, '_blank');
         }
 
@@ -145,8 +145,7 @@ export default function MyBalancePage() {
                                                     height={150}
                                                 />
                                             </div>
-                                            <p className="font-semibold">UPI ID: 9179349919-2@axl</p>
-                                            <p className="font-semibold">Mobile: 9179349919</p>
+                                            <p className="font-semibold">UPI Number: 9179349919</p>
                                         </div>
                                     )}
                                 </div>
