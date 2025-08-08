@@ -120,6 +120,13 @@ export interface InterestPayout {
     type: "Credit";
 }
 
+export interface InterestOnAmount {
+    id: string;
+    userId: string;
+    balance: number;
+    lastUpdated: Timestamp;
+}
+
 
 export interface AppUser {
     id: string;
@@ -165,6 +172,7 @@ interface DataContextType {
     interestPayouts: InterestPayout[];
     templates: Template[];
     fdTenureRates: {[key: number]: number};
+    interestOnAmount: InterestOnAmount[];
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -186,6 +194,7 @@ interface DataContextType {
     addTemplate: (templateData: Omit<Template, 'id'>) => Promise<void>;
     updateTemplate: (templateId: string, templateData: Omit<Template, 'id'>) => Promise<void>;
     deleteTemplate: (templateId: string) => Promise<void>;
+    recordMonthlyBalances: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -218,6 +227,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [combinedHistory, setCombinedHistory] = useState<BalanceHistory[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
+    const [interestOnAmount, setInterestOnAmount] = useState<InterestOnAmount[]>([]);
 
     const initializeNewUser = useCallback(async (user: User) => {
         const userDocRef = doc(db, 'users', user.uid);
@@ -244,6 +254,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 balance: 0,
             };
             batch.set(userBalanceDocRef, newUserBalance);
+            
+            const interestOnAmountRef = doc(db, 'interestOnAmount', user.uid);
+            batch.set(interestOnAmountRef, {
+                userId: user.uid,
+                balance: 0,
+                lastUpdated: Timestamp.now()
+            });
 
             await batch.commit();
         }
@@ -326,43 +343,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('maturedFdRequests', setMaturedFdRequests);
     useDataFetching('topupRequests', setTopupRequests);
     useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
-    // useDataFetching('userBalances', setUserBalances);
+    useDataFetching('userBalances', setUserBalances);
     useDataFetching('balanceHistory', setBalanceHistory);
     useDataFetching('interestPayouts', setInterestPayouts);
     useDataFetching('templates', setTemplates);
-
-     useEffect(() => {
-        if (users.length > 0 && (balanceHistory.length > 0 || interestPayouts.length > 0)) {
-            const calculatedBalances = users.map(user => {
-                const userHistory = balanceHistory.filter(h => h.userId === user.userId);
-                const userInterest = interestPayouts.filter(p => p.userId === user.userId);
-                
-                const credits = [...userHistory.filter(h => h.type === 'Credit'), ...userInterest].reduce((acc, curr) => acc + curr.amount, 0);
-                const debits = userHistory.filter(h => h.type === 'Debit').reduce((acc, curr) => acc + curr.amount, 0);
-                
-                const finalBalance = credits - debits;
-
-                return {
-                    id: user.userId,
-                    userId: user.userId,
-                    userName: user.name,
-                    userAvatar: user.avatar,
-                    balance: finalBalance,
-                };
-            });
-            setUserBalances(calculatedBalances);
-        } else if (users.length > 0) {
-            // Handle case where there's no history, initialize balances to 0
-            const zeroBalances = users.map(user => ({
-                id: user.userId,
-                userId: user.userId,
-                userName: user.name,
-                userAvatar: user.avatar,
-                balance: 0,
-            }));
-            setUserBalances(zeroBalances);
-        }
-    }, [users, balanceHistory, interestPayouts]);
+    useDataFetching('interestOnAmount', setInterestOnAmount);
 
 
     const getUserInfo = () => {
@@ -405,7 +390,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceRef = doc(db, 'userBalances', userId);
         batch.update(userBalanceRef, { userName: newName });
 
-        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate'>)[] = [
+        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'recordMonthlyBalances'>)[] = [
             'investments', 'investmentRequests', 'fdWithdrawalRequests', 
             'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
             'balanceHistory', 'interestPayouts'
@@ -462,10 +447,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
                 const { userId, userName, amount, years, paymentMethod, description } = reqData;
 
-                if (paymentMethod === 'balance') {
-                    const userBalanceDocRef = doc(db, 'userBalances', userId);
-                    const userBalanceSnap = await transaction.get(userBalanceDocRef);
+                const userBalanceDocRef = doc(db, 'userBalances', userId);
+                const userBalanceSnap = await transaction.get(userBalanceDocRef);
 
+                if (paymentMethod === 'balance') {
                     if (!userBalanceSnap.exists()) {
                         throw new Error("User balance document does not exist!");
                     }
@@ -676,17 +661,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
                 const userBalanceSnap = await transaction.get(userBalanceDocRef);
                 
-                if (userBalanceSnap.exists()) {
-                    const currentBalance = userBalanceSnap.data()?.balance || 0;
-                    transaction.update(userBalanceDocRef, { balance: currentBalance + request.amount });
-                } else {
-                    transaction.set(userBalanceDocRef, {
-                        userId: request.userId,
-                        userName: request.userName,
-                        userAvatar: request.userAvatar,
-                        balance: request.amount,
-                    });
-                }
+                const currentBalance = userBalanceSnap.exists() ? userBalanceSnap.data()?.balance || 0 : 0;
+                transaction.set(userBalanceDocRef, { 
+                    balance: currentBalance + request.amount,
+                    userId: request.userId,
+                    userName: request.userName,
+                    userAvatar: request.userAvatar,
+                 }, { merge: true });
                 
                 const historyRef = doc(collection(db, 'balanceHistory'));
                 transaction.set(historyRef, {
@@ -766,45 +747,47 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'balanceWithdrawalRequests', requestId));
     };
 
+    const recordMonthlyBalances = async () => {
+        const batch = writeBatch(db);
+        userBalances.forEach(userBalance => {
+            const docRef = doc(db, 'interestOnAmount', userBalance.userId);
+            batch.set(docRef, {
+                userId: userBalance.userId,
+                balance: userBalance.balance,
+                lastUpdated: Timestamp.now()
+            }, { merge: true });
+        });
+        await batch.commit();
+        toast({ title: "Balances Recorded", description: "Current user balances have been recorded for interest calculation." });
+    };
+
     const payInterestToAll = async (annualRate: number) => {
+        if (interestOnAmount.length === 0) {
+            toast({ title: "No Data", description: "Please record monthly balances first.", variant: "destructive" });
+            return;
+        }
+
         const monthlyRate = annualRate / 12 / 100;
         const batch = writeBatch(db);
-        const oneMonthAgo = subMonths(new Date(), 1);
-
-        for (const userBalance of userBalances) {
-            if (userBalance.balance > 0) {
-                // Find the user's transaction history
-                const userHistory = combinedHistory.filter(h => h.userId === userBalance.userId);
+        
+        for (const userStoredBalance of interestOnAmount) {
+            const currentUserBalance = userBalances.find(b => b.userId === userStoredBalance.userId);
+            if (currentUserBalance && userStoredBalance.balance > 0) {
+                const interest = parseFloat((userStoredBalance.balance * monthlyRate).toFixed(2));
                 
-                // Calculate balance from one month ago
-                let balanceOneMonthAgo = userBalance.balance;
-                const recentTransactions = userHistory.filter(h => h.date.toDate() > oneMonthAgo);
+                if (interest > 0) {
+                    const userBalanceRef = doc(db, 'userBalances', userStoredBalance.userId);
+                    batch.update(userBalanceRef, { balance: currentUserBalance.balance + interest });
 
-                for (const tx of recentTransactions) {
-                    if (tx.type === 'Credit') {
-                        balanceOneMonthAgo -= tx.amount;
-                    } else { // Debit
-                        balanceOneMonthAgo += tx.amount;
-                    }
-                }
-                
-                if (balanceOneMonthAgo > 0) {
-                    const interest = parseFloat((balanceOneMonthAgo * monthlyRate).toFixed(2));
-                    
-                    if (interest > 0) {
-                        const userBalanceRef = doc(db, 'userBalances', userBalance.id);
-                        batch.update(userBalanceRef, { balance: userBalance.balance + interest });
-
-                        const payoutRef = doc(collection(db, 'interestPayouts'));
-                        batch.set(payoutRef, {
-                            userId: userBalance.userId,
-                            userName: userBalance.userName,
-                            date: Timestamp.now(),
-                            description: "Monthly Interest",
-                            amount: interest,
-                            type: 'Credit'
-                        });
-                    }
+                    const payoutRef = doc(collection(db, 'interestPayouts'));
+                    batch.set(payoutRef, {
+                        userId: userStoredBalance.userId,
+                        userName: currentUserBalance.userName,
+                        date: Timestamp.now(),
+                        description: "Monthly Interest",
+                        amount: interest,
+                        type: 'Credit'
+                    });
                 }
             }
         }
@@ -847,6 +830,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         interestPayouts,
         templates,
         fdTenureRates,
+        interestOnAmount,
         updateUserProfile,
         updateUserName,
         addInvestmentRequest,
@@ -868,6 +852,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addTemplate,
         updateTemplate,
         deleteTemplate,
+        recordMonthlyBalances,
     };
 
     return (

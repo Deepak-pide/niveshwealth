@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Download, Settings } from "lucide-react";
+import { Download, Settings, Save } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -32,6 +32,9 @@ export default function ManageBalancePage() {
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
         getUserPhoneNumber,
+        interestOnAmount,
+        recordMonthlyBalances,
+        users,
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
@@ -60,22 +63,10 @@ export default function ManageBalancePage() {
         return (balance * monthlyRate).toFixed(2);
     };
 
-    const getBalanceOneMonthAgo = (userBalance: (typeof userBalances)[0]) => {
-        const oneMonthAgo = subMonths(new Date(), 1);
-        let balance = userBalance.balance;
-        
-        const recentTransactions = balanceHistory
-            .filter(h => h.userId === userBalance.userId && h.date.toDate() > oneMonthAgo);
-            
-        for (const tx of recentTransactions) {
-            if (tx.type === 'Credit') {
-                balance -= tx.amount;
-            } else {
-                balance += tx.amount;
-            }
-        }
-        return balance;
-    }
+    const getBalanceForInterest = (userId: string) => {
+        const record = interestOnAmount.find(item => item.userId === userId);
+        return record ? record.balance : 0;
+    };
 
 
     const filteredUserBalances = userBalances
@@ -245,7 +236,13 @@ export default function ManageBalancePage() {
                                         </DialogHeader>
                                         <div className="grid gap-6 py-4">
                                             <div className="space-y-4">
-                                                <h4 className="font-medium">Balance Interest</h4>
+                                                <div className="flex justify-between items-center">
+                                                    <h4 className="font-medium">Balance Interest</h4>
+                                                    <Button variant="outline" size="sm" onClick={recordMonthlyBalances}>
+                                                        <Save className="mr-2 h-4 w-4" />
+                                                        Record Balances
+                                                    </Button>
+                                                </div>
                                                 <div className="flex items-center gap-4">
                                                     <Label htmlFor="interest-rate" className="w-48">Monthly Payout Rate (% p.a.)</Label>
                                                     <Input
@@ -261,19 +258,19 @@ export default function ManageBalancePage() {
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead>User</TableHead>
-                                                                <TableHead>Prev. Balance</TableHead>
+                                                                <TableHead>Balance for Interest</TableHead>
                                                                 <TableHead className="text-right">Interest to Pay</TableHead>
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                            {filteredUserBalances.map((user) => {
-                                                                const balanceOneMonthAgo = getBalanceOneMonthAgo(user);
+                                                            {users.filter(u => getBalanceForInterest(u.id) > 0).map((user) => {
+                                                                const balanceForInterest = getBalanceForInterest(user.id);
                                                                 return (
                                                                     <TableRow key={user.id}>
-                                                                        <TableCell className="font-medium">{user.userName}</TableCell>
-                                                                        <TableCell>₹{balanceOneMonthAgo.toLocaleString('en-IN')}</TableCell>
+                                                                        <TableCell className="font-medium">{user.name}</TableCell>
+                                                                        <TableCell>₹{balanceForInterest.toLocaleString('en-IN')}</TableCell>
                                                                         <TableCell className="text-right font-semibold text-green-600">
-                                                                            +₹{calculateMonthlyInterest(balanceOneMonthAgo, interestRate)}
+                                                                            +₹{calculateMonthlyInterest(balanceForInterest, interestRate)}
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 )
