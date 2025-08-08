@@ -90,10 +90,6 @@ export default function SendAlertPage() {
         const pendingTopup = topupRequests.map(r => mapRequest(r, 'Balance Top-up'));
         const pendingBalanceWithdraw = balanceWithdrawalRequests.map(r => mapRequest(r, 'Balance Withdrawal'));
 
-        const approvedFD = investments
-            .filter(inv => inv.status === 'Active')
-            .map(inv => mapInvestment(inv, 'FD Approved', 'startDate'));
-            
         const approvedFDWithdrawal = investments
             .filter(inv => inv.status === 'Withdrawn')
             .map(inv => mapInvestment(inv, 'FD Withdrawal Approved', 'maturityDate'));
@@ -115,7 +111,6 @@ export default function SendAlertPage() {
             ...pendingFDWithdraw,
             ...pendingTopup,
             ...pendingBalanceWithdraw,
-            ...approvedFD,
             ...approvedFDWithdrawal,
             ...approvedBalanceTopup,
             ...approvedBalanceWithdrawal,
