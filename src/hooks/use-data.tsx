@@ -326,10 +326,44 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('maturedFdRequests', setMaturedFdRequests);
     useDataFetching('topupRequests', setTopupRequests);
     useDataFetching('balanceWithdrawalRequests', setBalanceWithdrawalRequests);
-    useDataFetching('userBalances', setUserBalances);
+    // useDataFetching('userBalances', setUserBalances);
     useDataFetching('balanceHistory', setBalanceHistory);
     useDataFetching('interestPayouts', setInterestPayouts);
     useDataFetching('templates', setTemplates);
+
+     useEffect(() => {
+        if (users.length > 0 && (balanceHistory.length > 0 || interestPayouts.length > 0)) {
+            const calculatedBalances = users.map(user => {
+                const userHistory = balanceHistory.filter(h => h.userId === user.userId);
+                const userInterest = interestPayouts.filter(p => p.userId === user.userId);
+                
+                const credits = [...userHistory.filter(h => h.type === 'Credit'), ...userInterest].reduce((acc, curr) => acc + curr.amount, 0);
+                const debits = userHistory.filter(h => h.type === 'Debit').reduce((acc, curr) => acc + curr.amount, 0);
+                
+                const finalBalance = credits - debits;
+
+                return {
+                    id: user.userId,
+                    userId: user.userId,
+                    userName: user.name,
+                    userAvatar: user.avatar,
+                    balance: finalBalance,
+                };
+            });
+            setUserBalances(calculatedBalances);
+        } else if (users.length > 0) {
+            // Handle case where there's no history, initialize balances to 0
+            const zeroBalances = users.map(user => ({
+                id: user.userId,
+                userId: user.userId,
+                userName: user.name,
+                userAvatar: user.avatar,
+                balance: 0,
+            }));
+            setUserBalances(zeroBalances);
+        }
+    }, [users, balanceHistory, interestPayouts]);
+
 
     const getUserInfo = () => {
         if (authUser) {
