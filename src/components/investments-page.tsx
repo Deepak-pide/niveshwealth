@@ -22,8 +22,14 @@ import AppFooter from "./app-footer";
 const calculateInvestmentDetails = (investment: { amount: number, interestRate: number, startDate: Timestamp, maturityDate: Timestamp }) => {
     const principal = investment.amount;
     const rate = investment.interestRate;
-    const years = differenceInYears(investment.maturityDate.toDate(), investment.startDate.toDate());
-    const totalInterest = principal * rate * years;
+    const startDate = investment.startDate.toDate();
+    const maturityDate = investment.maturityDate.toDate();
+    
+    // Calculate exact tenure in days
+    const tenureInDays = differenceInDays(maturityDate, startDate);
+    
+    // Calculate simple interest based on days. (P * R * T) where T is in years.
+    const totalInterest = principal * rate * (tenureInDays / 365);
     const totalValue = principal + totalInterest;
 
     return {

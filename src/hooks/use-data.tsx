@@ -566,8 +566,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 if (!investmentSnap.exists()) throw new Error("Investment not found.");
                 
                 const investment = investmentSnap.data() as Investment;
-                const years = differenceInYears(investment.maturityDate.toDate(), investment.startDate.toDate());
-                const totalInterest = investment.amount * investment.interestRate * years;
+                const tenureInDays = differenceInDays(investment.maturityDate.toDate(), investment.startDate.toDate());
+                const totalInterest = investment.amount * investment.interestRate * (tenureInDays / 365);
                 const totalValue = investment.amount + totalInterest;
 
                 const userBalanceDocRef = doc(db, 'userBalances', request.userId);
