@@ -322,9 +322,24 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }, [investments, users, maturedFdRequests, authUser]);
     
     useEffect(() => {
-        const allHistory = [...balanceHistory, ...interestPayouts];
-        allHistory.sort((a, b) => b.date.toMillis() - a.date.toMillis());
-        setCombinedHistory(allHistory);
+        const allHistory = [...balanceHistory, ...interestPayouts].map(h => ({...h, date: h.date, id: h.id || Math.random().toString()}));
+        const userBalancesWithRecalculatedBalances = userBalances.map(ub => {
+            const userHistory = allHistory.filter(h => h.userId === ub.userId);
+            const recalculatedBalance = userHistory.reduce((acc, curr) => {
+                if (curr.type === 'Credit') {
+                    return acc + curr.amount;
+                } else {
+                    return acc - curr.amount;
+                }
+            }, 0);
+            return { ...ub, balance: recalculatedBalance };
+        });
+        
+        setUserBalances(userBalancesWithRecalculatedBalances);
+        
+        const sortedHistory = allHistory.sort((a, b) => b.date.toMillis() - a.date.toMillis());
+        setCombinedHistory(sortedHistory);
+
     }, [balanceHistory, interestPayouts]);
 
 
@@ -340,6 +355,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('balanceHistory', setBalanceHistory);
     useDataFetching('interestPayouts', setInterestPayouts);
     useDataFetching('templates', setTemplates);
+    useDataFetching('interestOnAmount', setInterestOnAmount);
 
 
     const getUserInfo = () => {
@@ -742,19 +758,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const calculateAndSetPreviousMonthBalance = () => {
         const oneMonthAgo = subMonths(new Date(), 1);
         const balances: InterestOnAmount[] = users.map(user => {
+            let balance = userBalances.find(b => b.userId === user.id)?.balance || 0;
             const userHistory = combinedHistory
                 .filter(h => h.userId === user.id && isAfter(h.date.toDate(), oneMonthAgo));
-
-            let balance = userBalances.find(b => b.userId === user.id)?.balance || 0;
-
+    
             userHistory.forEach(transaction => {
                 if (transaction.type === 'Credit') {
                     balance -= transaction.amount;
                 } else {
-                    balance += transaction.amount;
+                    balance += transaction.amount; 
                 }
             });
-
+    
             return {
                 id: user.id,
                 userId: user.id,
@@ -888,5 +903,7 @@ export const useData = () => {
     }
     return context;
 };
+
+    
 
     
