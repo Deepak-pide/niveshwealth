@@ -173,6 +173,7 @@ interface DataContextType {
     fdTenureRates: {[key: number]: number};
     interestOnAmount: InterestOnAmount[];
     calculateAndSetPreviousMonthBalance: () => void;
+    calculateAndSetCurrentMonthBalance: () => void;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -381,7 +382,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceRef = doc(db, 'userBalances', userId);
         batch.update(userBalanceRef, { userName: newName });
 
-        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance'>)[] = [
+        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance' | 'calculateAndSetCurrentMonthBalance'>)[] = [
             'investments', 'investmentRequests', 'fdWithdrawalRequests', 
             'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
             'balanceHistory', 'interestPayouts'
@@ -764,9 +765,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Balances Calculated", description: "Balances from one month ago have been calculated for interest payout." });
     };
 
+    const calculateAndSetCurrentMonthBalance = () => {
+        const balances: InterestOnAmount[] = users.map(user => {
+            const currentBalance = userBalances.find(b => b.userId === user.id)?.balance || 0;
+            return {
+                id: user.id,
+                userId: user.id,
+                balance: currentBalance > 0 ? currentBalance : 0
+            };
+        });
+        setInterestOnAmount(balances);
+        toast({ title: "Balances Calculated", description: "Current balances have been set for interest payout." });
+    };
+
     const payInterestToAll = async (annualRate: number) => {
         if (interestOnAmount.length === 0) {
-            toast({ title: "No Data", description: "Please calculate previous month's balances first.", variant: "destructive" });
+            toast({ title: "No Data", description: "Please calculate balances first using one of the buttons.", variant: "destructive" });
             return;
         }
 
@@ -836,6 +850,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         fdTenureRates,
         interestOnAmount,
         calculateAndSetPreviousMonthBalance,
+        calculateAndSetCurrentMonthBalance,
         updateUserProfile,
         updateUserName,
         addInvestmentRequest,
@@ -873,3 +888,5 @@ export const useData = () => {
     }
     return context;
 };
+
+    

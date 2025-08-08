@@ -35,6 +35,7 @@ export default function ManageBalancePage() {
         users,
         interestOnAmount,
         calculateAndSetPreviousMonthBalance,
+        calculateAndSetCurrentMonthBalance,
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
@@ -238,10 +239,14 @@ export default function ManageBalancePage() {
                                             <div className="space-y-4">
                                                 <div className="flex justify-between items-center">
                                                     <h4 className="font-medium">Balance Interest</h4>
-                                                     <Button variant="outline" size="sm" onClick={() => calculateAndSetPreviousMonthBalance()}>
-                                                        <Save className="mr-2 h-4 w-4" />
-                                                        Use Previous Month's Balance
-                                                    </Button>
+                                                     <div className="flex gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => calculateAndSetPreviousMonthBalance()}>
+                                                            Use Previous Month's Balance
+                                                        </Button>
+                                                        <Button variant="outline" size="sm" onClick={() => calculateAndSetCurrentMonthBalance()}>
+                                                            Use Current Balance
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <Label htmlFor="interest-rate" className="w-48">Monthly Payout Rate (% p.a.)</Label>
@@ -337,3 +342,5 @@ export default function ManageBalancePage() {
         </div>
     );
 }
+
+    
