@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
@@ -172,8 +173,8 @@ interface DataContextType {
     templates: Template[];
     fdTenureRates: {[key: number]: number};
     interestOnAmount: InterestOnAmount[];
-    calculateAndSetPreviousMonthBalance: () => void;
-    calculateAndSetCurrentMonthBalance: () => void;
+    calculateAndSetPreviousMonthBalance: () => Promise<void>;
+    calculateAndSetCurrentMonthBalance: () => Promise<void>;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -755,17 +756,19 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'balanceWithdrawalRequests', requestId));
     };
 
-    const calculateAndSetPreviousMonthBalance = () => {
+    const calculateAndSetPreviousMonthBalance = async () => {
         const oneMonthAgo = subMonths(new Date(), 1);
         const balances: InterestOnAmount[] = users.map(user => {
-            let balance = userBalances.find(b => b.userId === user.id)?.balance || 0;
+            const currentUserBalanceInfo = userBalances.find(b => b.userId === user.id);
+            let balance = currentUserBalanceInfo ? currentUserBalanceInfo.balance : 0;
+            
             const userHistory = combinedHistory
                 .filter(h => h.userId === user.id && isAfter(h.date.toDate(), oneMonthAgo));
     
             userHistory.forEach(transaction => {
                 if (transaction.type === 'Credit') {
                     balance -= transaction.amount;
-                } else {
+                } else { // Debit
                     balance += transaction.amount; 
                 }
             });
@@ -776,11 +779,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 balance: balance > 0 ? balance : 0
             };
         });
-        setInterestOnAmount(balances);
-        toast({ title: "Balances Calculated", description: "Balances from one month ago have been calculated for interest payout." });
+
+        const batch = writeBatch(db);
+        balances.forEach(bal => {
+            const docRef = doc(db, 'interestOnAmount', bal.userId);
+            batch.set(docRef, { balance: bal.balance, userId: bal.userId }, { merge: true });
+        });
+        await batch.commit();
+
+        toast({ title: "Balances Calculated", description: "Balances from one month ago have been calculated and stored." });
     };
 
-    const calculateAndSetCurrentMonthBalance = () => {
+    const calculateAndSetCurrentMonthBalance = async () => {
         const balances: InterestOnAmount[] = users.map(user => {
             const currentBalance = userBalances.find(b => b.userId === user.id)?.balance || 0;
             return {
@@ -789,8 +799,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 balance: currentBalance > 0 ? currentBalance : 0
             };
         });
-        setInterestOnAmount(balances);
-        toast({ title: "Balances Calculated", description: "Current balances have been set for interest payout." });
+        
+        const batch = writeBatch(db);
+        balances.forEach(bal => {
+            const docRef = doc(db, 'interestOnAmount', bal.userId);
+            batch.set(docRef, { balance: bal.balance, userId: bal.userId }, { merge: true });
+        });
+        await batch.commit();
+
+        toast({ title: "Balances Calculated", description: "Current balances have been stored." });
     };
 
     const payInterestToAll = async (annualRate: number) => {
@@ -825,7 +842,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
         await batch.commit();
         toast({ title: "Interest Paid", description: "Monthly interest has been successfully paid to all eligible users."});
-        setInterestOnAmount([]); // Clear the calculated balances after paying
     };
 
     const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {
