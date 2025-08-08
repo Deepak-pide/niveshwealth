@@ -32,7 +32,7 @@ export default function AdminPage() {
                     <p className="text-muted-foreground">Welcome to the admin dashboard.</p>
                 </header>
                 {showInterestReminder && (
-                    <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800/50 transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+                    <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800/50">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                             <CardTitle className="text-yellow-800 dark:text-yellow-200">Pending Action: Pay Monthly Interest</CardTitle>
