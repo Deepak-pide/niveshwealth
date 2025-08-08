@@ -102,11 +102,17 @@ export default function UserNav() {
                     ) : (
                         <Link href="/">
                             <DropdownMenuItem>
-                                <UserIcon className="mr-2 h-4 w-4" />
+                                <LayoutDashboard className="mr-2 h-4 w-4" />
                                 <span>Home</span>
                             </DropdownMenuItem>
                         </Link>
                     )}
+                    <Link href="/update-profile">
+                        <DropdownMenuItem>
+                            <UserIcon className="mr-2 h-4 w-4" />
+                            <span>Update Profile</span>
+                        </DropdownMenuItem>
+                    </Link>
                      {showInstallButton && (
                         <DropdownMenuItem onClick={handleInstallClick}>
                             <Download className="mr-2 h-4 w-4" />
