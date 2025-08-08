@@ -124,7 +124,6 @@ export interface InterestOnAmount {
     id: string;
     userId: string;
     balance: number;
-    lastUpdated: Timestamp;
 }
 
 
@@ -173,6 +172,7 @@ interface DataContextType {
     templates: Template[];
     fdTenureRates: {[key: number]: number};
     interestOnAmount: InterestOnAmount[];
+    calculateAndSetPreviousMonthBalance: () => void;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     updateUserName: (userId: string, newName: string) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
@@ -194,7 +194,6 @@ interface DataContextType {
     addTemplate: (templateData: Omit<Template, 'id'>) => Promise<void>;
     updateTemplate: (templateId: string, templateData: Omit<Template, 'id'>) => Promise<void>;
     deleteTemplate: (templateId: string) => Promise<void>;
-    recordMonthlyBalances: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -254,13 +253,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 balance: 0,
             };
             batch.set(userBalanceDocRef, newUserBalance);
-            
-            const interestOnAmountRef = doc(db, 'interestOnAmount', user.uid);
-            batch.set(interestOnAmountRef, {
-                userId: user.uid,
-                balance: 0,
-                lastUpdated: Timestamp.now()
-            });
 
             await batch.commit();
         }
@@ -347,7 +339,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     useDataFetching('balanceHistory', setBalanceHistory);
     useDataFetching('interestPayouts', setInterestPayouts);
     useDataFetching('templates', setTemplates);
-    useDataFetching('interestOnAmount', setInterestOnAmount);
 
 
     const getUserInfo = () => {
@@ -390,7 +381,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceRef = doc(db, 'userBalances', userId);
         batch.update(userBalanceRef, { userName: newName });
 
-        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'recordMonthlyBalances'>)[] = [
+        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance'>)[] = [
             'investments', 'investmentRequests', 'fdWithdrawalRequests', 
             'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
             'balanceHistory', 'interestPayouts'
@@ -747,23 +738,35 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await deleteDoc(doc(db, 'balanceWithdrawalRequests', requestId));
     };
 
-    const recordMonthlyBalances = async () => {
-        const batch = writeBatch(db);
-        userBalances.forEach(userBalance => {
-            const docRef = doc(db, 'interestOnAmount', userBalance.userId);
-            batch.set(docRef, {
-                userId: userBalance.userId,
-                balance: userBalance.balance,
-                lastUpdated: Timestamp.now()
-            }, { merge: true });
+    const calculateAndSetPreviousMonthBalance = () => {
+        const oneMonthAgo = subMonths(new Date(), 1);
+        const balances: InterestOnAmount[] = users.map(user => {
+            const userHistory = combinedHistory
+                .filter(h => h.userId === user.id && isAfter(h.date.toDate(), oneMonthAgo));
+
+            let balance = userBalances.find(b => b.userId === user.id)?.balance || 0;
+
+            userHistory.forEach(transaction => {
+                if (transaction.type === 'Credit') {
+                    balance -= transaction.amount;
+                } else {
+                    balance += transaction.amount;
+                }
+            });
+
+            return {
+                id: user.id,
+                userId: user.id,
+                balance: balance > 0 ? balance : 0
+            };
         });
-        await batch.commit();
-        toast({ title: "Balances Recorded", description: "Current user balances have been recorded for interest calculation." });
+        setInterestOnAmount(balances);
+        toast({ title: "Balances Calculated", description: "Balances from one month ago have been calculated for interest payout." });
     };
 
     const payInterestToAll = async (annualRate: number) => {
         if (interestOnAmount.length === 0) {
-            toast({ title: "No Data", description: "Please record monthly balances first.", variant: "destructive" });
+            toast({ title: "No Data", description: "Please calculate previous month's balances first.", variant: "destructive" });
             return;
         }
 
@@ -793,6 +796,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
         await batch.commit();
         toast({ title: "Interest Paid", description: "Monthly interest has been successfully paid to all eligible users."});
+        setInterestOnAmount([]); // Clear the calculated balances after paying
     };
 
     const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {
@@ -831,6 +835,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         templates,
         fdTenureRates,
         interestOnAmount,
+        calculateAndSetPreviousMonthBalance,
         updateUserProfile,
         updateUserName,
         addInvestmentRequest,
@@ -852,7 +857,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addTemplate,
         updateTemplate,
         deleteTemplate,
-        recordMonthlyBalances,
     };
 
     return (

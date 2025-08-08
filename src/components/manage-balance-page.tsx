@@ -32,9 +32,9 @@ export default function ManageBalancePage() {
         rejectBalanceWithdrawalRequest,
         payInterestToAll,
         getUserPhoneNumber,
-        interestOnAmount,
-        recordMonthlyBalances,
         users,
+        interestOnAmount,
+        calculateAndSetPreviousMonthBalance,
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
@@ -238,9 +238,9 @@ export default function ManageBalancePage() {
                                             <div className="space-y-4">
                                                 <div className="flex justify-between items-center">
                                                     <h4 className="font-medium">Balance Interest</h4>
-                                                    <Button variant="outline" size="sm" onClick={recordMonthlyBalances}>
+                                                     <Button variant="outline" size="sm" onClick={() => calculateAndSetPreviousMonthBalance()}>
                                                         <Save className="mr-2 h-4 w-4" />
-                                                        Record Balances
+                                                        Use Previous Month's Balance
                                                     </Button>
                                                 </div>
                                                 <div className="flex items-center gap-4">
