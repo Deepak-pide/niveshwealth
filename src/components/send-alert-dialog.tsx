@@ -74,7 +74,7 @@ export function SendAlertDialog({ request, isOpen, onClose }: SendAlertDialogPro
     useEffect(() => {
         if (request) {
             const relevantTemplates = templates.filter(t => t.type === templateTypeToFind || !t.type);
-            const template = relevantTemplates.find(t => t.type === templateTypeToFind) || relevantTemplates[0];
+            const template = relevantTemplates.find(t => t.type === templateTypeToFind) || relevantTemplates.find(t => !t.type) || null;
 
             let message = '';
             if (template) {
