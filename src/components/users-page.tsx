@@ -11,6 +11,7 @@ import { useData, UserDetails, AppUser } from "@/hooks/use-data";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "./ui/separator";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -21,12 +22,19 @@ const UserDetailsView = ({ isOpen, onOpenChange, user, details }: { isOpen: bool
     const [name, setName] = useState(user.name);
     const [phone, setPhone] = useState(details?.phoneNumber || '');
     const [occupation, setOccupation] = useState(details?.occupation || '');
+    const [upiId, setUpiId] = useState(details?.upiId || '');
+    const [accountNumber, setAccountNumber] = useState(details?.accountNumber || '');
+    const [accountHolderName, setAccountHolderName] = useState(details?.accountHolderName || '');
+
 
     useEffect(() => {
         if(isOpen) {
             setName(user.name);
             setPhone(details?.phoneNumber || '');
             setOccupation(details?.occupation || '');
+            setUpiId(details?.upiId || '');
+            setAccountNumber(details?.accountNumber || '');
+            setAccountHolderName(details?.accountHolderName || '');
             setIsEditing(false); // Reset editing state when dialog opens
         }
     }, [isOpen, user, details]);
@@ -36,8 +44,18 @@ const UserDetailsView = ({ isOpen, onOpenChange, user, details }: { isOpen: bool
             if (name !== user.name) {
                 await updateUserName(user.id, name);
             }
-            if (phone !== (details?.phoneNumber || '') || occupation !== (details?.occupation || '')) {
-                await updateUserProfile(user.id, { phoneNumber: phone, occupation: occupation });
+            if (phone !== (details?.phoneNumber || '') || 
+                occupation !== (details?.occupation || '') ||
+                upiId !== (details?.upiId || '') ||
+                accountNumber !== (details?.accountNumber || '') ||
+                accountHolderName !== (details?.accountHolderName || '')) {
+                await updateUserProfile(user.id, { 
+                    phoneNumber: phone, 
+                    occupation: occupation,
+                    upiId: upiId,
+                    accountNumber: accountNumber,
+                    accountHolderName: accountHolderName,
+                 });
             }
             toast({ title: "Success", description: "User profile updated successfully." });
             setIsEditing(false);
@@ -81,6 +99,32 @@ const UserDetailsView = ({ isOpen, onOpenChange, user, details }: { isOpen: bool
                             <Input id="occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="w-3/4" />
                         ) : (
                             <span className="font-semibold">{occupation || 'N/A'}</span>
+                        )}
+                    </div>
+                    <Separator className="my-2" />
+                     <p className="font-semibold text-foreground">Bank Details</p>
+                     <div className="flex items-center justify-between">
+                        <Label htmlFor="upiId" className="text-muted-foreground">UPI ID:</Label>
+                         {isEditing ? (
+                            <Input id="upiId" value={upiId} onChange={(e) => setUpiId(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{upiId || 'N/A'}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="accountNumber" className="text-muted-foreground">Account Number:</Label>
+                         {isEditing ? (
+                            <Input id="accountNumber" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{accountNumber || 'N/A'}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="accountHolderName" className="text-muted-foreground">Account Holder:</Label>
+                         {isEditing ? (
+                            <Input id="accountHolderName" value={accountHolderName} onChange={(e) => setAccountHolderName(e.target.value)} className="w-3/4" />
+                        ) : (
+                            <span className="font-semibold">{accountHolderName || 'N/A'}</span>
                         )}
                     </div>
                 </div>
