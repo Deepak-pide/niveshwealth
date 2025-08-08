@@ -75,7 +75,6 @@ const InvestmentDetailsDialog = ({ investment, onWithdraw }: { investment: Inves
                                 outerRadius={60}
                                 labelLine
                                 label={(entry) => `₹${entry.value.toLocaleString('en-IN')}`}
-                                isAnimationActive={false}
                             >
                                 {chartData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
