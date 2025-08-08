@@ -90,37 +90,17 @@ export default function SendAlertPage() {
         const pendingTopup = topupRequests.map(r => mapRequest(r, 'Balance Top-up'));
         const pendingBalanceWithdraw = balanceWithdrawalRequests.map(r => mapRequest(r, 'Balance Withdrawal'));
 
-        const approvedFDWithdrawal = investments
-            .filter(inv => inv.status === 'Withdrawn')
-            .map(inv => mapInvestment(inv, 'FD Withdrawal Approved', 'maturityDate'));
-
-        const approvedBalanceTopup = balanceHistory
-            .filter(h => h.description === 'Added to wallet')
-            .map(h => mapHistory(h, 'Balance Top-up Approved'));
-
-        const approvedBalanceWithdrawal = balanceHistory
-            .filter(h => h.description === 'Withdrawn from wallet')
-            .map(h => mapHistory(h, 'Balance Withdrawal Approved'));
-        
-        const maturedFDs = investments
-            .filter(inv => inv.status === 'Matured')
-            .map(inv => mapInvestment(inv, 'FD Matured', 'maturityDate'));
-
         const combined = [
             ...pendingFD,
             ...pendingFDWithdraw,
             ...pendingTopup,
             ...pendingBalanceWithdraw,
-            ...approvedFDWithdrawal,
-            ...approvedBalanceTopup,
-            ...approvedBalanceWithdrawal,
-            ...maturedFDs
         ].filter(r => r.date)
          .sort((a, b) => b.date.getTime() - a.date.getTime());
         
         return combined as CombinedRequest[];
 
-    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, investments, balanceHistory, maturedFdRequests, userDetails, users]);
+    }, [investmentRequests, fdWithdrawalRequests, topupRequests, balanceWithdrawalRequests, userDetails, users]);
 
     return (
         <div className="container mx-auto p-4 md:p-8">
