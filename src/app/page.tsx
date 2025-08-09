@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import AppHeader from "@/components/app-header";
@@ -18,6 +18,7 @@ export default function Home() {
   const { interestPayouts } = useData();
   const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [showInterestNotification, setShowInterestNotification] = useState(false);
 
   const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
   const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -36,10 +37,30 @@ export default function Home() {
   }, [user, loading, isAdmin, router]);
 
   useEffect(() => {
-    if (latestInterestPayout && audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+    if (latestInterestPayout) {
+        const notificationKey = `interestNotification_${user?.uid}_${latestInterestPayout.id}`;
+        const notificationShown = localStorage.getItem(notificationKey);
+        const now = new Date().getTime();
+
+        if (notificationShown) {
+            const { timestamp } = JSON.parse(notificationShown);
+            const twelveHours = 12 * 60 * 60 * 1000;
+            // Show notification if it's been less than 12 hours, but don't play sound
+            if (now - timestamp < twelveHours) {
+                setShowInterestNotification(true);
+            } else {
+                setShowInterestNotification(false);
+            }
+        } else {
+            // First time seeing this notification
+            setShowInterestNotification(true);
+            if (audioRef.current) {
+                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+            }
+            localStorage.setItem(notificationKey, JSON.stringify({ timestamp: now }));
+        }
     }
-  }, [latestInterestPayout]);
+  }, [latestInterestPayout, user?.uid]);
 
 
   if (loading || isAdmin) {
@@ -56,7 +77,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-background">
       <AppHeader />
       <main className="flex-1 overflow-y-auto p-4">
-        {latestInterestPayout && (
+        {showInterestNotification && latestInterestPayout && (
             <Card className="mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800/50 transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg">
                 <CardContent className="p-4 flex items-center gap-4">
                     <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
