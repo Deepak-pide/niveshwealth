@@ -9,27 +9,6 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Badge } from "./ui/badge";
 
-const dummyHistory = [
-    {
-        date: "07/08/2025",
-        description: "Monthly Interest",
-        amount: 603,
-        type: "Credit"
-    },
-    {
-        date: "07/07/2025",
-        description: "Monthly Interest",
-        amount: 600,
-        type: "Credit"
-    },
-    {
-        date: "01/06/2025",
-        description: "Added to wallet",
-        amount: 100000,
-        type: "Credit"
-    },
-].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
 const fdAllocationData = [
     { name: 'Bank Funds', value: 50, color: 'hsl(var(--primary))' },
     { name: 'Govt. Bonds', value: 30, color: 'hsl(var(--chart-2))' },
@@ -49,8 +28,8 @@ export default function BusinessModelSection() {
                                     How we make your money work for you.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="grid lg:grid-cols-2 gap-8 items-center">
-                                <div className="space-y-6">
+                            <CardContent className="flex flex-col gap-8 items-center">
+                                <div className="space-y-6 w-full max-w-md">
                                     <div className="flex justify-around items-center text-center p-4 rounded-lg bg-muted/50">
                                         <div className="flex flex-col items-center gap-1">
                                             <Landmark className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
@@ -91,44 +70,6 @@ export default function BusinessModelSection() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">Example: ₹1,00,000 Balance</CardTitle>
-                                            <CardDescription className="text-sm">See how your balance grows over time.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="overflow-x-auto">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableCell>Date</TableCell>
-                                                            <TableCell>Description</TableCell>
-                                                            <TableCell className="text-right">Amount</TableCell>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {dummyHistory.map((item, index) => {
-                                                            const isInterest = item.description === 'Monthly Interest';
-                                                            return (
-                                                                <TableRow key={index}>
-                                                                    <TableCell className="whitespace-nowrap">{item.date}</TableCell>
-                                                                    <TableCell>{item.description}</TableCell>
-                                                                    <TableCell className={cn(
-                                                                        "text-right font-semibold whitespace-nowrap",
-                                                                        isInterest ? 'text-primary' : 'text-green-600'
-                                                                    )}>
-                                                                        +₹{item.amount.toLocaleString('en-IN')}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            )
-                                                        })}
-                                                    </TableBody>
-                                                </Table>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
                                 </div>
                             </CardContent>
                         </Card>
@@ -220,3 +161,4 @@ export default function BusinessModelSection() {
     );
 
     
+
