@@ -38,6 +38,9 @@ export default function UpdateProfilePage() {
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
   const { theme, setTheme } = useTheme();
 
+  const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
+  const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
+
   useEffect(() => {
     const getStatus = async () => {
         const status = await checkNotificationPermission();
@@ -255,7 +258,7 @@ export default function UpdateProfilePage() {
             </CardContent>
         </Card>
       </main>
-      <AppFooter />
+      {!isAdmin && <AppFooter />}
     </div>
   );
 }
