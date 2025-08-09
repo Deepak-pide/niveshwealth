@@ -143,7 +143,7 @@ export default function BusinessModelSection() {
                                     <div className="h-56 md:h-64 w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie data={fdAllocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                                <Pie data={fdAllocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} labelLine={false} label={({ percent }) => `${(percent * 100).toFixed(0)}%`}>
                                                     {fdAllocationData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                                 </Pie>
                                                 <Legend wrapperStyle={{fontSize: "12px"}}/>
@@ -191,8 +191,10 @@ export default function BusinessModelSection() {
                 <CarouselPrevious className="hidden sm:flex" />
                 <CarouselNext className="hidden sm:flex" />
             </Carousel>
-            <p className="text-center text-sm text-muted-foreground mt-2 sm:hidden">slide >> to know more</p>
+            <p className="text-center text-sm text-muted-foreground mt-2 sm:hidden">slide &gt;&gt; to know more</p>
         </section>
     );
 
 }
+
+    
