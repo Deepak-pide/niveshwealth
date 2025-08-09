@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "./ui/table";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { Badge } from "./ui/badge";
 
 const dummyHistory = [
     {
@@ -139,17 +140,19 @@ export default function BusinessModelSection() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="grid md:grid-cols-2 gap-8 items-center">
-                                <div>
-                                    <h4 className="font-semibold mb-2">Where we invest:</h4>
-                                    <ul className="space-y-2 text-muted-foreground text-sm list-disc pl-5">
-                                        <li><span className="font-medium text-foreground">High-Reputed Bank Funds:</span> SBI, HDFC, ICICI (9-10% return)</li>
-                                        <li><span className="font-medium text-foreground">Government Bonds:</span> When govt needs loans (11% return)</li>
-                                        <li><span className="font-medium text-foreground">MNC Companies:</span> (11% return)</li>
-                                    </ul>
-                                    <p className="text-sm mt-4 text-muted-foreground">
-                                        We maintain almost no risk with safer and higher returns.
-                                    </p>
-                                     <div className="grid grid-cols-2 gap-4 mt-6 text-center">
+                                <div className="space-y-6">
+                                    <div>
+                                        <h4 className="font-semibold mb-2">Where we invest:</h4>
+                                        <ul className="space-y-2 text-muted-foreground text-sm list-disc pl-5">
+                                            <li><span className="font-medium text-foreground">High-Reputed Bank Funds:</span> SBI, HDFC, ICICI (9-10% return)</li>
+                                            <li><span className="font-medium text-foreground">Government Bonds:</span> When govt needs loans (11% return)</li>
+                                            <li><span className="font-medium text-foreground">MNC Companies:</span> (11% return)</li>
+                                        </ul>
+                                        <p className="text-sm mt-4 text-muted-foreground">
+                                            We maintain almost no risk with safer and higher returns.
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 text-center">
                                         <div className="p-3 bg-muted/50 rounded-lg">
                                             <p className="text-sm font-semibold">Nivesh Earns</p>
                                             <p className="text-2xl font-bold text-primary">11%</p>
@@ -159,16 +162,49 @@ export default function BusinessModelSection() {
                                             <p className="text-2xl font-bold text-green-600">9%</p>
                                         </div>
                                     </div>
+                                    <div className="h-64 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie data={fdAllocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                                    {fdAllocationData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                                                </Pie>
+                                                <Legend />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
-                                <div className="h-64 w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie data={fdAllocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                                                {fdAllocationData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                                            </Pie>
-                                            <Legend />
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                <div className="flex flex-col justify-center">
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                            <CardTitle className="text-lg font-medium">Example FD</CardTitle>
+                                            <Badge variant="secondary">Example</Badge>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <p className="text-muted-foreground">Invested Amount</p>
+                                                    <p className="font-semibold">₹30,000</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground">Interest Rate</p>
+                                                    <p className="font-semibold">9.00%</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground">Tenure</p>
+                                                    <p className="font-semibold">5 Years</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground">Amount at Maturity</p>
+                                                    <p className="font-semibold text-green-600">₹43,500</p>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card className="mt-4 bg-accent/20 border-accent">
+                                        <CardContent className="p-4">
+                                            <p className="text-sm text-foreground text-center">We provide a <span className="font-bold">No-Lockin</span> feature. Get your money whenever it's urgent for you.</p>
+                                        </CardContent>
+                                    </Card>
                                 </div>
                             </CardContent>
                         </Card>
@@ -177,7 +213,7 @@ export default function BusinessModelSection() {
                 <CarouselPrevious className="hidden sm:flex" />
                 <CarouselNext className="hidden sm:flex" />
             </Carousel>
-            <p className="text-center text-sm text-muted-foreground mt-2 sm:hidden">slide &gt;&gt; to know more</p>
+            <p className="text-center text-sm text-muted-foreground mt-2 sm:hidden">slide >> to know more</p>
         </section>
     );
 }
