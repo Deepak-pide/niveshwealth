@@ -69,7 +69,7 @@ export default function FdInvestmentPage() {
         router.push('/investments');
     };
 
-    const isInvestDisabled = !user || hasPendingFDRequest;
+    const isInvestDisabled = !user || hasPendingFDRequest || !hasSufficientBalance;
 
     return (
         <div className="container mx-auto p-4 md:p-8 flex justify-center animate-fade-in">
@@ -113,7 +113,7 @@ export default function FdInvestmentPage() {
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button className="w-full" disabled={isInvestDisabled}>
-                                    {hasPendingFDRequest ? "Request Pending" : "Invest Now"}
+                                    {hasPendingFDRequest ? "Request Pending" : (hasSufficientBalance ? "Invest Now" : "Insufficient Balance")}
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
