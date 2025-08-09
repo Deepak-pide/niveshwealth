@@ -139,6 +139,7 @@ export interface AppUser {
     avatar: string;
     joinDate: Timestamp;
     isProfileComplete: boolean;
+    fcmToken?: string;
 }
 
 export interface UserDetails {
@@ -975,9 +976,3 @@ export const useData = () => {
     }
     return context;
 };
-
-    
-
-    
-
-    
