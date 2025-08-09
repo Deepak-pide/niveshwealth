@@ -100,7 +100,7 @@ export default function ManageFdPage() {
         const approvedRequest = await action();
         if (approvedRequest) {
             const phoneNumber = getUserPhoneNumber(approvedRequest.userId);
-            setSelectedRequest({ ...approvedRequest, type, date: new Date(approvedRequest.date.seconds * 1000), phoneNumber });
+            setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate(), phoneNumber });
             setIsAlertOpen(true);
         }
     };
@@ -531,3 +531,5 @@ export default function ManageFdPage() {
         </div>
     );
 }
+
+    
