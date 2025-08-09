@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,6 +26,7 @@ export default function MyBalancePage() {
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [visibleHistoryCount, setVisibleHistoryCount] = useState(ITEMS_PER_PAGE);
     const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
 
     const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest, topupRequests, balanceWithdrawalRequests } = useData();
@@ -53,6 +54,12 @@ export default function MyBalancePage() {
     const pendingWithdrawalRequests = balanceWithdrawalRequests.filter(req => req.userId === user.uid);
     const hasPendingRequests = pendingTopupRequests.length > 0 || pendingWithdrawalRequests.length > 0;
 
+    const playSound = () => {
+        if (audioRef.current) {
+            audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+        }
+    };
+
     const handleAddBalance = () => {
         const amount = parseFloat(addAmount);
         if (isNaN(amount) || amount <= 0) {
@@ -65,6 +72,7 @@ export default function MyBalancePage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
+        playSound();
         toast({ title: "Request Submitted", description: "Your request to add balance has been sent for admin approval. It will be approved within 1 hour." });
         setAddAmount("");
     }
@@ -84,6 +92,7 @@ export default function MyBalancePage() {
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
+        playSound();
         toast({ title: "Request Submitted", description: "Your request to withdraw balance has been sent for admin approval." });
         setWithdrawAmount("");
         setIsWithdrawDialogOpen(false);
@@ -95,6 +104,7 @@ export default function MyBalancePage() {
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
+            <audio ref={audioRef} src="/approved_notify.mp3" preload="auto"></audio>
             <div className="space-y-8">
                 <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>

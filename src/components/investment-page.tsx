@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function InvestmentPage() {
 
     return (
-        <div className="container mx-auto p-4 md:p-8 animate-fade-in">
+        <div className="container mx-auto animate-fade-in">
             <div className="space-y-8">
                 <section className="text-center">
                     <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

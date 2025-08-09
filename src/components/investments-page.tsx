@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -155,6 +155,7 @@ export default function InvestmentsPage() {
     const [visiblePast, setVisiblePast] = useState(ITEMS_PER_PAGE);
     const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
     
     if (!user) {
         return (
@@ -193,6 +194,12 @@ export default function InvestmentsPage() {
 
     const pastInvestments = userInvestments.filter(inv => inv.status === 'Matured' || inv.status === 'Withdrawn');
     
+    const playSound = () => {
+        if (audioRef.current) {
+            audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+        }
+    };
+    
     const handleWithdraw = (investmentId: string) => {
         const investment = investments.find(inv => inv.id === investmentId);
         if (!investment || !user) return;
@@ -212,6 +219,8 @@ export default function InvestmentsPage() {
             date: new Date().toISOString().split('T')[0],
             investmentIdToWithdraw: investmentId,
         });
+
+        playSound();
 
         toast({
             title: "Withdrawal Request Submitted",
@@ -234,6 +243,7 @@ export default function InvestmentsPage() {
 
     return (
         <div className="flex flex-col h-screen bg-background">
+          <audio ref={audioRef} src="/approved_notify.mp3" preload="auto"></audio>
           <AppHeader />
           <header className="shrink-0 border-b bg-card shadow-sm px-4 h-16 flex items-center justify-between">
               <div>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export default function FdInvestmentPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
+    const audioRef = useRef<HTMLAudioElement>(null);
     
     const hasPendingFDRequest = investmentRequests.some(req => req.userId === user?.uid);
     
@@ -32,6 +33,12 @@ export default function FdInvestmentPage() {
     const calculatedReturn = amount * fdRate * years;
     const totalAmount = amount + calculatedReturn;
     const maturityDate = addYears(new Date(), years);
+
+    const playSound = () => {
+        if (audioRef.current) {
+            audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+        }
+    };
 
     const handlePayment = () => {
         if (!user) {
@@ -61,6 +68,8 @@ export default function FdInvestmentPage() {
             description: description,
         });
 
+        playSound();
+
         toast({
             title: "Investment Request Submitted",
             description: "Your FD investment request has been sent for admin approval.",
@@ -73,6 +82,7 @@ export default function FdInvestmentPage() {
 
     return (
         <div className="container mx-auto p-4 md:p-8 flex justify-center animate-fade-in">
+            <audio ref={audioRef} src="/approved_notify.mp3" preload="auto"></audio>
             <div className="w-full max-w-lg space-y-8">
                 <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>
