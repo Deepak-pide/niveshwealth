@@ -80,17 +80,26 @@ export default function BusinessModelSection() {
                                         <CardContent className="space-y-4">
                                             <div className="relative pl-6">
                                                 <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-border"></div>
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
-                                                    <p className="text-sm font-semibold">August: <span className="text-foreground">Monthly Interest</span> <span className="text-primary">+₹503</span></p>
+                                                <div className="flex items-start gap-4 mb-4">
+                                                    <div className="absolute left-0 mt-1.5 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
+                                                    <div className="text-sm">
+                                                        <span className="font-semibold">August: <span className="text-foreground">Monthly Interest</span></span>
+                                                        <div className="font-semibold text-primary">+₹503</div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
-                                                    <p className="text-sm font-semibold">July: <span className="text-foreground">Monthly Interest</span> <span className="text-primary">+₹500</span></p>
+                                                <div className="flex items-start gap-4 mb-4">
+                                                    <div className="absolute left-0 mt-1.5 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
+                                                    <div className="text-sm">
+                                                        <span className="font-semibold">July: <span className="text-foreground">Monthly Interest</span></span>
+                                                        <div className="font-semibold text-primary">+₹500</div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                     <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
-                                                    <p className="text-sm font-semibold text-green-600">June: Added to wallet ₹1,00,000</p>
+                                                <div className="flex items-start gap-4">
+                                                     <div className="absolute left-0 mt-1.5 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
+                                                    <div className="text-sm">
+                                                        <span className="font-semibold text-green-600">June: Added to wallet</span>
+                                                        <div className="font-semibold text-green-600">₹1,00,000</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -187,3 +196,5 @@ export default function BusinessModelSection() {
     );
 
 }
+
+    
