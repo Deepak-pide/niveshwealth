@@ -69,7 +69,7 @@ export default function FdInvestmentPage() {
         router.push('/investments');
     };
 
-    const isInvestDisabled = !user || hasPendingFDRequest || !hasSufficientBalance;
+    const isInvestDisabled = !user || hasPendingFDRequest;
 
     return (
         <div className="container mx-auto p-4 md:p-8 flex justify-center animate-fade-in">
@@ -108,18 +108,12 @@ export default function FdInvestmentPage() {
                                 placeholder="e.g., For my child's education"
                             />
                         </div>
-                        <div className="text-sm">
-                            <span className="text-muted-foreground">Available Balance:</span>
-                            <span className={`font-semibold ml-2 ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>
-                                ₹{currentUserBalance.toLocaleString('en-IN')}
-                            </span>
-                        </div>
                     </CardContent>
                     <CardFooter className="flex flex-col items-stretch gap-2">
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button className="w-full" disabled={isInvestDisabled}>
-                                    {hasPendingFDRequest ? "Request Pending" : (hasSufficientBalance ? "Invest Now" : "Insufficient Balance")}
+                                    {hasPendingFDRequest ? "Request Pending" : "Invest Now"}
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -128,6 +122,12 @@ export default function FdInvestmentPage() {
                                     <AlertDialogDescription asChild>
                                         <div className="space-y-4 pt-4 text-sm">
                                             <p>Your investment will be made from your available balance.</p>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Available Balance:</span>
+                                                <span className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>
+                                                    ₹{currentUserBalance.toLocaleString('en-IN')}
+                                                </span>
+                                            </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Investment Amount:</span>
                                                 <span className="font-semibold text-foreground">₹{amount.toLocaleString('en-IN')}</span>
@@ -150,12 +150,15 @@ export default function FdInvestmentPage() {
                                                 <span className="text-muted-foreground">Maturity Date:</span>
                                                 <span className="font-semibold text-foreground">{format(maturityDate, 'PPP')}</span>
                                             </div>
+                                            {!hasSufficientBalance && (
+                                                <p className="text-red-600 font-semibold text-center">You do not have enough balance to make this investment.</p>
+                                            )}
                                         </div>
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handlePayment}>
+                                    <AlertDialogAction onClick={handlePayment} disabled={!hasSufficientBalance}>
                                         Submit Request
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
