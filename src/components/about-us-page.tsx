@@ -8,30 +8,6 @@ import BusinessModelSection from "./business-model-section";
 
 
 export default function AboutUsPage() {
-    const commitments = [
-        {
-            icon: <Handshake className="h-8 w-8 text-primary" />,
-            title: "Company Transparency",
-            description: "We believe in clear and open communication. You'll always have access to detailed information about your investments and our performance."
-        },
-        {
-            icon: <PiggyBank className="h-8 w-8 text-primary" />,
-            title: "Backup for Investment",
-            description: "Your investments are secured with robust backup strategies to mitigate risks and protect your principal."
-        },
-        {
-            icon: <ShieldCheck className="h-8 w-8 text-primary" />,
-            title: "Safe & Secure",
-            description: "We prioritize the security of your assets with state-of-the-art encryption and industry-leading safety protocols."
-        },
-        {
-            icon: <TrendingUp className="h-8 w-8 text-primary" />,
-            title: "High Interest",
-            description: "Our expert financial strategies are designed to maximize your returns, offering competitive interest rates on your investments."
-        },
-    ];
-
-
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in space-y-12">
                 <section className="text-center">
@@ -39,22 +15,6 @@ export default function AboutUsPage() {
                     <p className="mt-4 text-lg text-muted-foreground">
                         Our commitment to building your secure financial future.
                     </p>
-                </section>
-
-                <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                    {commitments.map((item, index) => (
-                         <Card key={index} className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <div className="rounded-full bg-primary/10 p-3">
-                                    {item.icon}
-                                </div>
-                                <CardTitle>{item.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">{item.description}</p>
-                            </CardContent>
-                        </Card>
-                    ))}
                 </section>
 
                 <BusinessModelSection />
