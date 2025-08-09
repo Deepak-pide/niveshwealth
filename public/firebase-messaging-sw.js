@@ -1,6 +1,10 @@
+// This file is intentionally left empty.
+// The PWA plugin will automatically generate the service worker.
+// We need this file to exist to handle background notifications for FCM.
 
-importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js");
+// Import and configure the Firebase SDK
+importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js");
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGPL9oIZ1o0hQEYlC-Y_1vL6Hx5YtFlqA",
@@ -24,23 +28,40 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: payload.notification.icon,
+    icon: payload.notification.icon || "/logo.svg",
     sound: payload.notification.sound,
     tag: payload.notification.tag,
     data: {
-        click_action: payload.notification.click_action
-    }
+      click_action: payload.notification.click_action,
+    },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-self.addEventListener('notificationclick', function(event) {
+
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const clickAction = event.notification.data.click_action;
-  if (clickAction) {
-    event.waitUntil(
-      clients.openWindow(clickAction)
-    );
-  }
+  const urlToOpen = event.notification.data.click_action || "/";
+
+  event.waitUntil(
+    clients
+      .matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      })
+      .then((windowClients) => {
+        // Check if a window is already open.
+        for (var i = 0; i < windowClients.length; i++) {
+          var client = windowClients[i];
+          if (client.url === urlToOpen && "focus" in client) {
+            return client.focus();
+          }
+        }
+        // If not, open a new one.
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
 });
