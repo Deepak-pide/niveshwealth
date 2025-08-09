@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Landmark, Briefcase, Percent, Wallet, ArrowRight } from "lucide-react";
+import { Landmark, Briefcase, Percent, Wallet, ArrowRight, TrendingUp } from "lucide-react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "./ui/table";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,20 @@ export default function BusinessModelSection() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-2 gap-8 items-center">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                        <div className="flex justify-around items-center text-center p-4 rounded-lg bg-muted/50">
+                            <div className="flex flex-col items-center gap-2">
+                                <Landmark className="h-8 w-8 text-muted-foreground" />
+                                <p className="font-semibold">Bank Savings</p>
+                                <p className="text-lg font-bold text-muted-foreground">2-3%</p>
+                            </div>
+                             <p className="text-2xl font-bold text-primary">vs</p>
+                            <div className="flex flex-col items-center gap-2">
+                                <Wallet className="h-8 w-8 text-primary" />
+                                <p className="font-semibold">Nivesh</p>
+                                <p className="text-lg font-bold text-primary">6%</p>
+                            </div>
+                        </div>
                         <p className="text-muted-foreground">
                            Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                         </p>
