@@ -200,7 +200,7 @@ export default function BusinessModelSection() {
                                             </div>
                                         </CardContent>
                                     </Card>
-                                    <Card className="mt-4 bg-accent/20 border-accent">
+                                    <Card className="mt-4 bg-accent/20 border-accent relative overflow-hidden shine">
                                         <CardContent className="p-4">
                                             <p className="text-sm text-foreground text-center"><span className="font-bold">No-Locking period</span></p>
                                         </CardContent>
