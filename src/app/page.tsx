@@ -12,6 +12,7 @@ import { useData } from '@/hooks/use-data';
 import { isSameMonth, isSameYear } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
+import { requestNotificationPermission } from '@/lib/notifications';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -29,6 +30,12 @@ export default function Home() {
         .filter(p => p.userId === user.uid && isSameMonth(p.date.toDate(), today) && isSameYear(p.date.toDate(), today))
         .sort((a, b) => b.date.toMillis() - a.date.toMillis())[0]
     : null;
+
+  useEffect(() => {
+    if (user && !loading) {
+        requestNotificationPermission(user.uid);
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     if (!loading && isAdmin) {
