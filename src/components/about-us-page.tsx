@@ -33,8 +33,7 @@ export default function AboutUsPage() {
 
 
     return (
-        <div className="container mx-auto p-4 md:p-8 animate-fade-in">
-            <div className="space-y-12">
+        <div className="container mx-auto p-4 md:p-8 animate-fade-in space-y-12">
                 <section className="text-center">
                     <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">About Nivesh</h1>
                     <p className="mt-4 text-lg text-muted-foreground">
@@ -101,7 +100,6 @@ export default function AboutUsPage() {
                         </CardContent>
                     </Card>
                 </section>
-            </div>
         </div>
     );
 }
