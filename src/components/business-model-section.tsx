@@ -11,9 +11,9 @@ import { Badge } from "./ui/badge";
 
 const dummyHistory = [
     {
-        date: "01/06/2025",
-        description: "Added to wallet",
-        amount: 100000,
+        date: "07/08/2025",
+        description: "Monthly Interest",
+        amount: 603,
         type: "Credit"
     },
     {
@@ -23,9 +23,9 @@ const dummyHistory = [
         type: "Credit"
     },
     {
-        date: "07/08/2025",
-        description: "Monthly Interest",
-        amount: 603,
+        date: "01/06/2025",
+        description: "Added to wallet",
+        amount: 100000,
         type: "Credit"
     },
 ];
@@ -54,14 +54,14 @@ export default function BusinessModelSection() {
                                     <div className="flex justify-around items-center text-center p-4 rounded-lg bg-muted/50">
                                         <div className="flex flex-col items-center gap-1">
                                             <Landmark className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
-                                            <p className="font-semibold text-sm md:text-base">Saving Account</p>
-                                            <p className="text-base md:text-lg font-bold text-muted-foreground">2-3%</p>
+                                            <p className="font-semibold text-xs md:text-base">Saving Account</p>
+                                            <p className="text-sm md:text-lg font-bold text-muted-foreground">2-3%</p>
                                         </div>
-                                        <p className="text-xl md:text-2xl font-bold text-primary">vs</p>
+                                        <p className="text-lg md:text-2xl font-bold text-primary">vs</p>
                                         <div className="flex flex-col items-center gap-1">
                                             <Wallet className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-                                            <p className="font-semibold text-sm md:text-base">Nivesh</p>
-                                            <p className="text-base md:text-lg font-bold text-primary">6%</p>
+                                            <p className="font-semibold text-xs md:text-base">Nivesh</p>
+                                            <p className="text-sm md:text-lg font-bold text-primary">6%</p>
                                         </div>
                                     </div>
                                     <p className="text-muted-foreground text-sm md:text-base">
@@ -218,6 +218,5 @@ export default function BusinessModelSection() {
             <p className="text-center text-sm text-muted-foreground mt-2 sm:hidden">slide >> to know more</p>
         </section>
     );
-}
 
     
