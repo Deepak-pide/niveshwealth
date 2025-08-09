@@ -145,6 +145,7 @@ export default function BusinessModelSection() {
                 <CarouselPrevious className="hidden sm:flex" />
                 <CarouselNext className="hidden sm:flex" />
             </Carousel>
+            <p className="text-center text-sm text-muted-foreground mt-2 sm:hidden">slide &gt;&gt; to know more</p>
         </section>
     );
 }
