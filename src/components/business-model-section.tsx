@@ -8,12 +8,13 @@ import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Badge } from "./ui/badge";
+import { useState, useEffect, useRef } from "react";
 
 const dummyHistory = [
     {
-        date: "07/08/2025",
-        description: "Monthly Interest",
-        amount: 603,
+        date: "01/06/2025",
+        description: "Added to wallet",
+        amount: 100000,
         type: "Credit"
     },
     {
@@ -23,9 +24,9 @@ const dummyHistory = [
         type: "Credit"
     },
     {
-        date: "01/06/2025",
-        description: "Added to wallet",
-        amount: 100000,
+        date: "07/08/2025",
+        description: "Monthly Interest",
+        amount: 603,
         type: "Credit"
     }
 ];
@@ -37,6 +38,58 @@ const fdAllocationData = [
 ];
 
 export default function BusinessModelSection() {
+    const [visibleRows, setVisibleRows] = useState(0);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    useEffect(() => {
+        const timeouts: NodeJS.Timeout[] = [];
+        
+        const playSound = () => {
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+            }
+        }
+
+        const animateTable = () => {
+            setVisibleRows(1); // Show "Added to wallet"
+
+            timeouts.push(setTimeout(() => {
+                setVisibleRows(2);
+                playSound();
+            }, 1500));
+
+            timeouts.push(setTimeout(() => {
+                setVisibleRows(3);
+                playSound();
+            }, 3000));
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    animateTable();
+                } else {
+                    setVisibleRows(0);
+                    timeouts.forEach(clearTimeout);
+                }
+            },
+            { threshold: 0.5 }
+        );
+
+        const tableElement = document.getElementById("animated-table");
+        if (tableElement) {
+            observer.observe(tableElement);
+        }
+
+        return () => {
+            if (tableElement) {
+                observer.unobserve(tableElement);
+            }
+            timeouts.forEach(clearTimeout);
+        };
+    }, []);
+
     return (
         <section className="animate-fade-in">
              <Carousel className="w-full">
@@ -44,7 +97,7 @@ export default function BusinessModelSection() {
                     <CarouselItem>
                          <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl h-full">
                             <CardHeader>
-                                <CardTitle className="text-center">Our Business Model</CardTitle>
+                                <CardTitle className="text-center">Our Company Model</CardTitle>
                                 <CardDescription className="text-center">
                                     How we make your money work for you.
                                 </CardDescription>
@@ -67,15 +120,15 @@ export default function BusinessModelSection() {
                                     <p className="text-muted-foreground">
                                     Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                                     </p>
-                                    <div className="flex justify-around items-center space-x-2 pt-4 overflow-x-auto pb-2">
-                                        <div className="flex flex-col sm:flex-row items-center gap-1 text-center flex-shrink-0">
+                                    <div className="flex flex-row items-center justify-around space-x-2 pt-4 overflow-x-auto pb-2">
+                                        <div className="flex flex-row items-center gap-1 text-center flex-shrink-0">
                                             <Wallet className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-bold text-sm">Your Balance</p>
                                             </div>
                                         </div>
                                         <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                        <div className="flex flex-col sm:flex-row items-center gap-1 text-center flex-shrink-0">
+                                        <div className="flex flex-row items-center gap-1 text-center flex-shrink-0">
                                             <Landmark className="h-5 w-5 text-green-600" />
                                             <div>
                                                 <p className="font-bold text-sm">7% Return</p>
@@ -83,7 +136,7 @@ export default function BusinessModelSection() {
                                             </div>
                                         </div>
                                         <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                        <div className="flex flex-col sm:flex-row items-center gap-1 text-center flex-shrink-0">
+                                        <div className="flex flex-row items-center gap-1 text-center flex-shrink-0">
                                             <Percent className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-bold text-sm">6% Return</p>
@@ -99,7 +152,8 @@ export default function BusinessModelSection() {
                                             <CardDescription>See how your balance grows over time.</CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <Table>
+                                            <audio ref={audioRef} src="/coin.mp3" preload="auto" />
+                                            <Table id="animated-table">
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableCell>Date</TableCell>
@@ -108,10 +162,10 @@ export default function BusinessModelSection() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {dummyHistory.map((item, index) => {
+                                                    {dummyHistory.slice(0, visibleRows).map((item, index) => {
                                                         const isInterest = item.description === 'Monthly Interest';
                                                         return (
-                                                            <TableRow key={index}>
+                                                            <TableRow key={index} className="animate-fade-in">
                                                                 <TableCell>{item.date}</TableCell>
                                                                 <TableCell>{item.description}</TableCell>
                                                                 <TableCell className={cn(
@@ -123,6 +177,11 @@ export default function BusinessModelSection() {
                                                             </TableRow>
                                                         )
                                                     })}
+                                                    {visibleRows < dummyHistory.length && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={3} className="h-10"></TableCell>
+                                                        </TableRow>
+                                                    )}
                                                 </TableBody>
                                             </Table>
                                         </CardContent>
@@ -134,7 +193,7 @@ export default function BusinessModelSection() {
                     <CarouselItem>
                         <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl h-full">
                              <CardHeader>
-                                <CardTitle className="text-center">Our business model for FD</CardTitle>
+                                <CardTitle className="text-center">Our Comapany Model for FD</CardTitle>
                                 <CardDescription className="text-center">
                                     When you plan for longer terms
                                 </CardDescription>
@@ -202,7 +261,7 @@ export default function BusinessModelSection() {
                                     </Card>
                                     <Card className="mt-4 bg-accent/20 border-accent">
                                         <CardContent className="p-4">
-                                            <p className="text-sm text-foreground text-center"><span className="font-bold">NO-LOCKING period.</span> Withdrawal whenever it's urgent for you.</p>
+                                            <p className="text-sm text-foreground text-center"><span className="font-bold">NO-LOCKING period.</span><br></br> Withdrawal whenever it's urgent for you.</p>
                                         </CardContent>
                                     </Card>
                                 </div>
