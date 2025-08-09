@@ -243,7 +243,7 @@ export default function InvestmentsPage() {
 
     return (
         <div className="flex flex-col h-screen bg-background">
-          <audio ref={audioRef} src="/approved_notify.mp3" preload="auto"></audio>
+          <audio ref={audioRef} src="/approved_notify.wav" preload="auto"></audio>
           <AppHeader />
           <header className="shrink-0 border-b bg-card shadow-sm px-4 h-16 flex items-center justify-between">
               <div>

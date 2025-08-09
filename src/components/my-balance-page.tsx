@@ -104,7 +104,7 @@ export default function MyBalancePage() {
 
     return (
         <div className="container mx-auto p-4 md:p-8 animate-fade-in">
-            <audio ref={audioRef} src="/approved_notify.mp3" preload="auto"></audio>
+            <audio ref={audioRef} src="/approved_notify.wav" preload="auto"></audio>
             <div className="space-y-8">
                 <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
                     <CardHeader>

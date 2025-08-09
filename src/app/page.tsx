@@ -70,7 +70,7 @@ export default function Home() {
             </Card>
         )}
         <InvestmentPage />
-        <audio ref={audioRef} src="/get_notify.mp3" preload="auto" />
+        <audio ref={audioRef} src="/get_notify.wav" preload="auto" />
       </main>
       <AppFooter />
     </div>
