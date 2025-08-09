@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Landmark, Briefcase, Percent, Wallet, ArrowRight, TrendingUp } from "lucide-react";
+import { Landmark, Briefcase, Percent, Wallet, ArrowRight, TrendingUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "./ui/table";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
@@ -46,14 +46,15 @@ export default function BusinessModelSection() {
                                     <p className="text-muted-foreground text-sm md:text-base">
                                     Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                                     </p>
-                                    <div className="flex flex-wrap items-center justify-center gap-2 md:justify-around pt-4 pb-2">
+                                    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:justify-around pt-4 pb-2">
                                         <div className="flex flex-row items-center gap-1 text-center">
                                             <Wallet className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-bold text-sm">Your Balance</p>
                                             </div>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                        <ArrowDown className="h-5 w-5 text-muted-foreground md:hidden" />
+                                        <ArrowRight className="h-5 w-5 text-muted-foreground hidden md:block" />
                                         <div className="flex flex-row items-center gap-1 text-center">
                                             <Landmark className="h-5 w-5 text-green-600" />
                                             <div>
@@ -61,7 +62,8 @@ export default function BusinessModelSection() {
                                                 <p className="text-xs text-muted-foreground">From FDs</p>
                                             </div>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                        <ArrowDown className="h-5 w-5 text-muted-foreground md:hidden" />
+                                        <ArrowRight className="h-5 w-5 text-muted-foreground hidden md:block" />
                                         <div className="flex flex-row items-center gap-1 text-center">
                                             <Percent className="h-5 w-5 text-primary" />
                                             <div>
@@ -161,4 +163,5 @@ export default function BusinessModelSection() {
     );
 
     
+
 
