@@ -155,7 +155,7 @@ export default function BusinessModelSection() {
                                             <p className="text-2xl font-bold text-primary">11%</p>
                                         </div>
                                          <div className="p-3 bg-muted/50 rounded-lg">
-                                            <p className="text-sm font-semibold">Investor Gets</p>
+                                            <p className="text-sm font-semibold">Return to Investor</p>
                                             <p className="text-2xl font-bold text-green-600">9%</p>
                                         </div>
                                     </div>
