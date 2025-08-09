@@ -52,38 +52,38 @@ export default function BusinessModelSection() {
                             <CardContent className="grid lg:grid-cols-2 gap-8 items-center">
                                 <div className="space-y-6">
                                     <div className="flex justify-around items-center text-center p-4 rounded-lg bg-muted/50">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Landmark className="h-8 w-8 text-muted-foreground" />
-                                            <p className="font-semibold">Saving Account</p>
-                                            <p className="text-lg font-bold text-muted-foreground">2-3%</p>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Landmark className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
+                                            <p className="font-semibold text-sm md:text-base">Saving Account</p>
+                                            <p className="text-base md:text-lg font-bold text-muted-foreground">2-3%</p>
                                         </div>
-                                        <p className="text-2xl font-bold text-primary">vs</p>
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Wallet className="h-8 w-8 text-primary" />
-                                            <p className="font-semibold">Nivesh</p>
-                                            <p className="text-lg font-bold text-primary">6%</p>
+                                        <p className="text-xl md:text-2xl font-bold text-primary">vs</p>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Wallet className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                                            <p className="font-semibold text-sm md:text-base">Nivesh</p>
+                                            <p className="text-base md:text-lg font-bold text-primary">6%</p>
                                         </div>
                                     </div>
-                                    <p className="text-muted-foreground">
+                                    <p className="text-muted-foreground text-sm md:text-base">
                                     Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                                     </p>
-                                    <div className="flex flex-row items-center justify-around space-x-2 pt-4 overflow-x-auto pb-2">
-                                        <div className="flex flex-row items-center gap-1 text-center flex-shrink-0">
+                                    <div className="flex flex-wrap items-center justify-center gap-2 md:justify-around pt-4 pb-2">
+                                        <div className="flex flex-row items-center gap-1 text-center">
                                             <Wallet className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-bold text-sm">Your Balance</p>
                                             </div>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                        <div className="flex flex-row items-center gap-1 text-center flex-shrink-0">
+                                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex flex-row items-center gap-1 text-center">
                                             <Landmark className="h-5 w-5 text-green-600" />
                                             <div>
                                                 <p className="font-bold text-sm">7% Return</p>
                                                 <p className="text-xs text-muted-foreground">From FDs</p>
                                             </div>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                        <div className="flex flex-row items-center gap-1 text-center flex-shrink-0">
+                                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex flex-row items-center gap-1 text-center">
                                             <Percent className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-bold text-sm">6% Return</p>
@@ -96,35 +96,37 @@ export default function BusinessModelSection() {
                                     <Card>
                                         <CardHeader>
                                             <CardTitle className="text-lg">Example: ₹1,00,000 Balance</CardTitle>
-                                            <CardDescription>See how your balance grows over time.</CardDescription>
+                                            <CardDescription className="text-sm">See how your balance grows over time.</CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableCell>Date</TableCell>
-                                                        <TableCell>Description</TableCell>
-                                                        <TableCell className="text-right">Amount</TableCell>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {dummyHistory.map((item, index) => {
-                                                        const isInterest = item.description === 'Monthly Interest';
-                                                        return (
-                                                            <TableRow key={index}>
-                                                                <TableCell>{item.date}</TableCell>
-                                                                <TableCell>{item.description}</TableCell>
-                                                                <TableCell className={cn(
-                                                                    "text-right font-semibold",
-                                                                    isInterest ? 'text-primary' : 'text-green-600'
-                                                                )}>
-                                                                    +₹{item.amount.toLocaleString('en-IN')}
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )
-                                                    })}
-                                                </TableBody>
-                                            </Table>
+                                            <div className="overflow-x-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableCell>Date</TableCell>
+                                                            <TableCell>Description</TableCell>
+                                                            <TableCell className="text-right">Amount</TableCell>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {dummyHistory.map((item, index) => {
+                                                            const isInterest = item.description === 'Monthly Interest';
+                                                            return (
+                                                                <TableRow key={index}>
+                                                                    <TableCell className="whitespace-nowrap">{item.date}</TableCell>
+                                                                    <TableCell>{item.description}</TableCell>
+                                                                    <TableCell className={cn(
+                                                                        "text-right font-semibold whitespace-nowrap",
+                                                                        isInterest ? 'text-primary' : 'text-green-600'
+                                                                    )}>
+                                                                        +₹{item.amount.toLocaleString('en-IN')}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            )
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -155,20 +157,20 @@ export default function BusinessModelSection() {
                                     <div className="grid grid-cols-2 gap-4 text-center">
                                         <div className="p-3 bg-muted/50 rounded-lg">
                                             <p className="text-sm font-semibold">Nivesh Earns</p>
-                                            <p className="text-2xl font-bold text-primary">11%</p>
+                                            <p className="text-xl md:text-2xl font-bold text-primary">11%</p>
                                         </div>
                                          <div className="p-3 bg-muted/50 rounded-lg">
                                             <p className="text-sm font-semibold">Return to Investor</p>
-                                            <p className="text-2xl font-bold text-green-600">9%</p>
+                                            <p className="text-xl md:text-2xl font-bold text-green-600">9%</p>
                                         </div>
                                     </div>
-                                    <div className="h-64 w-full">
+                                    <div className="h-56 md:h-64 w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie data={fdAllocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                                <Pie data={fdAllocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                                     {fdAllocationData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                                 </Pie>
-                                                <Legend />
+                                                <Legend wrapperStyle={{fontSize: "12px"}}/>
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -217,3 +219,5 @@ export default function BusinessModelSection() {
         </section>
     );
 }
+
+    
