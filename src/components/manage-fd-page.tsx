@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import * as XLSX from "xlsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -126,10 +126,16 @@ export default function ManageFdPage() {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [selectedUserForFds, setSelectedUserForFds] = useState<any>(null);
     const [isFdsDialogOpen, setIsFdsDialogOpen] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    const playSound = () => {
+        audioRef.current?.play().catch(e => console.error("Audio play failed:", e));
+    };
 
     const handleApproval = async (action: () => Promise<any>, requestData: any, type: CombinedRequest['type']) => {
         const approvedRequest = await action();
         if (approvedRequest) {
+            playSound();
             const phoneNumber = getUserPhoneNumber(approvedRequest.userId);
             setSelectedRequest({ ...approvedRequest, type, date: approvedRequest.date.toDate(), phoneNumber });
             setIsAlertOpen(true);
@@ -235,6 +241,7 @@ export default function ManageFdPage() {
 
     return (
         <div className="container mx-auto p-4 md:p-8">
+            <audio ref={audioRef} src="/approved_notify.wav" preload="auto"></audio>
             <header className="mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Manage FDs</h1>
                 <p className="text-muted-foreground">Approve, reject, and view all fixed deposits.</p>
