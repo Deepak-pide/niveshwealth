@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
-import { LogOut, User as UserIcon, LayoutDashboard, Download } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, Download, Settings } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -111,6 +111,12 @@ export default function UserNav() {
                         <DropdownMenuItem>
                             <UserIcon className="mr-2 h-4 w-4" />
                             <span>Update Profile</span>
+                        </DropdownMenuItem>
+                    </Link>
+                     <Link href="/update-profile">
+                        <DropdownMenuItem>
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Settings</span>
                         </DropdownMenuItem>
                     </Link>
                      {showInstallButton && (
