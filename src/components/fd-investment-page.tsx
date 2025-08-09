@@ -122,11 +122,13 @@ export default function FdInvestmentPage() {
                                     <AlertDialogDescription asChild>
                                         <div className="space-y-4 pt-4 text-sm">
                                             <p>Your investment will be made from your available balance.</p>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Available Balance:</span>
-                                                <span className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>
-                                                    ₹{currentUserBalance.toLocaleString('en-IN')}
-                                                </span>
+                                             <div className="rounded-md border p-3">
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Available Balance:</span>
+                                                    <span className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>
+                                                        ₹{currentUserBalance.toLocaleString('en-IN')}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Investment Amount:</span>
