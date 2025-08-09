@@ -28,7 +28,7 @@ const dummyHistory = [
         amount: 100000,
         type: "Credit"
     },
-];
+].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 const fdAllocationData = [
     { name: 'Bank Funds', value: 50, color: 'hsl(var(--primary))' },
