@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Bank, Briefcase, Percent, Wallet, ArrowRight } from "lucide-react";
+import { Landmark, Briefcase, Percent, Wallet, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "./ui/table";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ const dummyHistory = [
     {
         date: "07/07/2025",
         description: "Monthly Interest",
-        amount: 500,
+        amount: 600,
         type: "Credit"
     },
     {
@@ -55,7 +55,7 @@ export default function BusinessModelSection() {
                             </div>
                             <ArrowRight className="h-6 w-6 text-muted-foreground hidden sm:block" />
                             <div className="flex items-center gap-2 text-center">
-                                <Bank className="h-6 w-6 text-green-600" />
+                                <Landmark className="h-6 w-6 text-green-600" />
                                 <div>
                                     <p className="font-bold">7% Bank Return</p>
                                     <p className="text-sm text-muted-foreground">From FDs</p>
