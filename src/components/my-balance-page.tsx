@@ -17,7 +17,6 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Badge } from "./ui/badge";
-import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
 
 const ITEMS_PER_PAGE = 10;
@@ -32,7 +31,6 @@ export default function MyBalancePage() {
     const { userBalances, balanceHistory, addTopupRequest, addBalanceWithdrawalRequest, topupRequests, balanceWithdrawalRequests } = useData();
     const { toast } = useToast();
     const { user } = useAuth();
-    const isMobile = useIsMobile();
 
     if (!user) {
         return (
@@ -62,18 +60,12 @@ export default function MyBalancePage() {
             return;
         }
 
-        if (isMobile) {
-            const transactionNote = "Add to Nivesh Wallet";
-            const upiUrl = `upi://pay?pa=shriwatsagupta@ybl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
-            window.open(upiUrl, '_blank');
-        }
-
         addTopupRequest({
             userId: user.uid,
             amount: amount,
             date: new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Request Submitted", description: "Your request to add balance has been sent for admin approval." });
+        toast({ title: "Request Submitted", description: "Your request to add balance has been sent for admin approval. It will be approved within 1 hour." });
         setAddAmount("");
     }
     
@@ -134,25 +126,24 @@ export default function MyBalancePage() {
                                             placeholder="Enter amount"
                                         />
                                     </div>
-                                    { !isMobile && (
-                                        <div className="space-y-4 pt-4 text-center">
-                                            <p className="text-sm text-muted-foreground">Scan the QR code with your UPI app</p>
-                                            <div className="flex justify-center">
-                                                <Image
-                                                    src="/QR Code.jpeg"
-                                                    alt="UPI QR Code"
-                                                    width={150}
-                                                    height={150}
-                                                />
-                                            </div>
-                                            <p className="font-semibold">UPI ID: shriwatsagupta@ybl</p>
+                                    <div className="space-y-4 pt-4 text-center">
+                                        <p className="text-sm text-muted-foreground">Scan the QR code with your UPI app</p>
+                                        <div className="flex justify-center">
+                                            <Image
+                                                src="/QR Code.jpeg"
+                                                alt="UPI QR Code"
+                                                width={150}
+                                                height={150}
+                                            />
                                         </div>
-                                    )}
+                                        <p className="font-semibold">Mobile No. : 9179349919</p>
+                                        <p className="text-xs text-primary">Payment will be approved within 1 hour.</p>
+                                    </div>
                                 </div>
                                 <DialogFooter>
                                     <DialogClose asChild>
                                         <Button type="submit" onClick={handleAddBalance} className="w-full">
-                                            {isMobile ? 'Pay using UPI' : 'I Have Paid'}
+                                            I Have Paid
                                         </Button>
                                     </DialogClose>
                                 </DialogFooter>

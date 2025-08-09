@@ -13,7 +13,6 @@ import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
 import { Textarea } from "./ui/textarea";
 
@@ -26,7 +25,6 @@ export default function FdInvestmentPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
-    const isMobile = useIsMobile();
     
     const hasPendingFDRequest = investmentRequests.some(req => req.userId === user?.uid);
     
@@ -57,12 +55,6 @@ export default function FdInvestmentPage() {
             return;
         }
 
-        if (paymentMethod === 'upi' && isMobile) {
-            const transactionNote = `FD for ${years} years, maturing on ${format(maturityDate, 'PPP')}`;
-            const upiUrl = `upi://pay?pa=shriwatsagupta@ybl&pn=Nivesh&am=${amount}&tn=${encodeURIComponent(transactionNote)}&cu=INR`;
-            window.open(upiUrl, '_blank');
-        }
-
         addInvestmentRequest({
             userId: user.uid,
             amount: amount,
@@ -74,7 +66,7 @@ export default function FdInvestmentPage() {
 
         toast({
             title: "Investment Request Submitted",
-            description: "Your FD investment request has been sent for admin approval.",
+            description: "Your FD investment request has been sent for admin approval. It will be approved within 1 hour.",
         });
 
         router.push('/investments');
@@ -170,7 +162,7 @@ export default function FdInvestmentPage() {
                                                 </div>
                                             </RadioGroup>
 
-                                            {paymentMethod === 'upi' && !isMobile && (
+                                            {paymentMethod === 'upi' && (
                                                  <div className="space-y-4 pt-4 text-center">
                                                     <p className="font-semibold text-muted-foreground">Pay using UPI</p>
                                                     <div className="flex justify-center">
@@ -182,7 +174,8 @@ export default function FdInvestmentPage() {
                                                         />
                                                     </div>
                                                     <p className="text-muted-foreground">Scan the QR code with your UPI app</p>
-                                                    <p className="font-semibold">UPI ID: shriwatsagupta@ybl</p>
+                                                    <p className="font-semibold">Mobile No. : 9179349919</p>
+                                                    <p className="text-xs text-primary">Payment will be approved within 1 hour.</p>
                                                 </div>
                                             )}
                                         </div>
@@ -191,7 +184,7 @@ export default function FdInvestmentPage() {
                                 <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-4">
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={handlePayment} disabled={isPayNowDisabled}>
-                                        {paymentMethod === 'upi' && !isMobile ? 'I Have Paid' : 'Submit Request'}
+                                        {paymentMethod === 'upi' ? 'I Have Paid' : 'Submit Request'}
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
