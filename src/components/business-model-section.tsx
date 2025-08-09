@@ -55,28 +55,25 @@ export default function BusinessModelSection() {
                         <p className="text-muted-foreground">
                            Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                         </p>
-                        <div className="flex flex-row justify-around items-center space-x-4 pt-4 overflow-x-auto pb-2">
-                            <div className="flex items-center gap-2 text-center flex-shrink-0">
-                                <Wallet className="h-6 w-6 text-primary" />
+                        <div className="flex flex-row justify-around items-center space-x-2 pt-4 overflow-x-auto pb-2">
+                            <div className="flex items-center gap-1 text-center flex-shrink-0">
+                                <Wallet className="h-5 w-5 text-primary" />
                                 <div>
-                                    <p className="font-bold">Your Balance</p>
-                                    <p className="text-sm text-muted-foreground">Invested Securely</p>
+                                    <p className="font-bold text-sm">Your Balance</p>
                                 </div>
                             </div>
-                            <ArrowRight className="h-6 w-6 text-muted-foreground flex-shrink-0" />
-                            <div className="flex items-center gap-2 text-center flex-shrink-0">
-                                <Landmark className="h-6 w-6 text-green-600" />
+                            <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-center gap-1 text-center flex-shrink-0">
+                                <Landmark className="h-5 w-5 text-green-600" />
                                 <div>
-                                    <p className="font-bold">7% Bank Return</p>
-                                    <p className="text-sm text-muted-foreground">From FDs</p>
+                                    <p className="font-bold text-sm">7% Return</p>
                                 </div>
                             </div>
-                             <ArrowRight className="h-6 w-6 text-muted-foreground flex-shrink-0" />
-                            <div className="flex items-center gap-2 text-center flex-shrink-0">
-                                <Percent className="h-6 w-6 text-primary" />
+                             <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-center gap-1 text-center flex-shrink-0">
+                                <Percent className="h-5 w-5 text-primary" />
                                 <div>
-                                    <p className="font-bold">6% User Return</p>
-                                    <p className="text-sm text-muted-foreground">Paid to you</p>
+                                    <p className="font-bold text-sm">6% Return</p>
                                 </div>
                             </div>
                         </div>
