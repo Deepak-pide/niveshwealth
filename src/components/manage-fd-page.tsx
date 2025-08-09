@@ -19,9 +19,38 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 
 const ITEMS_PER_PAGE = 10;
+
+const CollapsibleDescription = ({ description }: { description?: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    if (!description) {
+        return <span className="text-muted-foreground">N/A</span>;
+    }
+
+    const isLongDescription = description.length > 50;
+
+    return (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <div className="space-y-2">
+                <p className="text-sm">
+                    {isOpen || !isLongDescription ? description : `${description.substring(0, 50)}...`}
+                </p>
+                {isLongDescription && (
+                    <CollapsibleTrigger asChild>
+                         <Button variant="link" className="p-0 h-auto text-xs">
+                            {isOpen ? "Show Less" : "Read More"}
+                        </Button>
+                    </CollapsibleTrigger>
+                )}
+            </div>
+        </Collapsible>
+    );
+};
+
 
 const ActiveFdsDialog = ({ user, fds }: { user: any; fds: any[] }) => (
     <DialogContent className="max-w-2xl">
@@ -44,7 +73,9 @@ const ActiveFdsDialog = ({ user, fds }: { user: any; fds: any[] }) => (
                             <TableCell>{fd.name}</TableCell>
                             <TableCell>₹{fd.amount.toLocaleString('en-IN')}</TableCell>
                             <TableCell>{format(fd.maturityDate.toDate(), 'dd MMM yyyy')}</TableCell>
-                            <TableCell>{fd.description || 'N/A'}</TableCell>
+                            <TableCell>
+                                <CollapsibleDescription description={fd.description} />
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
