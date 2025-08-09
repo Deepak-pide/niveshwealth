@@ -11,9 +11,9 @@ import { Badge } from "./ui/badge";
 
 const dummyHistory = [
     {
-        date: "07/08/2025",
-        description: "Monthly Interest",
-        amount: 603,
+        date: "01/06/2025",
+        description: "Added to wallet",
+        amount: 100000,
         type: "Credit"
     },
     {
@@ -23,11 +23,11 @@ const dummyHistory = [
         type: "Credit"
     },
     {
-        date: "01/06/2025",
-        description: "Added to wallet",
-        amount: 100000,
+        date: "07/08/2025",
+        description: "Monthly Interest",
+        amount: 603,
         type: "Credit"
-    }
+    },
 ];
 
 const fdAllocationData = [
@@ -49,7 +49,7 @@ export default function BusinessModelSection() {
                                     How we make your money work for you.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="grid md:grid-cols-2 gap-8 items-center">
+                            <CardContent className="grid lg:grid-cols-2 gap-8 items-center">
                                 <div className="space-y-6">
                                     <div className="flex justify-around items-center text-center p-4 rounded-lg bg-muted/50">
                                         <div className="flex flex-col items-center gap-2">
@@ -139,7 +139,7 @@ export default function BusinessModelSection() {
                                     When you plan for longer terms
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="grid md:grid-cols-2 gap-8 items-center">
+                            <CardContent className="grid lg:grid-cols-2 gap-8 items-center">
                                 <div className="space-y-6">
                                     <div>
                                         <h4 className="font-semibold mb-2">Where we invest:</h4>
