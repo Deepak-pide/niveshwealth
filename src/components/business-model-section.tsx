@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Landmark, Briefcase, Percent, Wallet, ArrowRight, TrendingUp, ArrowDown, Plus, ChevronsRight } from "lucide-react";
+import { Landmark, Briefcase, Percent, Wallet, ArrowRight, TrendingUp, ArrowDown, Plus, ChevronsRight, ArrowUp } from "lucide-react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "./ui/table";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
@@ -75,29 +75,23 @@ export default function BusinessModelSection() {
 
                                     <Card className="bg-muted/50 border-border">
                                         <CardHeader>
-                                            <CardTitle className="text-base text-center">Example Calculation</CardTitle>
+                                            <CardTitle className="text-base text-center">Balance Growth Example</CardTitle>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            <div className="flex flex-col md:flex-row items-center justify-center text-center gap-2">
-                                                <div className="flex flex-col">
-                                                    <p className="font-bold">₹1,00,000</p>
-                                                    <p className="text-xs text-muted-foreground">Initial Balance</p>
+                                            <div className="relative pl-6">
+                                                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-border"></div>
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
+                                                    <p className="text-sm font-semibold">August: <span className="text-green-600">Monthly Interest +₹503</span></p>
                                                 </div>
-                                                <Plus className="h-4 w-4 text-primary md:hidden"/>
-                                                <ChevronsRight className="h-4 w-4 text-primary hidden md:block"/>
-                                                <div className="flex flex-col">
-                                                    <p className="font-bold text-primary">+ ₹500</p>
-                                                    <p className="text-xs text-muted-foreground">Month 1 Interest</p>
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
+                                                    <p className="text-sm font-semibold">July: <span className="text-green-600">Monthly Interest +₹500</span></p>
                                                 </div>
-                                                <ArrowDown className="h-4 w-4 text-primary md:hidden"/>
-                                                <ChevronsRight className="h-4 w-4 text-primary hidden md:block"/>
-                                                 <div className="flex flex-col">
-                                                    <p className="font-bold">₹1,00,500</p>
-                                                    <p className="text-xs text-muted-foreground">New Balance</p>
+                                                <div className="flex items-center gap-4">
+                                                     <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
+                                                    <p className="text-sm font-semibold">June: <span className="text-foreground">Added to wallet ₹1,00,000</span></p>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center justify-center text-center gap-2 pt-2">
-                                                <p className="text-sm font-medium">Then, next month's interest is on the new balance: <span className="font-bold text-primary">+ ₹502.50</span></p>
                                             </div>
                                         </CardContent>
                                     </Card>
