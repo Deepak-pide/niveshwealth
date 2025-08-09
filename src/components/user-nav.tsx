@@ -113,7 +113,7 @@ export default function UserNav() {
                             <span>Update Profile</span>
                         </DropdownMenuItem>
                     </Link>
-                     <Link href="/update-profile">
+                     <Link href="/settings">
                         <DropdownMenuItem>
                             <Settings className="mr-2 h-4 w-4" />
                             <span>Settings</span>

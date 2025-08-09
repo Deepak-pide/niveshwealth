@@ -6,20 +6,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useData, UserDetails } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { LineChart, Banknote, Bell, Palette } from "lucide-react";
+import { LineChart, Banknote } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { useEffect, useState } from "react";
 import AppHeader from "./app-header";
 import AppFooter from "./app-footer";
-import { Switch } from "./ui/switch";
-import { checkNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
-import { useTheme } from "@/hooks/use-theme";
 
 const formSchema = z.object({
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number must be at most 15 digits"),
@@ -30,25 +27,15 @@ const formSchema = z.object({
 });
 
 export default function UpdateProfilePage() {
-  const { updateUserProfile, userDetails, updateNotificationPreference } = useData();
+  const { updateUserProfile, userDetails } = useData();
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [currentUserDetails, setCurrentUserDetails] = useState<UserDetails | null>(null);
-  const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
-  const { theme, setTheme } = useTheme();
 
   const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
   const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
 
-  useEffect(() => {
-    const getStatus = async () => {
-        const status = await checkNotificationPermission();
-        setNotificationStatus(status);
-    };
-    getStatus();
-  }, []);
-  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -88,19 +75,6 @@ export default function UpdateProfilePage() {
       router.push('/');
     } catch (error) {
       toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
-    }
-  }
-
-  const handleNotificationToggle = async (checked: boolean) => {
-    if (!user) return;
-    await updateNotificationPreference(user.uid, checked);
-    const newStatus = await checkNotificationPermission();
-    setNotificationStatus(newStatus);
-
-    if(checked && newStatus === 'default') {
-        await requestNotificationPermission(user.uid);
-        const finalStatus = await checkNotificationPermission();
-        setNotificationStatus(finalStatus);
     }
   }
 
@@ -197,56 +171,6 @@ export default function UpdateProfilePage() {
                             )}
                         />
                     </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="appearance">
-                        <AccordionTrigger>
-                            <div className="flex items-center gap-2">
-                                <Palette className="h-5 w-5 text-primary" />
-                                <span className="font-semibold">Appearance</span>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-4">
-                           <div className="flex items-center justify-between rounded-lg border p-3">
-                                <div className="space-y-0.5">
-                                    <FormLabel>Dark Mode</FormLabel>
-                                    <FormDescription>
-                                        Enable or disable dark mode.
-                                    </FormDescription>
-                                </div>
-                                <Switch
-                                    checked={theme === 'dark'}
-                                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                                />
-                           </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="notifications">
-                        <AccordionTrigger>
-                            <div className="flex items-center gap-2">
-                                <Bell className="h-5 w-5 text-primary" />
-                                <span className="font-semibold">Notifications</span>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-4">
-                           <div className="flex items-center justify-between rounded-lg border p-3">
-                                <div className="space-y-0.5">
-                                    <FormLabel>Push Notifications</FormLabel>
-                                    <FormDescription>
-                                        Receive alerts about your account activity.
-                                    </FormDescription>
-                                </div>
-                                <Switch
-                                    checked={notificationStatus === 'granted'}
-                                    onCheckedChange={handleNotificationToggle}
-                                    disabled={notificationStatus === 'denied'}
-                                />
-                           </div>
-                            {notificationStatus === 'denied' && (
-                                <p className="text-xs text-destructive text-center">
-                                    You have blocked notifications. To enable them, please update your browser settings for this site.
-                                </p>
-                            )}
-                        </AccordionContent>
                     </AccordionItem>
                 </Accordion>
 
