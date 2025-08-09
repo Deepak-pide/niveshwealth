@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Badge } from "./ui/badge";
-import { useState, useEffect, useRef } from "react";
 
 const dummyHistory = [
     {
@@ -38,58 +37,6 @@ const fdAllocationData = [
 ];
 
 export default function BusinessModelSection() {
-    const [visibleRows, setVisibleRows] = useState(0);
-    const audioRef = useRef<HTMLAudioElement>(null);
-
-    useEffect(() => {
-        const timeouts: NodeJS.Timeout[] = [];
-        
-        const playSound = () => {
-            if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-            }
-        }
-
-        const animateTable = () => {
-            setVisibleRows(1); // Show "Added to wallet"
-
-            timeouts.push(setTimeout(() => {
-                setVisibleRows(2);
-                playSound();
-            }, 1500));
-
-            timeouts.push(setTimeout(() => {
-                setVisibleRows(3);
-                playSound();
-            }, 3000));
-        };
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) {
-                    animateTable();
-                } else {
-                    setVisibleRows(0);
-                    timeouts.forEach(clearTimeout);
-                }
-            },
-            { threshold: 0.5 }
-        );
-
-        const tableElement = document.getElementById("animated-table");
-        if (tableElement) {
-            observer.observe(tableElement);
-        }
-
-        return () => {
-            if (tableElement) {
-                observer.unobserve(tableElement);
-            }
-            timeouts.forEach(clearTimeout);
-        };
-    }, []);
-
     return (
         <section className="animate-fade-in">
              <Carousel className="w-full">
@@ -152,8 +99,7 @@ export default function BusinessModelSection() {
                                             <CardDescription>See how your balance grows over time.</CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <audio ref={audioRef} src="/coin.mp3" preload="auto" />
-                                            <Table id="animated-table">
+                                            <Table>
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableCell>Date</TableCell>
@@ -162,10 +108,10 @@ export default function BusinessModelSection() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {dummyHistory.slice(0, visibleRows).map((item, index) => {
+                                                    {dummyHistory.map((item, index) => {
                                                         const isInterest = item.description === 'Monthly Interest';
                                                         return (
-                                                            <TableRow key={index} className="animate-fade-in">
+                                                            <TableRow key={index}>
                                                                 <TableCell>{item.date}</TableCell>
                                                                 <TableCell>{item.description}</TableCell>
                                                                 <TableCell className={cn(
@@ -177,11 +123,6 @@ export default function BusinessModelSection() {
                                                             </TableRow>
                                                         )
                                                     })}
-                                                    {visibleRows < dummyHistory.length && (
-                                                        <TableRow>
-                                                            <TableCell colSpan={3} className="h-10"></TableCell>
-                                                        </TableRow>
-                                                    )}
                                                 </TableBody>
                                             </Table>
                                         </CardContent>
