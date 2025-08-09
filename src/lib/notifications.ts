@@ -16,10 +16,10 @@ export const checkNotificationPermission = async (): Promise<NotificationPermiss
 };
 
 
-export const requestNotificationPermission = async (userId: string) => {
+export const requestNotificationPermission = async (userId: string): Promise<NotificationPermission> => {
   if (!messaging) {
     console.log("Firebase Messaging is not available.");
-    return;
+    return 'default';
   }
 
   try {
@@ -40,8 +40,10 @@ export const requestNotificationPermission = async (userId: string) => {
     } else {
       console.log("Unable to get permission to notify.");
     }
+    return permission;
   } catch (err) {
     console.error("An error occurred while retrieving token. ", err);
+    return 'default';
   }
 };
 

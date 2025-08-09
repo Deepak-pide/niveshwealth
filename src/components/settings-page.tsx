@@ -34,15 +34,27 @@ export default function SettingsPage() {
 
     const handleNotificationToggle = async (checked: boolean) => {
         if (!user) return;
-        await updateNotificationPreference(user.uid, checked);
-        const newStatus = await checkNotificationPermission();
-        setNotificationStatus(newStatus);
-
-        if (checked && newStatus === 'default') {
-            await requestNotificationPermission(user.uid);
-            const finalStatus = await checkNotificationPermission();
-            setNotificationStatus(finalStatus);
+        
+        if (checked) {
+            const permission = await checkNotificationPermission();
+            if (permission === 'default') {
+                const newPermission = await requestNotificationPermission(user.uid);
+                setNotificationStatus(newPermission);
+                if (newPermission !== 'granted') {
+                    // User denied or dismissed, so don't update preference in db
+                    return;
+                }
+            } else if (permission === 'denied') {
+                // Cannot request again, user must change in browser settings
+                return;
+            }
+             await updateNotificationPreference(user.uid, true);
+        } else {
+             await updateNotificationPreference(user.uid, false);
         }
+        // Re-check status after any change
+        const finalStatus = await checkNotificationPermission();
+        setNotificationStatus(finalStatus);
     }
 
     return (

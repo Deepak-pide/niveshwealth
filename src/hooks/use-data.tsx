@@ -441,12 +441,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userDocRef = doc(db, 'users', userId);
         if (enable) {
             try {
-                await requestNotificationPermission(userId);
-                toast({ title: 'Notifications Enabled', description: 'You will now receive push notifications.' });
+                // The requestNotificationPermission function already handles getting and saving the token.
+                const permission = await requestNotificationPermission(userId);
+                if (permission === 'granted') {
+                    toast({ title: 'Notifications Enabled', description: 'You will now receive push notifications.' });
+                }
             } catch (error) {
                 toast({ title: 'Error', description: 'Could not enable notifications.', variant: 'destructive' });
             }
         } else {
+            // Remove the token to disable notifications
             await updateDoc(userDocRef, { fcmToken: null });
             toast({ title: 'Notifications Disabled', description: 'You will no longer receive push notifications.' });
         }
