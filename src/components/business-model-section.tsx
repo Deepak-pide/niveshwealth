@@ -67,6 +67,7 @@ export default function BusinessModelSection() {
                                 <Landmark className="h-5 w-5 text-green-600" />
                                 <div>
                                     <p className="font-bold text-sm">7% Return</p>
+                                    <p className="text-xs text-muted-foreground">From FDs</p>
                                 </div>
                             </div>
                              <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
@@ -74,6 +75,7 @@ export default function BusinessModelSection() {
                                 <Percent className="h-5 w-5 text-primary" />
                                 <div>
                                     <p className="font-bold text-sm">6% Return</p>
+                                    <p className="text-xs text-muted-foreground">Paid to you</p>
                                 </div>
                             </div>
                         </div>
