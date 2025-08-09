@@ -21,6 +21,8 @@ import {
     getDocs,
     runTransaction,
     setDoc,
+    arrayUnion,
+    arrayRemove,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from './use-auth';
@@ -173,6 +175,8 @@ interface DataContextType {
     templates: Template[];
     fdTenureRates: {[key: number]: number};
     interestOnAmount: InterestOnAmount[];
+    excludedUserIds: string[];
+    toggleInterestExclusion: (userId: string) => Promise<void>;
     calculateAndSetPreviousMonthBalance: () => Promise<void>;
     calculateAndSetCurrentMonthBalance: () => Promise<void>;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
@@ -229,6 +233,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [fdTenureRates, setFdTenureRates] = useState<{[key: number]: number}>({});
     const [interestOnAmount, setInterestOnAmount] = useState<InterestOnAmount[]>([]);
+    const [excludedUserIds, setExcludedUserIds] = useState<string[]>([]);
 
     const initializeNewUser = useCallback(async (user: User) => {
         const userDocRef = doc(db, 'users', user.uid);
@@ -276,6 +281,19 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const defaultRates = { '1': 0.08, '2': 0.08, '3': 0.085, '4': 0.085, '5': 0.09 };
                 setDoc(docRef, defaultRates);
                 setFdTenureRates(defaultRates);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        const docRef = doc(db, 'settings', 'interestSettings');
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setExcludedUserIds(docSnap.data().excludedUserIds || []);
+            } else {
+                setDoc(docRef, { excludedUserIds: [] });
+                setExcludedUserIds([]);
             }
         });
         return () => unsubscribe();
@@ -399,7 +417,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceRef = doc(db, 'userBalances', userId);
         batch.update(userBalanceRef, { userName: newName });
 
-        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance' | 'calculateAndSetCurrentMonthBalance'>)[] = [
+        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance' | 'calculateAndSetCurrentMonthBalance' | 'excludedUserIds' | 'toggleInterestExclusion'>)[] = [
             'investments', 'investmentRequests', 'fdWithdrawalRequests', 
             'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
             'balanceHistory', 'interestPayouts'
@@ -820,6 +838,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const batch = writeBatch(db);
         
         for (const userStoredBalance of interestOnAmount) {
+             if (excludedUserIds.includes(userStoredBalance.userId)) {
+                continue; // Skip excluded users
+            }
             const currentUserBalance = userBalances.find(b => b.userId === userStoredBalance.userId);
             if (currentUserBalance && userStoredBalance.balance > 0) {
                 const interest = parseFloat((userStoredBalance.balance * monthlyRate).toFixed(2));
@@ -847,6 +868,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const setFdInterestRatesForTenures = async (rates: { [key: number]: number }) => {
         const docRef = doc(db, 'settings', 'fdTenureRates');
         await setDoc(docRef, rates, { merge: true });
+    };
+
+    const toggleInterestExclusion = async (userId: string) => {
+        const settingsRef = doc(db, 'settings', 'interestSettings');
+        if (excludedUserIds.includes(userId)) {
+            await updateDoc(settingsRef, {
+                excludedUserIds: arrayRemove(userId)
+            });
+            toast({ title: "User Included", description: "This user will now receive interest payments." });
+        } else {
+            await updateDoc(settingsRef, {
+                excludedUserIds: arrayUnion(userId)
+            });
+            toast({ title: "User Excluded", description: "This user will no longer receive interest payments." });
+        }
     };
 
     const addTemplate = async (templateData: Omit<Template, 'id'>) => {
@@ -880,6 +916,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         templates,
         fdTenureRates,
         interestOnAmount,
+        excludedUserIds,
+        toggleInterestExclusion,
         calculateAndSetPreviousMonthBalance,
         calculateAndSetCurrentMonthBalance,
         updateUserProfile,
@@ -924,3 +962,4 @@ export const useData = () => {
 
     
 
+    

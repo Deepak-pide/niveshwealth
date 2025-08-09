@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Download, Settings, Save } from "lucide-react";
+import { Download, Settings, Save, UserX, UserCheck } from "lucide-react";
 import { useData } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { format, subMonths } from "date-fns";
 import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -36,6 +37,8 @@ export default function ManageBalancePage() {
         interestOnAmount,
         calculateAndSetPreviousMonthBalance,
         calculateAndSetCurrentMonthBalance,
+        excludedUserIds,
+        toggleInterestExclusion,
     } = useData();
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
@@ -304,23 +307,41 @@ export default function ManageBalancePage() {
                                     <TableRow>
                                         <TableHead>User</TableHead>
                                         <TableHead className="text-right">Balance</TableHead>
+                                        <TableHead className="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {visibleUserBalances.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar>
-                                                        <AvatarImage src={user.userAvatar} />
-                                                        <AvatarFallback>{user.userName.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="font-medium">{user.userName}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right font-semibold">₹{user.balance.toLocaleString('en-IN')}</TableCell>
-                                        </TableRow>
-                                    ))}
+                                    {visibleUserBalances.map((user) => {
+                                        const isExcluded = excludedUserIds.includes(user.userId);
+                                        return (
+                                            <TableRow 
+                                                key={user.id} 
+                                                className={cn("group transition-opacity", isExcluded && "opacity-50")}
+                                            >
+                                                <TableCell>
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar>
+                                                            <AvatarImage src={user.userAvatar} />
+                                                            <AvatarFallback>{user.userName.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="font-medium">{user.userName}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold">₹{user.balance.toLocaleString('en-IN')}</TableCell>
+                                                 <TableCell className="text-right">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={() => toggleInterestExclusion(user.userId)}
+                                                        title={isExcluded ? 'Include in interest payment' : 'Exclude from interest payment'}
+                                                    >
+                                                        {isExcluded ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
                                 </TableBody>
                             </Table>
                             {hasMoreUsers && (
@@ -342,6 +363,8 @@ export default function ManageBalancePage() {
         </div>
     );
 }
+
+    
 
     
 
