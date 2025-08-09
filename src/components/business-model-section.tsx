@@ -173,24 +173,6 @@ export default function BusinessModelSection() {
                             </CardContent>
                         </Card>
                     </CarouselItem>
-                     <CarouselItem>
-                        <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl h-full flex flex-col justify-center">
-                            <CardHeader>
-                                <CardTitle className="text-center">Our business model</CardTitle>
-                                <CardDescription className="text-center">
-                                    How we maintain FD to generate best safest return
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex items-center justify-center p-6">
-                                <div className="text-center">
-                                     <TrendingUp className="h-16 w-16 text-primary mx-auto mb-4" />
-                                    <p className="text-muted-foreground max-w-md">
-                                        Nivesh earns a 1% commission on the returns generated from your fixed deposit investments. This aligns our success with yours and ensures we are motivated to secure the best and safest returns for your portfolio.
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </CarouselItem>
                 </CarouselContent>
                 <CarouselPrevious className="hidden sm:flex" />
                 <CarouselNext className="hidden sm:flex" />
