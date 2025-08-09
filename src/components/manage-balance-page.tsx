@@ -12,14 +12,72 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Download, Settings, Save, UserX, UserCheck } from "lucide-react";
-import { useData } from "@/hooks/use-data";
+import { useData, UserBalance } from "@/hooks/use-data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { format, subMonths } from "date-fns";
 import { SendAlertDialog, CombinedRequest } from './send-alert-dialog';
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "./ui/scroll-area";
 
 const ITEMS_PER_PAGE = 10;
+
+const UserBalanceHistoryDialog = ({ isOpen, onOpenChange, user }: { isOpen: boolean, onOpenChange: (open: boolean) => void, user: UserBalance | null }) => {
+    const { balanceHistory } = useData();
+
+    if (!user) return null;
+
+    const userHistory = balanceHistory.filter(h => h.userId === user.userId);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>{user.userName}'s Balance History</DialogTitle>
+                    <DialogDescription>Current Balance: <span className="font-bold text-foreground">₹{user.balance.toLocaleString('en-IN')}</span></DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-96">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {userHistory.length > 0 ? userHistory.map((item) => {
+                                const isInterest = item.description === 'Monthly Interest';
+                                return (
+                                    <TableRow key={item.id} className="transition-colors hover:bg-muted/50">
+                                        <TableCell className="font-medium">{format(item.date.toDate(), 'dd MMM yyyy')}</TableCell>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className={cn(
+                                            "text-right font-semibold whitespace-nowrap",
+                                            isInterest ? 'text-primary' : (item.type === 'Credit' ? 'text-green-600' : 'text-red-600')
+                                        )}>
+                                            {item.type === 'Credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            }) : (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center">No transaction history found.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Close</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 
 export default function ManageBalancePage() {
     const { 
@@ -51,6 +109,8 @@ export default function ManageBalancePage() {
 
     const [selectedRequest, setSelectedRequest] = useState<CombinedRequest | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [selectedUserForHistory, setSelectedUserForHistory] = useState<UserBalance | null>(null);
+    const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
 
     const handleApproval = async (action: () => Promise<any>, requestData: any, type: CombinedRequest['type']) => {
         const approvedRequest = await action();
@@ -108,6 +168,11 @@ export default function ManageBalancePage() {
 
     const visibleUserBalances = filteredUserBalances.slice(0, visibleUsers);
     const hasMoreUsers = filteredUserBalances.length > visibleUsers;
+
+    const handleUserRowClick = (user: UserBalance) => {
+        setSelectedUserForHistory(user);
+        setIsHistoryDialogOpen(true);
+    };
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -324,7 +389,7 @@ export default function ManageBalancePage() {
                                 </TableHeader>
                                 <TableBody>
                                     {visibleUserBalances.map((user) => (
-                                        <TableRow key={user.id}>
+                                        <TableRow key={user.id} onClick={() => handleUserRowClick(user)} className="cursor-pointer">
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar>
@@ -354,6 +419,11 @@ export default function ManageBalancePage() {
                 isOpen={isAlertOpen}
                 onClose={() => setIsAlertOpen(false)}
                 request={selectedRequest}
+            />
+            <UserBalanceHistoryDialog
+                isOpen={isHistoryDialogOpen}
+                onOpenChange={setIsHistoryDialogOpen}
+                user={selectedUserForHistory}
             />
         </div>
     );
