@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ShieldCheck, TrendingUp, Handshake, PiggyBank, FileText, Info } from "lucide-react";
 import Image from 'next/image';
 import { Button } from "./ui/button";
+import BusinessModelSection from "./business-model-section";
 
 
 export default function AboutUsPage() {
@@ -56,6 +57,8 @@ export default function AboutUsPage() {
                         </Card>
                     ))}
                 </section>
+
+                <BusinessModelSection />
 
                 <section>
                     <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl overflow-hidden">
