@@ -292,6 +292,33 @@ export default function InvestmentsPage() {
           <main className="flex-1 overflow-y-auto p-4 md:p-8">
             <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
                 <div className="space-y-4">
+                    <Card className="transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl opacity-80 cursor-not-allowed">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-lg font-medium">Example FD</CardTitle>
+                            <Badge variant="secondary">Example</Badge>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p className="text-muted-foreground">Invested Amount</p>
+                                    <p className="font-semibold">₹30,000</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Interest Rate</p>
+                                    <p className="font-semibold">9.00%</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Tenure</p>
+                                    <p className="font-semibold">5 Years</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Amount at Maturity</p>
+                                    <p className="font-semibold text-green-600">₹43,500</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {visibleActiveInvestments.length > 0 ? visibleActiveInvestments.map((investment) => {
                         const isPending = investment.status === 'Pending';
                         const isWithdrawalPending = hasPendingWithdrawal(investment.id);
@@ -347,3 +374,4 @@ export default function InvestmentsPage() {
         </div>
     );
 }
+
