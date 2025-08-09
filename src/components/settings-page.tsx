@@ -3,7 +3,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { FormDescription } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { useData } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { Bell, Palette } from "lucide-react";
