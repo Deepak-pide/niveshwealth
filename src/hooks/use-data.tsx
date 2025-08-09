@@ -29,6 +29,7 @@ import { useAuth } from './use-auth';
 import { addYears, parseISO, differenceInYears, differenceInDays, format, startOfYear, endOfYear, isAfter, isBefore, subMonths } from 'date-fns';
 import { useToast } from './use-toast';
 import type { User } from 'firebase/auth';
+import { requestNotificationPermission } from '@/lib/notifications';
 
 type RequestType = 'FD Investment' | 'FD Withdrawal' | 'Balance Top-up' | 'Balance Withdrawal' | 'FD Approved' | 'FD Withdrawal Approved' | 'Balance Top-up Approved' | 'Balance Withdrawal Approved' | 'FD Matured';
 
@@ -181,6 +182,7 @@ interface DataContextType {
     calculateAndSetCurrentMonthBalance: () => Promise<void>;
     updateUserProfile: (userId: string, data: UserProfileData) => Promise<void>;
     updateUserName: (userId: string, newName: string) => Promise<void>;
+    updateNotificationPreference: (userId: string, enable: boolean) => Promise<void>;
     addInvestmentRequest: (requestData: Omit<InvestmentRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     addFdWithdrawalRequest: (requestData: Omit<FdWithdrawalRequest, 'id' | 'status' | 'userName' | 'userAvatar' | 'date'> & { date: string }) => Promise<void>;
     approveInvestmentRequest: (requestId: string) => Promise<InvestmentRequest | null>;
@@ -417,7 +419,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const userBalanceRef = doc(db, 'userBalances', userId);
         batch.update(userBalanceRef, { userName: newName });
 
-        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance' | 'calculateAndSetCurrentMonthBalance' | 'excludedUserIds' | 'toggleInterestExclusion'>)[] = [
+        const collectionsToUpdate: (keyof Omit<DataContextType, 'users' | 'userDetails' | 'fdTenureRates' | 'updateUserProfile' | 'updateUserName' | 'addInvestmentRequest' | 'addFdWithdrawalRequest' | 'approveInvestmentRequest' | 'rejectInvestmentRequest' | 'approveFdWithdrawalRequest' | 'rejectFdWithdrawalRequest' | 'approveMaturedFdRequest' | 'addTopupRequest' | 'addBalanceWithdrawalRequest' | 'approveTopupRequest' | 'rejectTopupRequest' | 'approveBalanceWithdrawalRequest' | 'rejectBalanceWithdrawalRequest' | 'payInterestToAll' | 'setFdInterestRatesForTenures' | 'getUserPhoneNumber' | 'addTemplate' | 'updateTemplate' | 'deleteTemplate' | 'interestOnAmount' | 'calculateAndSetPreviousMonthBalance' | 'calculateAndSetCurrentMonthBalance' | 'excludedUserIds' | 'toggleInterestExclusion' | 'updateNotificationPreference'>)[] = [
             'investments', 'investmentRequests', 'fdWithdrawalRequests', 
             'maturedFdRequests', 'topupRequests', 'balanceWithdrawalRequests', 
             'balanceHistory', 'interestPayouts'
@@ -432,6 +434,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     
         await batch.commit();
+    };
+
+    const updateNotificationPreference = async (userId: string, enable: boolean) => {
+        const userDocRef = doc(db, 'users', userId);
+        if (enable) {
+            try {
+                await requestNotificationPermission(userId);
+                toast({ title: 'Notifications Enabled', description: 'You will now receive push notifications.' });
+            } catch (error) {
+                toast({ title: 'Error', description: 'Could not enable notifications.', variant: 'destructive' });
+            }
+        } else {
+            await updateDoc(userDocRef, { fcmToken: null });
+            toast({ title: 'Notifications Disabled', description: 'You will no longer receive push notifications.' });
+        }
     };
 
 
@@ -922,6 +939,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         calculateAndSetCurrentMonthBalance,
         updateUserProfile,
         updateUserName,
+        updateNotificationPreference,
         addInvestmentRequest,
         addFdWithdrawalRequest,
         approveInvestmentRequest,

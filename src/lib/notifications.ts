@@ -8,6 +8,14 @@ import { db } from "./firebase";
 
 const VAPID_KEY = "BMefk-iiLGKli6ufvZaRi8nu2tEZrE_2LCRSBxqbpCoNXeR-zvfA5OgACg9GArSMyYGADAR4LuHsLvbL9CSxAFU";
 
+export const checkNotificationPermission = async (): Promise<NotificationPermission> => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+        return Notification.permission;
+    }
+    return 'default';
+};
+
+
 export const requestNotificationPermission = async (userId: string) => {
   if (!messaging) {
     console.log("Firebase Messaging is not available.");
