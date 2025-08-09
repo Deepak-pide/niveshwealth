@@ -97,7 +97,7 @@ export default function BusinessModelSection() {
                                                 <div className="flex items-start gap-4">
                                                      <div className="absolute left-0 mt-1.5 transform -translate-x-1/2 w-3 h-3 bg-primary rounded-full"></div>
                                                     <div className="text-sm">
-                                                        <span className="font-semibold text-green-600">June: Added to wallet</span>
+                                                        <span className="font-semibold text-foreground">June: Added to wallet</span>
                                                         <div className="font-semibold text-green-600">₹1,00,000</div>
                                                     </div>
                                                 </div>
@@ -196,5 +196,3 @@ export default function BusinessModelSection() {
     );
 
 }
-
-    
