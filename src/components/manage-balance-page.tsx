@@ -182,7 +182,7 @@ export default function ManageBalancePage() {
 
     return (
         <div className="container mx-auto p-4 md:p-8">
-             <audio ref={audioRef} src="/approved_notify.wav" preload="auto"></audio>
+             <audio ref={audioRef} src="/admin_approval.mp3" preload="auto"></audio>
             <header className="mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Manage Balances</h1>
                 <p className="text-muted-foreground">Approve balance requests and manage user interest payments.</p>

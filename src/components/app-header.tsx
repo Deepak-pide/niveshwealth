@@ -116,7 +116,7 @@ export default function AppHeader() {
                       )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <audio ref={audioRef} src="/get_notify.wav" preload="auto" />
+                <audio ref={audioRef} src="/admin_notify.wav" preload="auto" />
                </>
             )}
              <UserNav />
