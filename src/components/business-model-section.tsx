@@ -40,10 +40,7 @@ export default function BusinessModelSection() {
                 <CardContent className="grid md:grid-cols-2 gap-8 items-center">
                     <div className="space-y-4">
                         <p className="text-muted-foreground">
-                            The balance you hold in your Nivesh wallet is strategically invested in highly-rated and secure fixed deposits with trusted banks like SBI, HDFC, and ICICI Bank. These investments generate a stable annual return of approximately <span className="font-bold text-primary">7%</span>.
-                        </p>
-                        <p className="text-muted-foreground">
-                            We pass on a significant portion of these earnings directly to you, offering a competitive <span className="font-bold text-primary">6%</span> annual interest on your balance. The remaining <span className="font-bold text-primary">1%</span> is what we earn for providing this service, ensuring transparency and mutual growth.
+                           Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-around items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
                             <div className="flex items-center gap-2 text-center">
