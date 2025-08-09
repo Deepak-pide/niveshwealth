@@ -11,9 +11,9 @@ import { Badge } from "./ui/badge";
 
 const dummyHistory = [
     {
-        date: "01/06/2025",
-        description: "Added to wallet",
-        amount: 100000,
+        date: "07/08/2025",
+        description: "Monthly Interest",
+        amount: 603,
         type: "Credit"
     },
     {
@@ -23,9 +23,9 @@ const dummyHistory = [
         type: "Credit"
     },
     {
-        date: "07/08/2025",
-        description: "Monthly Interest",
-        amount: 603,
+        date: "01/06/2025",
+        description: "Added to wallet",
+        amount: 100000,
         type: "Credit"
     }
 ];
