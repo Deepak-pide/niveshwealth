@@ -44,3 +44,20 @@ export const requestNotificationPermission = async (userId: string) => {
     console.error("An error occurred while retrieving token. ", err);
   }
 };
+
+export const sendAdminNotification = async (body: string) => {
+  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (registration) {
+      registration.showNotification('New Request', {
+        body,
+        icon: '/logo.svg',
+        sound: '/admin_notify.wav',
+        tag: 'admin-new-request',
+        data: {
+          click_action: '/admin'
+        }
+      });
+    }
+  }
+};

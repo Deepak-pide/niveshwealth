@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
+import { sendAdminNotification } from '@/lib/notifications';
 
 export default function AppHeader() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function AppHeader() {
     if (isAdmin) {
       if (totalPendingRequests > prevTotalRequests) {
         audioRef.current?.play().catch(e => console.error("Audio play failed", e));
+        sendAdminNotification(`You have ${totalPendingRequests} pending requests.`);
       }
       setPrevTotalRequests(totalPendingRequests);
     }
