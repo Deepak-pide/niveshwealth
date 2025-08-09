@@ -59,7 +59,7 @@ export default function BusinessModelSection() {
                                     <p className="text-muted-foreground">
                                     Your Nivesh wallet balance is securely invested in highly-rated fixed deposits with trusted banks like SBI, HDFC, and ICICI, earning about 7% annually. We pay you 6% interest instantly from our company account, while the invested amount is later withdrawn to ensure you get fast withdrawals.
                                     </p>
-                                    <div className="flex flex-col sm:flex-row justify-around items-center space-y-2 sm:space-y-0 sm:space-x-2 pt-4 overflow-x-auto pb-2">
+                                    <div className="flex justify-around items-center space-x-2 pt-4 overflow-x-auto pb-2">
                                         <div className="flex flex-col sm:flex-row items-center gap-1 text-center flex-shrink-0">
                                             <Wallet className="h-5 w-5 text-primary" />
                                             <div>
