@@ -123,4 +123,3 @@ export const sendFdActiveNotification = functions.firestore
       return { success: false, error: error };
     }
   });
-
