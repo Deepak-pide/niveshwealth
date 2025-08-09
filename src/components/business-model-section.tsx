@@ -202,7 +202,7 @@ export default function BusinessModelSection() {
                                     </Card>
                                     <Card className="mt-4 bg-accent/20 border-accent relative overflow-hidden shine">
                                         <CardContent className="p-4">
-                                            <p className="text-sm text-foreground text-center"><span className="font-bold">No-Locking period</span></p>
+                                            <p className="text-sm text-foreground text-center"><span className="font-bold">NO-LOCKING period.</span> Withdrawal whenever it's urgent for you.</p>
                                         </CardContent>
                                     </Card>
                                 </div>
