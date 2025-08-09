@@ -42,7 +42,7 @@ export default function BusinessModelSection() {
                         <div className="flex justify-around items-center text-center p-4 rounded-lg bg-muted/50">
                             <div className="flex flex-col items-center gap-2">
                                 <Landmark className="h-8 w-8 text-muted-foreground" />
-                                <p className="font-semibold">Bank Savings</p>
+                                <p className="font-semibold">Saving Account</p>
                                 <p className="text-lg font-bold text-muted-foreground">2-3%</p>
                             </div>
                              <p className="text-2xl font-bold text-primary">vs</p>
