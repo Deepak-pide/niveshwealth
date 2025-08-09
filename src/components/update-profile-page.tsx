@@ -12,13 +12,14 @@ import { useData, UserDetails } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { LineChart, Banknote, Bell } from "lucide-react";
+import { LineChart, Banknote, Bell, Palette } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { useEffect, useState } from "react";
 import AppHeader from "./app-header";
 import AppFooter from "./app-footer";
 import { Switch } from "./ui/switch";
 import { checkNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
+import { useTheme } from "@/hooks/use-theme";
 
 const formSchema = z.object({
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number must be at most 15 digits"),
@@ -35,6 +36,7 @@ export default function UpdateProfilePage() {
   const router = useRouter();
   const [currentUserDetails, setCurrentUserDetails] = useState<UserDetails | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const getStatus = async () => {
@@ -192,6 +194,28 @@ export default function UpdateProfilePage() {
                             )}
                         />
                     </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="appearance">
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                                <Palette className="h-5 w-5 text-primary" />
+                                <span className="font-semibold">Appearance</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-4">
+                           <div className="flex items-center justify-between rounded-lg border p-3">
+                                <div className="space-y-0.5">
+                                    <FormLabel>Dark Mode</FormLabel>
+                                    <FormDescription>
+                                        Enable or disable dark mode.
+                                    </FormDescription>
+                                </div>
+                                <Switch
+                                    checked={theme === 'dark'}
+                                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                                />
+                           </div>
+                        </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="notifications">
                         <AccordionTrigger>

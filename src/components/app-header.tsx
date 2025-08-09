@@ -3,7 +3,7 @@
 
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { LineChart, Bell } from 'lucide-react';
+import { LineChart, Bell, Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import UserNav from './user-nav';
@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEffect, useRef, useState } from 'react';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppHeader() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function AppHeader() {
   const isMobile = useIsMobile();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [prevTotalRequests, setPrevTotalRequests] = useState(0);
+  const { theme, setTheme } = useTheme();
 
   const adminEmails = ['moneynivesh@gmail.com', 'moneynivesh360@gmail.com'];
   const isAdmin = user?.email ? adminEmails.includes(user.email) : false;
@@ -51,6 +53,17 @@ export default function AppHeader() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+             {isAdmin && !isMobile && (
+                <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4" />
+                    <Switch
+                        checked={theme === 'dark'}
+                        onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        aria-label="Toggle dark mode"
+                    />
+                    <Moon className="h-4 w-4" />
+                </div>
+            )}
              {isAdmin && (
                <>
                 <DropdownMenu>
